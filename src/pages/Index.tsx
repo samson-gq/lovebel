@@ -1,45 +1,118 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Heart, Star } from "lucide-react";
+import { X, Heart, Star, LogOut } from "lucide-react";
 import SwipeCard from "@/components/SwipeCard";
 import BottomNav from "@/components/BottomNav";
-import { profiles } from "@/data/profiles";
+import SwipeFilters, { type FilterValues } from "@/components/SwipeFilters";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import type { Profile } from "@/data/profiles";
+
+interface DBProfile {
+  user_id: string;
+  name: string;
+  age: number | null;
+  bio: string | null;
+  avatar_url: string | null;
+  interests: string[] | null;
+  gender: string | null;
+  city: string | null;
+}
 
 const Index = () => {
+  const { user, signOut } = useAuth();
+  const [cards, setCards] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [matches, setMatches] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<FilterValues>({
+    ageRange: [18, 45],
+    maxDistance: 50,
+    gender: "all",
+  });
+
+  const fetchProfiles = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+
+    // Get already swiped user ids
+    const { data: swiped } = await supabase
+      .from("swipes")
+      .select("swiped_id")
+      .eq("swiper_id", user.id);
+
+    const swipedIds = swiped?.map((s) => s.swiped_id) || [];
+    const excludeIds = [user.id, ...swipedIds];
+
+    let query = supabase
+      .from("profiles")
+      .select("*")
+      .not("user_id", "in", `(${excludeIds.join(",")})`)
+      .not("name", "eq", "")
+      .gte("age", filters.ageRange[0])
+      .lte("age", filters.ageRange[1]);
+
+    if (filters.gender !== "all") {
+      query = query.eq("gender", filters.gender);
+    }
+
+    const { data } = await query;
+
+    const mapped: Profile[] = (data || []).map((p: DBProfile) => ({
+      id: p.user_id,
+      name: p.name,
+      age: p.age || 0,
+      bio: p.bio || "",
+      distance: p.city || "—",
+      image: p.avatar_url || "/placeholder.svg",
+      interests: p.interests || [],
+    }));
+
+    setCards(mapped);
+    setCurrentIndex(0);
+    setLoading(false);
+  }, [user, filters]);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, [fetchProfiles]);
 
   const handleSwipe = useCallback(
-    (direction: "left" | "right") => {
-      if (direction === "right") {
-        const profile = profiles[currentIndex];
-        if (profile) {
-          const stored = JSON.parse(localStorage.getItem("matches") || "[]");
-          const updated = [...stored, profile.id];
-          localStorage.setItem("matches", JSON.stringify(updated));
-          setMatches(updated);
-        }
-      }
+    async (direction: "left" | "right") => {
+      if (!user || currentIndex >= cards.length) return;
+      const profile = cards[currentIndex];
+
+      await supabase.from("swipes").insert({
+        swiper_id: user.id,
+        swiped_id: profile.id,
+        direction: direction === "right" ? "like" : "dislike",
+      });
+
       setCurrentIndex((prev) => prev + 1);
     },
-    [currentIndex]
+    [user, currentIndex, cards]
   );
 
-  const remaining = profiles.slice(currentIndex);
+  const remaining = cards.slice(currentIndex);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
-      <header className="flex items-center justify-center py-4">
+      <header className="relative flex items-center justify-between px-4 py-4">
+        <SwipeFilters filters={filters} onChange={setFilters} />
         <h1 className="gradient-primary bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
           Spark
         </h1>
+        <button onClick={signOut} className="rounded-full p-2.5 text-muted-foreground hover:bg-muted">
+          <LogOut className="h-5 w-5" />
+        </button>
       </header>
 
-      {/* Card stack */}
       <div className="relative mx-auto flex w-full max-w-sm flex-1 px-4 pb-24">
         <div className="relative h-[520px] w-full">
-          {remaining.length > 0 ? (
+          {loading ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          ) : remaining.length > 0 ? (
             <AnimatePresence>
               {remaining
                 .slice(0, 2)
@@ -60,19 +133,14 @@ const Index = () => {
               className="flex h-full flex-col items-center justify-center text-center"
             >
               <Star className="mb-4 h-16 w-16 text-secondary" />
-              <h2 className="text-2xl font-bold text-foreground">
-                Все просмотрено!
-              </h2>
-              <p className="mt-2 text-muted-foreground">
-                Новые анкеты скоро появятся
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">Все просмотрено!</h2>
+              <p className="mt-2 text-muted-foreground">Новые анкеты скоро появятся</p>
             </motion.div>
           )}
         </div>
       </div>
 
-      {/* Action buttons */}
-      {remaining.length > 0 && (
+      {remaining.length > 0 && !loading && (
         <div className="fixed bottom-20 left-0 right-0 flex items-center justify-center gap-6">
           <button
             onClick={() => handleSwipe("left")}
