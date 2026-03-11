@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Flame } from "lucide-react";
+import logoImg from "@/assets/lovebel-logo.png";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
