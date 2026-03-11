@@ -99,7 +99,7 @@ const Index = () => {
       <header className="relative flex items-center justify-between px-4 py-4">
         <SwipeFilters filters={filters} onChange={setFilters} />
         <h1 className="gradient-primary bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
-          Spark
+          LoveBel
         </h1>
         <button onClick={signOut} className="rounded-full p-2.5 text-muted-foreground hover:bg-muted">
           <LogOut className="h-5 w-5" />
