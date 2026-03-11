@@ -45,11 +45,9 @@ const Auth = () => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6">
       <div className="mb-8 flex flex-col items-center">
-        <div className="gradient-primary mb-4 flex h-16 w-16 items-center justify-center rounded-2xl">
-          <Flame className="h-8 w-8 text-primary-foreground" />
-        </div>
+        <img src={logoImg} alt="LoveBel" className="mb-4 h-16 w-16" />
         <h1 className="gradient-primary bg-clip-text text-3xl font-extrabold text-transparent">
-          Spark
+          LoveBel
         </h1>
         <p className="mt-2 text-muted-foreground">
           {isLogin ? "Войдите в аккаунт" : "Создайте аккаунт"}
