@@ -64,6 +64,7 @@ const Index = () => {
       bio: p.bio || "",
       distance: p.city || "—",
       image: p.avatar_url || "/placeholder.svg",
+      images: [],
       interests: p.interests || [],
     }));
 
