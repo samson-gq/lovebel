@@ -12,6 +12,7 @@ export interface Profile {
   bio: string;
   distance: string;
   image: string;
+  images: string[];
   interests: string[];
 }
 
