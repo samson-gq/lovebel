@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings, Edit3, MapPin, Camera, LogOut } from "lucide-react";
+import { Settings, Edit3, MapPin, Camera, LogOut, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +14,14 @@ const INTEREST_OPTIONS = [
   "Наука", "Искусство", "Питание", "Мотивация",
 ];
 
+const MAX_PHOTOS = 6;
+
+interface ProfilePhoto {
+  id: string;
+  photo_url: string;
+  position: number;
+}
+
 const Profile = () => {
   const { user, signOut } = useAuth();
   const [editing, setEditing] = useState(false);
@@ -24,42 +32,42 @@ const Profile = () => {
   const [gender, setGender] = useState("other");
   const [interests, setInterests] = useState<string[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<ProfilePhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
+  const photosFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setName(data.name);
-          setBio(data.bio || "");
-          setAge(data.age || "");
-          setCity(data.city || "");
-          setGender(data.gender || "other");
-          setInterests(data.interests || []);
-          setAvatarUrl(data.avatar_url);
-        }
-        setLoading(false);
-      });
+
+    const fetchData = async () => {
+      const [{ data: profile }, { data: photoData }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+        supabase.from("profile_photos").select("*").eq("user_id", user.id).order("position"),
+      ]);
+
+      if (profile) {
+        setName(profile.name);
+        setBio(profile.bio || "");
+        setAge(profile.age || "");
+        setCity(profile.city || "");
+        setGender(profile.gender || "other");
+        setInterests(profile.interests || []);
+        setAvatarUrl(profile.avatar_url);
+      }
+
+      setPhotos((photoData as ProfilePhoto[]) || []);
+      setLoading(false);
+    };
+
+    fetchData();
   }, [user]);
 
   const handleSave = async () => {
     if (!user) return;
     const { error } = await supabase
       .from("profiles")
-      .update({
-        name,
-        bio,
-        age: age || null,
-        city,
-        gender,
-        interests,
-      })
+      .update({ name, bio, age: age || null, city, gender, interests })
       .eq("user_id", user.id);
 
     if (error) {
@@ -83,10 +91,58 @@ const Profile = () => {
     }
 
     const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
-
     await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("user_id", user.id);
     setAvatarUrl(publicUrl);
     toast.success("Фото обновлено!");
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !user) return;
+
+    const remaining = MAX_PHOTOS - photos.length;
+    if (remaining <= 0) {
+      toast.error(`Максимум ${MAX_PHOTOS} фото`);
+      return;
+    }
+
+    const filesToUpload = Array.from(files).slice(0, remaining);
+
+    for (let i = 0; i < filesToUpload.length; i++) {
+      const file = filesToUpload[i];
+      const path = `${user.id}/photos/${Date.now()}-${i}.${file.name.split(".").pop()}`;
+      const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+
+      if (error) {
+        toast.error(`Ошибка загрузки: ${file.name}`);
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+
+      const { data: inserted } = await supabase
+        .from("profile_photos")
+        .insert({ user_id: user.id, photo_url: publicUrl, position: photos.length + i })
+        .select()
+        .single();
+
+      if (inserted) {
+        setPhotos((prev) => [...prev, inserted as ProfilePhoto]);
+      }
+    }
+
+    toast.success("Фото добавлены!");
+    if (photosFileRef.current) photosFileRef.current.value = "";
+  };
+
+  const handleDeletePhoto = async (photo: ProfilePhoto) => {
+    const { error } = await supabase.from("profile_photos").delete().eq("id", photo.id);
+    if (error) {
+      toast.error("Ошибка удаления");
+      return;
+    }
+    setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+    toast.success("Фото удалено");
   };
 
   const toggleInterest = (interest: string) => {
@@ -198,6 +254,48 @@ const Profile = () => {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Photos Gallery */}
+      <div className="mt-6 px-6">
+        <h3 className="mb-3 text-lg font-semibold text-foreground">
+          Фото ({photos.length}/{MAX_PHOTOS})
+        </h3>
+        <div className="grid grid-cols-3 gap-2">
+          {photos.map((photo) => (
+            <div key={photo.id} className="group relative aspect-square overflow-hidden rounded-xl">
+              <img
+                src={photo.photo_url}
+                alt="Фото профиля"
+                className="h-full w-full object-cover"
+              />
+              {editing && (
+                <button
+                  onClick={() => handleDeletePhoto(photo)}
+                  className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-destructive/80 text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          ))}
+          {photos.length < MAX_PHOTOS && (
+            <button
+              onClick={() => photosFileRef.current?.click()}
+              className="flex aspect-square items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+              <Plus className="h-8 w-8" />
+            </button>
+          )}
+        </div>
+        <input
+          ref={photosFileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={handlePhotoUpload}
+        />
       </div>
 
       {/* Interests */}

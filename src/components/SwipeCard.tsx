@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { MapPin } from "lucide-react";
+import { MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Profile } from "@/data/profiles";
 
 interface SwipeCardProps {
@@ -13,6 +14,9 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
+  const [photoIndex, setPhotoIndex] = useState(0);
+
+  const allImages = profile.images.length > 0 ? profile.images : [profile.image];
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (info.offset.x > 120) {
@@ -20,6 +24,16 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
     } else if (info.offset.x < -120) {
       onSwipe("left");
     }
+  };
+
+  const nextPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPhotoIndex((prev) => Math.min(prev + 1, allImages.length - 1));
+  };
+
+  const prevPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPhotoIndex((prev) => Math.max(prev - 1, 0));
   };
 
   return (
@@ -34,11 +48,47 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
     >
       <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-elevated">
         <img
-          src={profile.image}
+          src={allImages[photoIndex]}
           alt={profile.name}
           className="h-full w-full object-cover"
           draggable={false}
         />
+
+        {/* Photo indicators */}
+        {allImages.length > 1 && (
+          <div className="absolute left-0 right-0 top-3 flex justify-center gap-1 px-4">
+            {allImages.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1 flex-1 rounded-full transition-colors ${
+                  i === photoIndex ? "bg-primary-foreground" : "bg-primary-foreground/40"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Photo navigation zones */}
+        {allImages.length > 1 && isTop && (
+          <>
+            {photoIndex > 0 && (
+              <button
+                onClick={prevPhoto}
+                className="absolute left-0 top-0 flex h-3/4 w-1/4 items-center justify-start pl-2"
+              >
+                <ChevronLeft className="h-8 w-8 text-primary-foreground/70 drop-shadow" />
+              </button>
+            )}
+            {photoIndex < allImages.length - 1 && (
+              <button
+                onClick={nextPhoto}
+                className="absolute right-0 top-0 flex h-3/4 w-1/4 items-center justify-end pr-2"
+              >
+                <ChevronRight className="h-8 w-8 text-primary-foreground/70 drop-shadow" />
+              </button>
+            )}
+          </>
+        )}
 
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
