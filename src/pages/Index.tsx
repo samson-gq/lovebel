@@ -98,7 +98,7 @@ const Index = () => {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="relative flex items-center justify-between px-4 py-4">
         <SwipeFilters filters={filters} onChange={setFilters} />
-        <h1 className="gradient-primary bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
+        <h1 className="bg-clip-text text-2xl font-extrabold tracking-tight text-transparent" style={{ backgroundImage: 'var(--gradient-primary)' }}>
           LoveBel
         </h1>
         <button onClick={signOut} className="rounded-full p-2.5 text-muted-foreground hover:bg-muted">
