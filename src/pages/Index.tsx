@@ -57,6 +57,12 @@ const Index = () => {
 
     const { data } = await query;
 
+    // Fetch photos for all profiles
+    const userIds = (data || []).map((p: DBProfile) => p.user_id);
+    const { data: allPhotos } = userIds.length > 0
+      ? await supabase.from("profile_photos").select("*").in("user_id", userIds).order("position")
+      : { data: [] };
+
     const mapped: Profile[] = (data || []).map((p: DBProfile) => ({
       id: p.user_id,
       name: p.name,
@@ -64,7 +70,9 @@ const Index = () => {
       bio: p.bio || "",
       distance: p.city || "—",
       image: p.avatar_url || "/placeholder.svg",
-      images: [],
+      images: (allPhotos || [])
+        .filter((photo: any) => photo.user_id === p.user_id)
+        .map((photo: any) => photo.photo_url),
       interests: p.interests || [],
     }));
 
