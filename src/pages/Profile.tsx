@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings, Edit3, MapPin, Camera, LogOut, Plus, Trash2 } from "lucide-react";
+import { Settings, Edit3, MapPin, Camera, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
