@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings, Edit3, MapPin, Camera, LogOut, Plus, Trash2 } from "lucide-react";
+import { Settings, Edit3, MapPin, Camera, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import DraggablePhotoGrid from "@/components/DraggablePhotoGrid";
 
 const INTEREST_OPTIONS = [
   "Путешествия", "Музыка", "Спорт", "Кино", "Книги",
@@ -145,6 +146,17 @@ const Profile = () => {
     toast.success("Фото удалено");
   };
 
+  const handleReorder = async (reordered: ProfilePhoto[]) => {
+    setPhotos(reordered);
+    for (const photo of reordered) {
+      await supabase
+        .from("profile_photos")
+        .update({ position: photo.position })
+        .eq("id", photo.id);
+    }
+    toast.success("Порядок фото обновлён");
+  };
+
   const toggleInterest = (interest: string) => {
     setInterests((prev) =>
       prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]
@@ -261,33 +273,14 @@ const Profile = () => {
         <h3 className="mb-3 text-lg font-semibold text-foreground">
           Фото ({photos.length}/{MAX_PHOTOS})
         </h3>
-        <div className="grid grid-cols-3 gap-2">
-          {photos.map((photo) => (
-            <div key={photo.id} className="group relative aspect-square overflow-hidden rounded-xl">
-              <img
-                src={photo.photo_url}
-                alt="Фото профиля"
-                className="h-full w-full object-cover"
-              />
-              {editing && (
-                <button
-                  onClick={() => handleDeletePhoto(photo)}
-                  className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-destructive/80 text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          ))}
-          {photos.length < MAX_PHOTOS && (
-            <button
-              onClick={() => photosFileRef.current?.click()}
-              className="flex aspect-square items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-            >
-              <Plus className="h-8 w-8" />
-            </button>
-          )}
-        </div>
+        <DraggablePhotoGrid
+          photos={photos}
+          editing={editing}
+          maxPhotos={MAX_PHOTOS}
+          onReorder={handleReorder}
+          onDelete={handleDeletePhoto}
+          onAddClick={() => photosFileRef.current?.click()}
+        />
         <input
           ref={photosFileRef}
           type="file"
