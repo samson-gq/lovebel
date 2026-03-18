@@ -14,6 +14,11 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const NotificationListener = () => {
+  useRealtimeNotifications();
+  return null;
+};
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   if (loading) {
