@@ -146,6 +146,17 @@ const Profile = () => {
     toast.success("Фото удалено");
   };
 
+  const handleReorder = async (reordered: ProfilePhoto[]) => {
+    setPhotos(reordered);
+    for (const photo of reordered) {
+      await supabase
+        .from("profile_photos")
+        .update({ position: photo.position })
+        .eq("id", photo.id);
+    }
+    toast.success("Порядок фото обновлён");
+  };
+
   const toggleInterest = (interest: string) => {
     setInterests((prev) =>
       prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]
