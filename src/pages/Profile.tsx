@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import DraggablePhotoGrid from "@/components/DraggablePhotoGrid";
 
 const INTEREST_OPTIONS = [
   "Путешествия", "Музыка", "Спорт", "Кино", "Книги",
