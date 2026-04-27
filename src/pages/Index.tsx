@@ -81,23 +81,18 @@ const Index = () => {
     const swipedIds = swiped?.map((s) => s.swiped_id) || [];
     const excludeIds = [user.id, ...swipedIds];
 
-    let query = supabase
-      .from("profiles")
-      .select("*")
-      .not("user_id", "in", `(${excludeIds.join(",")})`)
-      .not("name", "eq", "")
-      .gte("age", filters.ageRange[0])
-      .lte("age", filters.ageRange[1]);
+    // Use server-side RPC that leverages the normalized-city index
+    const { data, error } = await supabase.rpc("search_profiles", {
+      exclude_ids: excludeIds,
+      min_age: filters.ageRange[0],
+      max_age: filters.ageRange[1],
+      gender_filter: filters.gender,
+      city_query: filters.city.trim(),
+    });
 
-    if (filters.gender !== "all") {
-      query = query.eq("gender", filters.gender);
+    if (error) {
+      console.error("search_profiles failed", error);
     }
-
-    if (filters.city.trim()) {
-      query = query.ilike("city", `%${filters.city.trim()}%`);
-    }
-
-    const { data } = await query;
 
     // Fetch photos for all profiles
     const userIds = (data || []).map((p: DBProfile) => p.user_id);
