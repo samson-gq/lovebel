@@ -240,13 +240,6 @@ export type Database = {
         }
         Returns: number
       }
-      get_my_coordinates: {
-        Args: never
-        Returns: {
-          latitude: number
-          longitude: number
-        }[]
-      }
       normalize_city: { Args: { input: string }; Returns: string }
       search_profiles: {
         Args: {
