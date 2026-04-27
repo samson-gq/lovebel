@@ -1,25 +1,5 @@
-// Popular cities + lightweight client-side normalization mirroring the
-// SQL `public.normalize_city` function so suggestions match server filtering.
-
-export const POPULAR_CITIES = [
-  "Москва",
-  "Санкт-Петербург",
-  "Новосибирск",
-  "Екатеринбург",
-  "Казань",
-  "Нижний Новгород",
-  "Челябинск",
-  "Самара",
-  "Уфа",
-  "Ростов-на-Дону",
-  "Краснодар",
-  "Воронеж",
-  "Пермь",
-  "Волгоград",
-  "Минск",
-  "Киев",
-  "Алматы",
-];
+// Lightweight client-side normalization mirroring the SQL `public.normalize_city`
+// function so suggestions and client-side filtering stay consistent with the server.
 
 const ABBREVIATIONS: Array<[RegExp, string]> = [
   [/(^|\s)спб($|\s|\.)/gi, "$1санкт-петербург$2"],
@@ -28,7 +8,7 @@ const ABBREVIATIONS: Array<[RegExp, string]> = [
   [/(^|\s)нн($|\s|\.)/gi, "$1нижний новгород$2"],
 ];
 
-export function normalizeCity(input: string): string {
+export function normalizeCity(input: string | null | undefined): string {
   if (!input) return "";
   let s = input;
   for (const [re, rep] of ABBREVIATIONS) s = s.replace(re, rep);
@@ -39,8 +19,24 @@ export function normalizeCity(input: string): string {
     .trim();
 }
 
-export function suggestCities(query: string, limit = 6): string[] {
+export function suggestCities(
+  query: string,
+  cities: string[],
+  limit = 6,
+): string[] {
   const q = normalizeCity(query);
-  if (!q) return POPULAR_CITIES.slice(0, limit);
-  return POPULAR_CITIES.filter((c) => normalizeCity(c).includes(q)).slice(0, limit);
+  if (!q) return cities.slice(0, limit);
+  return cities.filter((c) => normalizeCity(c).includes(q)).slice(0, limit);
 }
+
+// Fallback list used until server data loads (also used in tests).
+export const FALLBACK_POPULAR_CITIES = [
+  "Москва",
+  "Санкт-Петербург",
+  "Новосибирск",
+  "Екатеринбург",
+  "Казань",
+  "Нижний Новгород",
+  "Минск",
+  "Киев",
+];
