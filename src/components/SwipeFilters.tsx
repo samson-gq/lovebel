@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
+import { suggestCities } from "@/lib/cities";
 
 interface FilterValues {
   ageRange: [number, number];
@@ -16,13 +17,10 @@ interface FiltersProps {
   onChange: (filters: FilterValues) => void;
 }
 
-const INTERESTS_OPTIONS = [
-  "Путешествия", "Музыка", "Спорт", "Кино", "Книги",
-  "Фотография", "Кофе", "Йога", "Дизайн", "Фитнес",
-];
-
 const SwipeFilters = ({ filters, onChange }: FiltersProps) => {
   const [open, setOpen] = useState(false);
+  const [cityFocused, setCityFocused] = useState(false);
+  const suggestions = suggestCities(filters.city);
 
   if (!open) {
     return (
