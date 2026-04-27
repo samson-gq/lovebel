@@ -169,6 +169,36 @@ export type Database = {
     }
     Functions: {
       normalize_city: { Args: { input: string }; Returns: string }
+      search_profiles: {
+        Args: {
+          city_query: string
+          exclude_ids: string[]
+          gender_filter: string
+          max_age: number
+          min_age: number
+        }
+        Returns: {
+          age: number | null
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          created_at: string
+          gender: string | null
+          id: string
+          interests: string[] | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       unaccent: { Args: { "": string }; Returns: string }
