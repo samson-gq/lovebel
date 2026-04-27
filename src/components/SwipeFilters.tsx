@@ -2,11 +2,13 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 
 interface FilterValues {
   ageRange: [number, number];
   maxDistance: number;
   gender: string;
+  city: string;
 }
 
 interface FiltersProps {
@@ -76,6 +78,27 @@ const SwipeFilters = ({ filters, onChange }: FiltersProps) => {
             onChange({ ...filters, maxDistance: val[0] })
           }
         />
+      </div>
+
+      {/* City */}
+      <div className="mb-5">
+        <label className="mb-2 block text-sm font-medium text-card-foreground">Город</label>
+        <div className="relative">
+          <Input
+            placeholder="Любой город"
+            value={filters.city}
+            onChange={(e) => onChange({ ...filters, city: e.target.value })}
+            className="pr-8"
+          />
+          {filters.city && (
+            <button
+              onClick={() => onChange({ ...filters, city: "" })}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Gender */}

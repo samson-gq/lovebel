@@ -28,6 +28,7 @@ const Index = () => {
     ageRange: [18, 45],
     maxDistance: 50,
     gender: "all",
+    city: "",
   });
 
   const fetchProfiles = useCallback(async () => {
@@ -53,6 +54,10 @@ const Index = () => {
 
     if (filters.gender !== "all") {
       query = query.eq("gender", filters.gender);
+    }
+
+    if (filters.city.trim()) {
+      query = query.ilike("city", `%${filters.city.trim()}%`);
     }
 
     const { data } = await query;
