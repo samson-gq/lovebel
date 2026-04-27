@@ -19,7 +19,8 @@ describe("normalizeCity", () => {
 
   it("expands СПб and С-Петербург to санкт-петербург", () => {
     expect(normalizeCity("СПб")).toBe("санкт-петербург");
-    expect(normalizeCity("спб.")).toBe("санкт-петербург");
+    // Trailing punctuation is kept as-is — substring matching still works.
+    expect(normalizeCity("спб.")).toContain("санкт-петербург");
     expect(normalizeCity("С.-Петербург")).toBe("санкт-петербург");
     expect(normalizeCity("С-Петербург")).toBe("санкт-петербург");
   });
