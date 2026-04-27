@@ -57,6 +57,7 @@ const Index = () => {
   const [cards, setCards] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [matchCount, setMatchCount] = useState<number | null>(null);
   const [filters, setFilters] = useState<FilterValues>(loadFilters);
 
   useEffect(() => {
@@ -115,6 +116,7 @@ const Index = () => {
 
     setCards(mapped);
     setCurrentIndex(0);
+    setMatchCount(mapped.length);
     setLoading(false);
   }, [user, filters]);
 
@@ -185,6 +187,13 @@ const Index = () => {
             Сбросить все
           </button>
         </div>
+      )}
+
+      {!loading && matchCount !== null && (
+        <p className="px-4 pb-1 text-xs text-muted-foreground">
+          Найдено анкет: <span className="font-semibold text-foreground">{matchCount}</span>
+          {filters.city.trim() && <> в городе «{filters.city.trim()}»</>}
+        </p>
       )}
 
       <div className="relative mx-auto flex w-full max-w-sm flex-1 px-4 pb-24">
