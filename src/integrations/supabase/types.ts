@@ -186,9 +186,67 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          age: number | null
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          created_at: string | null
+          gender: string | null
+          id: string | null
+          interests: string[] | null
+          name: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          age?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          created_at?: string | null
+          gender?: string | null
+          id?: string | null
+          interests?: string[] | null
+          name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          age?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          created_at?: string | null
+          gender?: string | null
+          id?: string | null
+          interests?: string[] | null
+          name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      count_search_profiles: {
+        Args: {
+          city_query: string
+          exclude_ids: string[]
+          gender_filter: string
+          max_age: number
+          min_age: number
+        }
+        Returns: number
+      }
+      get_my_coordinates: {
+        Args: never
+        Returns: {
+          latitude: number
+          longitude: number
+        }[]
+      }
       normalize_city: { Args: { input: string }; Returns: string }
       search_profiles: {
         Args: {
@@ -199,26 +257,18 @@ export type Database = {
           min_age: number
         }
         Returns: {
-          age: number | null
-          avatar_url: string | null
-          bio: string | null
-          city: string | null
+          age: number
+          avatar_url: string
+          bio: string
+          city: string
           created_at: string
-          gender: string | null
+          gender: string
           id: string
-          interests: string[] | null
-          latitude: number | null
-          longitude: number | null
+          interests: string[]
           name: string
           updated_at: string
           user_id: string
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "profiles"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
     }
     Enums: {
