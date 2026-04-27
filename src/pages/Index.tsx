@@ -189,6 +189,13 @@ const Index = () => {
         </div>
       )}
 
+      {!loading && matchCount !== null && (
+        <p className="px-4 pb-1 text-xs text-muted-foreground">
+          Найдено анкет: <span className="font-semibold text-foreground">{matchCount}</span>
+          {filters.city.trim() && <> в городе «{filters.city.trim()}»</>}
+        </p>
+      )}
+
       <div className="relative mx-auto flex w-full max-w-sm flex-1 px-4 pb-24">
         <div className="relative h-[520px] w-full">
           {loading ? (
