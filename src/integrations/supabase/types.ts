@@ -67,6 +67,27 @@ export type Database = {
           },
         ]
       }
+      popular_cities: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profile_photos: {
         Row: {
           created_at: string
@@ -199,9 +220,6 @@ export type Database = {
           isSetofReturn: true
         }
       }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
-      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
