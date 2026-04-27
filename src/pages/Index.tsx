@@ -152,6 +152,41 @@ const Index = () => {
         </button>
       </header>
 
+      {!isDefaultFilters(filters) && (
+        <div className="flex flex-wrap items-center gap-2 px-4 pb-2">
+          {filters.city.trim() && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              <MapPin className="h-3 w-3" />
+              Город: {filters.city.trim()}
+              <button
+                onClick={() => setFilters({ ...filters, city: "" })}
+                className="ml-1 rounded-full text-primary/70 hover:text-primary"
+                aria-label="Убрать город"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {filters.gender !== "all" && (
+            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+              {filters.gender === "female" ? "Женщины" : "Мужчины"}
+            </span>
+          )}
+          {(filters.ageRange[0] !== DEFAULT_FILTERS.ageRange[0] ||
+            filters.ageRange[1] !== DEFAULT_FILTERS.ageRange[1]) && (
+            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+              {filters.ageRange[0]}–{filters.ageRange[1]} лет
+            </span>
+          )}
+          <button
+            onClick={() => setFilters(DEFAULT_FILTERS)}
+            className="ml-auto text-xs font-medium text-primary hover:underline"
+          >
+            Сбросить все
+          </button>
+        </div>
+      )}
+
       <div className="relative mx-auto flex w-full max-w-sm flex-1 px-4 pb-24">
         <div className="relative h-[520px] w-full">
           {loading ? (
