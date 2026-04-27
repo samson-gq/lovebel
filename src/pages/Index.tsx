@@ -57,6 +57,7 @@ const Index = () => {
   const [cards, setCards] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [matchCount, setMatchCount] = useState<number | null>(null);
   const [filters, setFilters] = useState<FilterValues>(loadFilters);
 
   useEffect(() => {
