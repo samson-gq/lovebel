@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Heart, Star, LogOut } from "lucide-react";
+import { X, Heart, Star, LogOut, MapPin } from "lucide-react";
 import SwipeCard from "@/components/SwipeCard";
 import BottomNav from "@/components/BottomNav";
 import SwipeFilters, { type FilterValues } from "@/components/SwipeFilters";
@@ -19,17 +19,54 @@ interface DBProfile {
   city: string | null;
 }
 
+const FILTERS_STORAGE_KEY = "lovebel.swipe.filters.v1";
+const DEFAULT_FILTERS: FilterValues = {
+  ageRange: [18, 45],
+  maxDistance: 50,
+  gender: "all",
+  city: "",
+};
+
+const loadFilters = (): FilterValues => {
+  try {
+    const raw = localStorage.getItem(FILTERS_STORAGE_KEY);
+    if (!raw) return DEFAULT_FILTERS;
+    const parsed = JSON.parse(raw);
+    return {
+      ageRange: Array.isArray(parsed.ageRange) && parsed.ageRange.length === 2
+        ? [Number(parsed.ageRange[0]) || 18, Number(parsed.ageRange[1]) || 45]
+        : DEFAULT_FILTERS.ageRange,
+      maxDistance: Number(parsed.maxDistance) || DEFAULT_FILTERS.maxDistance,
+      gender: typeof parsed.gender === "string" ? parsed.gender : DEFAULT_FILTERS.gender,
+      city: typeof parsed.city === "string" ? parsed.city : "",
+    };
+  } catch {
+    return DEFAULT_FILTERS;
+  }
+};
+
+const isDefaultFilters = (f: FilterValues) =>
+  f.ageRange[0] === DEFAULT_FILTERS.ageRange[0] &&
+  f.ageRange[1] === DEFAULT_FILTERS.ageRange[1] &&
+  f.maxDistance === DEFAULT_FILTERS.maxDistance &&
+  f.gender === DEFAULT_FILTERS.gender &&
+  f.city.trim() === "";
+
 const Index = () => {
   const { user, signOut } = useAuth();
   const [cards, setCards] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<FilterValues>({
-    ageRange: [18, 45],
-    maxDistance: 50,
-    gender: "all",
-    city: "",
-  });
+  const [filters, setFilters] = useState<FilterValues>(loadFilters);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
+    } catch {
+      // ignore quota errors
+    }
+  }, [filters]);
+
 
   const fetchProfiles = useCallback(async () => {
     if (!user) return;
@@ -44,23 +81,18 @@ const Index = () => {
     const swipedIds = swiped?.map((s) => s.swiped_id) || [];
     const excludeIds = [user.id, ...swipedIds];
 
-    let query = supabase
-      .from("profiles")
-      .select("*")
-      .not("user_id", "in", `(${excludeIds.join(",")})`)
-      .not("name", "eq", "")
-      .gte("age", filters.ageRange[0])
-      .lte("age", filters.ageRange[1]);
+    // Use server-side RPC that leverages the normalized-city index
+    const { data, error } = await supabase.rpc("search_profiles", {
+      exclude_ids: excludeIds,
+      min_age: filters.ageRange[0],
+      max_age: filters.ageRange[1],
+      gender_filter: filters.gender,
+      city_query: filters.city.trim(),
+    });
 
-    if (filters.gender !== "all") {
-      query = query.eq("gender", filters.gender);
+    if (error) {
+      console.error("search_profiles failed", error);
     }
-
-    if (filters.city.trim()) {
-      query = query.ilike("city", `%${filters.city.trim()}%`);
-    }
-
-    const { data } = await query;
 
     // Fetch photos for all profiles
     const userIds = (data || []).map((p: DBProfile) => p.user_id);
@@ -119,6 +151,41 @@ const Index = () => {
           <LogOut className="h-5 w-5" />
         </button>
       </header>
+
+      {!isDefaultFilters(filters) && (
+        <div className="flex flex-wrap items-center gap-2 px-4 pb-2">
+          {filters.city.trim() && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              <MapPin className="h-3 w-3" />
+              Город: {filters.city.trim()}
+              <button
+                onClick={() => setFilters({ ...filters, city: "" })}
+                className="ml-1 rounded-full text-primary/70 hover:text-primary"
+                aria-label="Убрать город"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {filters.gender !== "all" && (
+            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+              {filters.gender === "female" ? "Женщины" : "Мужчины"}
+            </span>
+          )}
+          {(filters.ageRange[0] !== DEFAULT_FILTERS.ageRange[0] ||
+            filters.ageRange[1] !== DEFAULT_FILTERS.ageRange[1]) && (
+            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+              {filters.ageRange[0]}–{filters.ageRange[1]} лет
+            </span>
+          )}
+          <button
+            onClick={() => setFilters(DEFAULT_FILTERS)}
+            className="ml-auto text-xs font-medium text-primary hover:underline"
+          >
+            Сбросить все
+          </button>
+        </div>
+      )}
 
       <div className="relative mx-auto flex w-full max-w-sm flex-1 px-4 pb-24">
         <div className="relative h-[520px] w-full">

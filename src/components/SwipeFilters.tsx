@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
+import { suggestCities } from "@/lib/cities";
 
 interface FilterValues {
   ageRange: [number, number];
@@ -16,13 +17,10 @@ interface FiltersProps {
   onChange: (filters: FilterValues) => void;
 }
 
-const INTERESTS_OPTIONS = [
-  "Путешествия", "Музыка", "Спорт", "Кино", "Книги",
-  "Фотография", "Кофе", "Йога", "Дизайн", "Фитнес",
-];
-
 const SwipeFilters = ({ filters, onChange }: FiltersProps) => {
   const [open, setOpen] = useState(false);
+  const [cityFocused, setCityFocused] = useState(false);
+  const suggestions = suggestCities(filters.city);
 
   if (!open) {
     return (
@@ -88,6 +86,8 @@ const SwipeFilters = ({ filters, onChange }: FiltersProps) => {
             placeholder="Любой город"
             value={filters.city}
             onChange={(e) => onChange({ ...filters, city: e.target.value })}
+            onFocus={() => setCityFocused(true)}
+            onBlur={() => setTimeout(() => setCityFocused(false), 150)}
             className="pr-8"
           />
           {filters.city && (
@@ -98,7 +98,28 @@ const SwipeFilters = ({ filters, onChange }: FiltersProps) => {
               <X className="h-4 w-4" />
             </button>
           )}
+          {cityFocused && suggestions.length > 0 && (
+            <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-52 overflow-auto rounded-xl border border-border bg-popover p-1 shadow-elevated">
+              {suggestions.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    onChange({ ...filters, city: c });
+                    setCityFocused(false);
+                  }}
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm text-popover-foreground hover:bg-muted"
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+        {!filters.city && (
+          <p className="mt-1.5 text-xs text-muted-foreground">Подсказка: «спб», «мск» — тоже работает</p>
+        )}
       </div>
 
       {/* Gender */}
