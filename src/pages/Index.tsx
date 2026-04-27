@@ -116,6 +116,7 @@ const Index = () => {
 
     setCards(mapped);
     setCurrentIndex(0);
+    setMatchCount(mapped.length);
     setLoading(false);
   }, [user, filters]);
 
