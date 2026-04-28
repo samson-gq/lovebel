@@ -13,3 +13,9 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: () => {},
   }),
 });
+
+// jsdom doesn't implement scrollIntoView; SwipeFilters calls it on the
+// active autocomplete option to keep it visible in the listbox.
+if (typeof Element !== "undefined" && !(Element.prototype as any).scrollIntoView) {
+  (Element.prototype as any).scrollIntoView = () => {};
+}
