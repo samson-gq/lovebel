@@ -10,6 +10,7 @@ import Matches from "./pages/Matches";
 import Profile from "./pages/Profile";
 import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
+import AdminCities from "./pages/AdminCities";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/matches" element={<ProtectedRoute><Matches /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/chat/:matchId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            <Route path="/admin/cities" element={<ProtectedRoute><AdminCities /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
