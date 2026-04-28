@@ -3,8 +3,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X, Heart, Star, LogOut, MapPin } from "lucide-react";
 import SwipeCard from "@/components/SwipeCard";
 import BottomNav from "@/components/BottomNav";
-import SwipeFilters, { type FilterValues } from "@/components/SwipeFilters";
+import SwipeFilters from "@/components/SwipeFilters";
 import { useAuth } from "@/hooks/useAuth";
+import { useSwipeFilters, DEFAULT_FILTERS, isDefaultFilters } from "@/hooks/useSwipeFilters";
+import { useProfilesCount } from "@/hooks/useProfilesCount";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/data/profiles";
 
@@ -19,54 +21,16 @@ interface DBProfile {
   city: string | null;
 }
 
-const FILTERS_STORAGE_KEY = "lovebel.swipe.filters.v1";
-const DEFAULT_FILTERS: FilterValues = {
-  ageRange: [18, 45],
-  maxDistance: 50,
-  gender: "all",
-  city: "",
-};
-
-const loadFilters = (): FilterValues => {
-  try {
-    const raw = localStorage.getItem(FILTERS_STORAGE_KEY);
-    if (!raw) return DEFAULT_FILTERS;
-    const parsed = JSON.parse(raw);
-    return {
-      ageRange: Array.isArray(parsed.ageRange) && parsed.ageRange.length === 2
-        ? [Number(parsed.ageRange[0]) || 18, Number(parsed.ageRange[1]) || 45]
-        : DEFAULT_FILTERS.ageRange,
-      maxDistance: Number(parsed.maxDistance) || DEFAULT_FILTERS.maxDistance,
-      gender: typeof parsed.gender === "string" ? parsed.gender : DEFAULT_FILTERS.gender,
-      city: typeof parsed.city === "string" ? parsed.city : "",
-    };
-  } catch {
-    return DEFAULT_FILTERS;
-  }
-};
-
-const isDefaultFilters = (f: FilterValues) =>
-  f.ageRange[0] === DEFAULT_FILTERS.ageRange[0] &&
-  f.ageRange[1] === DEFAULT_FILTERS.ageRange[1] &&
-  f.maxDistance === DEFAULT_FILTERS.maxDistance &&
-  f.gender === DEFAULT_FILTERS.gender &&
-  f.city.trim() === "";
-
 const Index = () => {
   const { user, signOut } = useAuth();
+  const { filters, setFilters, reset } = useSwipeFilters();
   const [cards, setCards] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [matchCount, setMatchCount] = useState<number | null>(null);
-  const [filters, setFilters] = useState<FilterValues>(loadFilters);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
-    } catch {
-      // ignore quota errors
-    }
-  }, [filters]);
+  const { count: liveCount, loading: countLoading, error: countError } = useProfilesCount({
+    user,
+    filters,
+  });
 
 
   const fetchProfiles = useCallback(async () => {
