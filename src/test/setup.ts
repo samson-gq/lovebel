@@ -19,3 +19,13 @@ Object.defineProperty(window, "matchMedia", {
 if (typeof Element !== "undefined" && !(Element.prototype as any).scrollIntoView) {
   (Element.prototype as any).scrollIntoView = () => {};
 }
+
+// Radix UI components (Slider) use ResizeObserver — polyfill for jsdom.
+if (typeof globalThis.ResizeObserver === "undefined") {
+  class ResizeObserverPolyfill {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  (globalThis as any).ResizeObserver = ResizeObserverPolyfill;
+}
