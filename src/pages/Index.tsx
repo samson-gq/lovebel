@@ -80,7 +80,6 @@ const Index = () => {
 
     setCards(mapped);
     setCurrentIndex(0);
-    setMatchCount(mapped.length);
     setLoading(false);
   }, [user, filters]);
 
@@ -145,7 +144,7 @@ const Index = () => {
             </span>
           )}
           <button
-            onClick={() => setFilters(DEFAULT_FILTERS)}
+            onClick={reset}
             className="ml-auto text-xs font-medium text-primary hover:underline"
           >
             Сбросить все
@@ -153,12 +152,20 @@ const Index = () => {
         </div>
       )}
 
-      {!loading && matchCount !== null && (
-        <p className="px-4 pb-1 text-xs text-muted-foreground">
-          Найдено анкет: <span className="font-semibold text-foreground">{matchCount}</span>
-          {filters.city.trim() && <> в городе «{filters.city.trim()}»</>}
-        </p>
-      )}
+      <p className="px-4 pb-1 text-xs text-muted-foreground" aria-live="polite">
+        {countError ? (
+          <span className="text-destructive">Не удалось обновить счётчик</span>
+        ) : countLoading && liveCount === null ? (
+          <span className="opacity-70">Считаем анкеты…</span>
+        ) : liveCount !== null ? (
+          <>
+            Найдено анкет:{" "}
+            <span className="font-semibold text-foreground">{liveCount}</span>
+            {filters.city.trim() && <> в городе «{filters.city.trim()}»</>}
+            {countLoading && <span className="ml-1 opacity-60">обновляем…</span>}
+          </>
+        ) : null}
+      </p>
 
       <div className="relative mx-auto flex w-full max-w-sm flex-1 px-4 pb-24">
         <div className="relative h-[520px] w-full">
