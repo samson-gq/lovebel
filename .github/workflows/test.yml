@@ -1,0 +1,57 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Vitest (unit + integration)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Seed the dedicated CI test user when Supabase admin credentials are
+      # available. Skipped automatically on PRs from forks (no secret access).
+      - name: Seed Supabase test user
+        if: ${{ env.SUPABASE_SERVICE_ROLE_KEY != '' && env.TEST_SUPABASE_EMAIL != '' && env.TEST_SUPABASE_PASSWORD != '' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          TEST_SUPABASE_EMAIL: ${{ secrets.TEST_SUPABASE_EMAIL }}
+          TEST_SUPABASE_PASSWORD: ${{ secrets.TEST_SUPABASE_PASSWORD }}
+        run: bun run test:seed
+
+      # When TEST_SUPABASE_EMAIL / TEST_SUPABASE_PASSWORD are set, the
+      # authenticated integration tests in
+      # src/lib/searchProfiles.integration.test.ts run for real. When they're
+      # missing (e.g. forked PRs), those assertions skip themselves and the
+      # rest of the suite still runs.
+      - name: Run vitest
+        env:
+          TEST_SUPABASE_EMAIL: ${{ secrets.TEST_SUPABASE_EMAIL }}
+          TEST_SUPABASE_PASSWORD: ${{ secrets.TEST_SUPABASE_PASSWORD }}
+        run: bunx vitest run --reporter=default --reporter=junit --outputFile=./test-results/junit.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-results
+          path: test-results/
+          retention-days: 14
