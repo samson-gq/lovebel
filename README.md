@@ -1,5 +1,9 @@
 # Welcome to your Lovable project
 
+[![Tests](https://github.com/<OWNER>/<REPO>/actions/workflows/test.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/test.yml)
+
+> Replace `<OWNER>/<REPO>` above with your GitHub repository path (and `test.yml` with your workflow filename) so the badge renders and links to the latest test runs. See [docs/ci-integration-tests.md](docs/ci-integration-tests.md) for the workflow setup and required secrets.
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
