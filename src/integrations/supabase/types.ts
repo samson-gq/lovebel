@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletions: {
+        Row: {
+          deleted_at: string
+          email: string | null
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          deleted_at?: string
+          email?: string | null
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          deleted_at?: string
+          email?: string | null
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           created_at: string
@@ -67,6 +112,39 @@ export type Database = {
           },
         ]
       }
+      photo_moderation: {
+        Row: {
+          ai_response: Json | null
+          created_at: string
+          id: string
+          photo_id: string
+          photo_url: string
+          reason: string | null
+          status: Database["public"]["Enums"]["moderation_status"]
+          user_id: string
+        }
+        Insert: {
+          ai_response?: Json | null
+          created_at?: string
+          id?: string
+          photo_id: string
+          photo_url: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["moderation_status"]
+          user_id: string
+        }
+        Update: {
+          ai_response?: Json | null
+          created_at?: string
+          id?: string
+          photo_id?: string
+          photo_url?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["moderation_status"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       popular_cities: {
         Row: {
           created_at: string
@@ -95,6 +173,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          moderation_reason: string | null
+          moderation_status: Database["public"]["Enums"]["moderation_status"]
           photo_url: string
           position: number
           user_id: string
@@ -102,6 +182,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          moderation_reason?: string | null
+          moderation_status?: Database["public"]["Enums"]["moderation_status"]
           photo_url: string
           position?: number
           user_id: string
@@ -109,6 +191,8 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          moderation_reason?: string | null
+          moderation_status?: Database["public"]["Enums"]["moderation_status"]
           photo_url?: string
           position?: number
           user_id?: string
@@ -125,9 +209,11 @@ export type Database = {
           gender: string | null
           id: string
           interests: string[] | null
+          is_verified: boolean
           name: string
           updated_at: string
           user_id: string
+          verified_at: string | null
         }
         Insert: {
           age?: number | null
@@ -138,9 +224,11 @@ export type Database = {
           gender?: string | null
           id?: string
           interests?: string[] | null
+          is_verified?: boolean
           name?: string
           updated_at?: string
           user_id: string
+          verified_at?: string | null
         }
         Update: {
           age?: number | null
@@ -151,8 +239,82 @@ export type Database = {
           gender?: string | null
           id?: string
           interests?: string[] | null
+          is_verified?: boolean
           name?: string
           updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          reason: Database["public"]["Enums"]["report_reason"]
+          reported_user_id: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          reason: Database["public"]["Enums"]["report_reason"]
+          reported_user_id: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          reason?: Database["public"]["Enums"]["report_reason"]
+          reported_user_id?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      selfie_verifications: {
+        Row: {
+          ai_response: Json | null
+          challenge_gesture: string
+          created_at: string
+          id: string
+          reason: string | null
+          selfie_url: string
+          status: Database["public"]["Enums"]["verification_status"]
+          user_id: string
+        }
+        Insert: {
+          ai_response?: Json | null
+          challenge_gesture: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          selfie_url: string
+          status?: Database["public"]["Enums"]["verification_status"]
+          user_id: string
+        }
+        Update: {
+          ai_response?: Json | null
+          challenge_gesture?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          selfie_url?: string
+          status?: Database["public"]["Enums"]["verification_status"]
           user_id?: string
         }
         Relationships: []
@@ -283,6 +445,7 @@ export type Database = {
           gender: string
           id: string
           interests: string[]
+          is_verified: boolean
           name: string
           updated_at: string
           user_id: string
@@ -291,6 +454,17 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      moderation_status: "pending" | "approved" | "rejected"
+      report_reason:
+        | "inappropriate_photos"
+        | "fake_profile"
+        | "harassment"
+        | "spam"
+        | "underage"
+        | "offensive_behavior"
+        | "other"
+      report_status: "pending" | "reviewed" | "dismissed" | "action_taken"
+      verification_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -419,6 +593,18 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      moderation_status: ["pending", "approved", "rejected"],
+      report_reason: [
+        "inappropriate_photos",
+        "fake_profile",
+        "harassment",
+        "spam",
+        "underage",
+        "offensive_behavior",
+        "other",
+      ],
+      report_status: ["pending", "reviewed", "dismissed", "action_taken"],
+      verification_status: ["pending", "approved", "rejected"],
     },
   },
 } as const
