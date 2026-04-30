@@ -37,16 +37,18 @@ const Chat = () => {
         .single();
 
       if (match) {
-        const partnerId = match.user1_id === user.id ? match.user2_id : match.user1_id;
+        const pid = match.user1_id === user.id ? match.user2_id : match.user1_id;
+        setPartnerId(pid);
         const { data: profile } = await supabase
           .from("profiles")
-          .select("name, avatar_url")
-          .eq("user_id", partnerId)
+          .select("name, avatar_url, is_verified")
+          .eq("user_id", pid)
           .single();
 
         if (profile) {
           setPartnerName(profile.name);
           setPartnerAvatar(profile.avatar_url);
+          setPartnerVerified(profile.is_verified ?? false);
         }
       }
     };
