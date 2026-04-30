@@ -133,6 +133,31 @@ const Profile = () => {
 
       if (inserted) {
         setPhotos((prev) => [...prev, inserted as ProfilePhoto]);
+
+        // Запускаем AI-модерацию в фоне
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const resp = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/moderate-photo`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session?.access_token}`,
+              },
+              body: JSON.stringify({ photo_id: inserted.id, photo_url: publicUrl }),
+            },
+          );
+          if (resp.ok) {
+            const j = await resp.json();
+            if (j.decision === "rejected") {
+              toast.error(`Фото отклонено: ${j.reason ?? "не соответствует правилам"}`);
+              setPhotos((prev) => prev.filter((p) => p.id !== inserted.id));
+            }
+          }
+        } catch (err) {
+          console.error("moderation error", err);
+        }
       }
     }
 
