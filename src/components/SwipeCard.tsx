@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, ChevronLeft, ChevronRight, BadgeCheck } from "lucide-react";
 import type { Profile } from "@/data/profiles";
+import ProfileActionsMenu from "./ProfileActionsMenu";
 
 interface SwipeCardProps {
-  profile: Profile;
+  profile: Profile & { isVerified?: boolean };
   onSwipe: (direction: "left" | "right") => void;
   isTop: boolean;
+  onBlocked?: () => void;
 }
 
-const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
+const SwipeCard = ({ profile, onSwipe, isTop, onBlocked }: SwipeCardProps) => {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
@@ -109,10 +111,24 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
           <span className="text-3xl tracking-wider">NOPE</span>
         </motion.div>
 
+        {/* Actions menu (top-right) */}
+        {isTop && (
+          <div className="absolute right-3 top-6 z-10">
+            <ProfileActionsMenu
+              targetUserId={profile.id}
+              targetUserName={profile.name}
+              onBlocked={onBlocked}
+            />
+          </div>
+        )}
+
         {/* Profile info */}
         <div className="absolute bottom-0 left-0 right-0 p-6">
-          <h2 className="text-3xl font-bold text-primary-foreground">
+          <h2 className="flex items-center gap-2 text-3xl font-bold text-primary-foreground">
             {profile.name}, {profile.age}
+            {profile.isVerified && (
+              <BadgeCheck className="h-6 w-6 text-secondary" aria-label="Верифицирован" />
+            )}
           </h2>
           <div className="mt-1 flex items-center gap-1 text-primary-foreground/80">
             <MapPin className="h-4 w-4" />
