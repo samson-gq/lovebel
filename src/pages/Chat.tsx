@@ -21,6 +21,8 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [partnerName, setPartnerName] = useState("");
   const [partnerAvatar, setPartnerAvatar] = useState<string | null>(null);
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [partnerVerified, setPartnerVerified] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
