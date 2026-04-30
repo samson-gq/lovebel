@@ -110,7 +110,7 @@ const Chat = () => {
     <div className="flex h-screen flex-col bg-background">
       {/* Header */}
       <header className="flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur-xl">
-        <button onClick={() => navigate("/matches")} className="text-foreground">
+        <button onClick={() => navigate("/matches")} className="text-foreground" aria-label="Назад">
           <ArrowLeft className="h-5 w-5" />
         </button>
         {partnerAvatar && (
@@ -120,7 +120,18 @@ const Chat = () => {
             className="h-9 w-9 rounded-full object-cover"
           />
         )}
-        <span className="font-semibold text-foreground">{partnerName}</span>
+        <span className="flex flex-1 items-center gap-1 font-semibold text-foreground">
+          {partnerName}
+          {partnerVerified && <BadgeCheck className="h-4 w-4 text-primary" aria-label="Верифицирован" />}
+        </span>
+        {partnerId && (
+          <ProfileActionsMenu
+            targetUserId={partnerId}
+            targetUserName={partnerName}
+            onBlocked={() => navigate("/matches")}
+            triggerClassName="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+          />
+        )}
       </header>
 
       {/* Messages */}
