@@ -25,8 +25,10 @@ interface ProfilePhoto {
 }
 
 const Profile = () => {
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [editing, setEditing] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [age, setAge] = useState<number | "">("");
@@ -56,6 +58,7 @@ const Profile = () => {
         setGender(profile.gender || "other");
         setInterests(profile.interests || []);
         setAvatarUrl(profile.avatar_url);
+        setIsVerified(profile.is_verified ?? false);
       }
 
       setPhotos((photoData as ProfilePhoto[]) || []);
@@ -180,10 +183,18 @@ const Profile = () => {
           <button
             onClick={() => (editing ? handleSave() : setEditing(true))}
             className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
+            aria-label={editing ? "Сохранить" : "Редактировать"}
           >
-            {editing ? <Settings className="h-5 w-5 text-primary" /> : <Edit3 className="h-5 w-5" />}
+            {editing ? <SettingsIcon className="h-5 w-5 text-primary" /> : <Edit3 className="h-5 w-5" />}
           </button>
-          <button onClick={signOut} className="rounded-full p-2 text-muted-foreground hover:bg-muted">
+          <button
+            onClick={() => navigate("/settings")}
+            className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
+            aria-label="Настройки"
+          >
+            <SettingsIcon className="h-5 w-5" />
+          </button>
+          <button onClick={signOut} className="rounded-full p-2 text-muted-foreground hover:bg-muted" aria-label="Выйти">
             <LogOut className="h-5 w-5" />
           </button>
         </div>
@@ -252,10 +263,20 @@ const Profile = () => {
             ) : (
               <>
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-card-foreground">
+                  <h2 className="flex items-center gap-2 text-2xl font-bold text-card-foreground">
                     {name || "Без имени"}{age ? `, ${age}` : ""}
+                    {isVerified && <BadgeCheck className="h-5 w-5 text-primary" aria-label="Верифицирован" />}
                   </h2>
                 </div>
+                {!isVerified && (
+                  <button
+                    onClick={() => navigate("/verification")}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                  >
+                    <ShieldCheck className="h-3 w-3" />
+                    Пройти верификацию
+                  </button>
+                )}
                 {city && (
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <MapPin className="h-4 w-4" />
