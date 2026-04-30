@@ -19,6 +19,7 @@ interface DBProfile {
   interests: string[] | null;
   gender: string | null;
   city: string | null;
+  is_verified?: boolean;
 }
 
 const Index = () => {
@@ -65,7 +66,7 @@ const Index = () => {
       ? await supabase.from("profile_photos").select("*").in("user_id", userIds).order("position")
       : { data: [] };
 
-    const mapped: Profile[] = (data || []).map((p: DBProfile) => ({
+    const mapped: (Profile & { isVerified?: boolean })[] = (data || []).map((p: DBProfile) => ({
       id: p.user_id,
       name: p.name,
       age: p.age || 0,
@@ -76,6 +77,7 @@ const Index = () => {
         .filter((photo: any) => photo.user_id === p.user_id)
         .map((photo: any) => photo.photo_url),
       interests: p.interests || [],
+      isVerified: p.is_verified ?? false,
     }));
 
     setCards(mapped);
@@ -181,9 +183,14 @@ const Index = () => {
                 .map((profile, i) => (
                   <SwipeCard
                     key={profile.id}
-                    profile={profile}
+                    profile={profile as Profile & { isVerified?: boolean }}
                     onSwipe={handleSwipe}
                     isTop={i === remaining.slice(0, 2).length - 1}
+                    onBlocked={() => {
+                      // Remove blocked profile from current stack and refetch
+                      setCards((prev) => prev.filter((p) => p.id !== profile.id));
+                      fetchProfiles();
+                    }}
                   />
                 ))}
             </AnimatePresence>

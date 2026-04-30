@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
+import ProfileActionsMenu from "@/components/ProfileActionsMenu";
 
 interface Message {
   id: string;
@@ -20,6 +21,8 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [partnerName, setPartnerName] = useState("");
   const [partnerAvatar, setPartnerAvatar] = useState<string | null>(null);
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [partnerVerified, setPartnerVerified] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,16 +37,18 @@ const Chat = () => {
         .single();
 
       if (match) {
-        const partnerId = match.user1_id === user.id ? match.user2_id : match.user1_id;
+        const pid = match.user1_id === user.id ? match.user2_id : match.user1_id;
+        setPartnerId(pid);
         const { data: profile } = await supabase
           .from("profiles")
-          .select("name, avatar_url")
-          .eq("user_id", partnerId)
+          .select("name, avatar_url, is_verified")
+          .eq("user_id", pid)
           .single();
 
         if (profile) {
           setPartnerName(profile.name);
           setPartnerAvatar(profile.avatar_url);
+          setPartnerVerified(profile.is_verified ?? false);
         }
       }
     };
@@ -105,7 +110,7 @@ const Chat = () => {
     <div className="flex h-screen flex-col bg-background">
       {/* Header */}
       <header className="flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur-xl">
-        <button onClick={() => navigate("/matches")} className="text-foreground">
+        <button onClick={() => navigate("/matches")} className="text-foreground" aria-label="Назад">
           <ArrowLeft className="h-5 w-5" />
         </button>
         {partnerAvatar && (
@@ -115,7 +120,18 @@ const Chat = () => {
             className="h-9 w-9 rounded-full object-cover"
           />
         )}
-        <span className="font-semibold text-foreground">{partnerName}</span>
+        <span className="flex flex-1 items-center gap-1 font-semibold text-foreground">
+          {partnerName}
+          {partnerVerified && <BadgeCheck className="h-4 w-4 text-primary" aria-label="Верифицирован" />}
+        </span>
+        {partnerId && (
+          <ProfileActionsMenu
+            targetUserId={partnerId}
+            targetUserName={partnerName}
+            onBlocked={() => navigate("/matches")}
+            triggerClassName="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+          />
+        )}
       </header>
 
       {/* Messages */}

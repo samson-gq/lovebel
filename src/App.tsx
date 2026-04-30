@@ -11,6 +11,8 @@ import Profile from "./pages/Profile";
 import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
 import AdminCities from "./pages/AdminCities";
+import Settings from "./pages/Settings";
+import Verification from "./pages/Verification";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +55,8 @@ const App = () => (
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/chat/:matchId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="/admin/cities" element={<ProtectedRoute><AdminCities /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/verification" element={<ProtectedRoute><Verification /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
