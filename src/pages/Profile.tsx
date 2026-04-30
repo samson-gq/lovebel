@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings, Edit3, MapPin, Camera, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
