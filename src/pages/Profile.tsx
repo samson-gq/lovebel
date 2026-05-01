@@ -100,7 +100,21 @@ const Profile = () => {
     if (!user) return;
     const { error } = await supabase
       .from("profiles")
-      .update({ name, bio, age: age || null, city, gender, interests })
+      .update({
+        name,
+        bio,
+        age: age || null,
+        city,
+        gender,
+        interests,
+        height_cm: heightCm === "" ? null : Number(heightCm),
+        education: education || null,
+        occupation: occupation || null,
+        zodiac: zodiac || null,
+        children: children || null,
+        smoking: smoking || null,
+        drinking: drinking || null,
+      })
       .eq("user_id", user.id);
 
     if (error) {
