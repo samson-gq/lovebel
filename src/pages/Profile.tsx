@@ -428,6 +428,47 @@ const Profile = () => {
                   </div>
                 )}
                 {bio && <p className="text-card-foreground/80">{bio}</p>}
+
+                {/* Расширенная информация */}
+                {(heightCm || education || occupation || zodiac || children || smoking || drinking) && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {heightCm && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        📏 {heightCm} см
+                      </span>
+                    )}
+                    {occupation && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        💼 {occupation}
+                      </span>
+                    )}
+                    {education && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        🎓 {education}
+                      </span>
+                    )}
+                    {zodiac && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        ✨ {zodiac}
+                      </span>
+                    )}
+                    {children && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        👶 {children}
+                      </span>
+                    )}
+                    {smoking && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        🚬 {smoking}
+                      </span>
+                    )}
+                    {drinking && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        🍷 {drinking}
+                      </span>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>
