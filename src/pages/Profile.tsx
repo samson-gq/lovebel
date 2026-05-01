@@ -51,6 +51,13 @@ const Profile = () => {
   const [interests, setInterests] = useState<string[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [photos, setPhotos] = useState<ProfilePhoto[]>([]);
+  const [heightCm, setHeightCm] = useState<number | "">("");
+  const [education, setEducation] = useState<string>("");
+  const [occupation, setOccupation] = useState<string>("");
+  const [zodiac, setZodiac] = useState<string>("");
+  const [children, setChildren] = useState<string>("");
+  const [smoking, setSmoking] = useState<string>("");
+  const [drinking, setDrinking] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
   const photosFileRef = useRef<HTMLInputElement>(null);
