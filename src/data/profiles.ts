@@ -5,6 +5,11 @@ import profile4 from "@/assets/profile4.jpg";
 import profile5 from "@/assets/profile5.jpg";
 import profile6 from "@/assets/profile6.jpg";
 
+export interface ProfilePromptItem {
+  prompt: string;
+  answer: string;
+}
+
 export interface Profile {
   id: string;
   name: string;
@@ -14,6 +19,14 @@ export interface Profile {
   image: string;
   images: string[];
   interests: string[];
+  heightCm?: number | null;
+  education?: string | null;
+  occupation?: string | null;
+  zodiac?: string | null;
+  children?: string | null;
+  smoking?: string | null;
+  drinking?: string | null;
+  prompts?: ProfilePromptItem[];
 }
 
 export const profiles: Profile[] = [
