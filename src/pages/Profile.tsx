@@ -518,6 +518,14 @@ const Profile = () => {
         </div>
       </div>
 
+      {/* Промпты */}
+      {user && (
+        <div className="mt-6 px-6">
+          <h3 className="mb-3 text-lg font-semibold text-foreground">О себе</h3>
+          <PromptsEditor userId={user.id} editing={editing} />
+        </div>
+      )}
+
       <BottomNav />
     </div>
   );
