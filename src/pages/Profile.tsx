@@ -80,6 +80,13 @@ const Profile = () => {
         setInterests(profile.interests || []);
         setAvatarUrl(profile.avatar_url);
         setIsVerified(profile.is_verified ?? false);
+        setHeightCm(profile.height_cm ?? "");
+        setEducation(profile.education ?? "");
+        setOccupation(profile.occupation ?? "");
+        setZodiac(profile.zodiac ?? "");
+        setChildren(profile.children ?? "");
+        setSmoking(profile.smoking ?? "");
+        setDrinking(profile.drinking ?? "");
       }
 
       setPhotos((photoData as ProfilePhoto[]) || []);
