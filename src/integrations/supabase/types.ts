@@ -199,51 +199,102 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_prompts: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          position: number
+          prompt: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          position?: number
+          prompt: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          position?: number
+          prompt?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
           avatar_url: string | null
           bio: string | null
+          children: string | null
           city: string | null
           created_at: string
+          drinking: string | null
+          education: string | null
           gender: string | null
+          height_cm: number | null
           id: string
           interests: string[] | null
           is_verified: boolean
           name: string
+          occupation: string | null
+          smoking: string | null
           updated_at: string
           user_id: string
           verified_at: string | null
+          zodiac: string | null
         }
         Insert: {
           age?: number | null
           avatar_url?: string | null
           bio?: string | null
+          children?: string | null
           city?: string | null
           created_at?: string
+          drinking?: string | null
+          education?: string | null
           gender?: string | null
+          height_cm?: number | null
           id?: string
           interests?: string[] | null
           is_verified?: boolean
           name?: string
+          occupation?: string | null
+          smoking?: string | null
           updated_at?: string
           user_id: string
           verified_at?: string | null
+          zodiac?: string | null
         }
         Update: {
           age?: number | null
           avatar_url?: string | null
           bio?: string | null
+          children?: string | null
           city?: string | null
           created_at?: string
+          drinking?: string | null
+          education?: string | null
           gender?: string | null
+          height_cm?: number | null
           id?: string
           interests?: string[] | null
           is_verified?: boolean
           name?: string
+          occupation?: string | null
+          smoking?: string | null
           updated_at?: string
           user_id?: string
           verified_at?: string | null
+          zodiac?: string | null
         }
         Relationships: []
       }
@@ -440,15 +491,22 @@ export type Database = {
           age: number
           avatar_url: string
           bio: string
+          children: string
           city: string
           created_at: string
+          drinking: string
+          education: string
           gender: string
+          height_cm: number
           id: string
           interests: string[]
           is_verified: boolean
           name: string
+          occupation: string
+          smoking: string
           updated_at: string
           user_id: string
+          zodiac: string
         }[]
       }
     }
