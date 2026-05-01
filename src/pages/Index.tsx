@@ -20,6 +20,13 @@ interface DBProfile {
   gender: string | null;
   city: string | null;
   is_verified?: boolean;
+  height_cm?: number | null;
+  education?: string | null;
+  occupation?: string | null;
+  zodiac?: string | null;
+  children?: string | null;
+  smoking?: string | null;
+  drinking?: string | null;
 }
 
 const Index = () => {
