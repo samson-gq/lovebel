@@ -323,6 +323,83 @@ const Profile = () => {
                   ))}
                 </div>
                 <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="О себе" />
+
+                {/* Расширенные поля */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    type="number"
+                    value={heightCm}
+                    onChange={(e) =>
+                      setHeightCm(e.target.value ? Number(e.target.value) : "")
+                    }
+                    placeholder="Рост, см"
+                    min={100}
+                    max={250}
+                  />
+                  <Input
+                    value={occupation}
+                    onChange={(e) => setOccupation(e.target.value)}
+                    placeholder="Кем работаете"
+                  />
+                </div>
+
+                <Select value={education} onValueChange={setEducation}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Образование" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EDUCATION_OPTIONS.map((o) => (
+                      <SelectItem key={o} value={o}>{o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={zodiac} onValueChange={setZodiac}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Знак зодиака" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ZODIAC_OPTIONS.map((o) => (
+                        <SelectItem key={o} value={o}>{o}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={children} onValueChange={setChildren}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Дети" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CHILDREN_OPTIONS.map((o) => (
+                        <SelectItem key={o} value={o}>{o}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={smoking} onValueChange={setSmoking}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Курение" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HABIT_OPTIONS.map((o) => (
+                        <SelectItem key={o} value={o}>{o}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={drinking} onValueChange={setDrinking}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Алкоголь" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HABIT_OPTIONS.map((o) => (
+                        <SelectItem key={o} value={o}>{o}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <Button onClick={handleSave} className="gradient-primary w-full text-primary-foreground">
                   Сохранить
                 </Button>
