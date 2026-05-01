@@ -9,6 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import DraggablePhotoGrid from "@/components/DraggablePhotoGrid";
+import PromptsEditor from "@/components/PromptsEditor";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  EDUCATION_OPTIONS,
+  ZODIAC_OPTIONS,
+  CHILDREN_OPTIONS,
+  HABIT_OPTIONS,
+} from "@/lib/profileOptions";
 
 const INTEREST_OPTIONS = [
   "Путешествия", "Музыка", "Спорт", "Кино", "Книги",
@@ -37,6 +51,13 @@ const Profile = () => {
   const [interests, setInterests] = useState<string[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [photos, setPhotos] = useState<ProfilePhoto[]>([]);
+  const [heightCm, setHeightCm] = useState<number | "">("");
+  const [education, setEducation] = useState<string>("");
+  const [occupation, setOccupation] = useState<string>("");
+  const [zodiac, setZodiac] = useState<string>("");
+  const [children, setChildren] = useState<string>("");
+  const [smoking, setSmoking] = useState<string>("");
+  const [drinking, setDrinking] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
   const photosFileRef = useRef<HTMLInputElement>(null);
@@ -59,6 +80,13 @@ const Profile = () => {
         setInterests(profile.interests || []);
         setAvatarUrl(profile.avatar_url);
         setIsVerified(profile.is_verified ?? false);
+        setHeightCm(profile.height_cm ?? "");
+        setEducation(profile.education ?? "");
+        setOccupation(profile.occupation ?? "");
+        setZodiac(profile.zodiac ?? "");
+        setChildren(profile.children ?? "");
+        setSmoking(profile.smoking ?? "");
+        setDrinking(profile.drinking ?? "");
       }
 
       setPhotos((photoData as ProfilePhoto[]) || []);
@@ -72,7 +100,21 @@ const Profile = () => {
     if (!user) return;
     const { error } = await supabase
       .from("profiles")
-      .update({ name, bio, age: age || null, city, gender, interests })
+      .update({
+        name,
+        bio,
+        age: age || null,
+        city,
+        gender,
+        interests,
+        height_cm: heightCm === "" ? null : Number(heightCm),
+        education: education || null,
+        occupation: occupation || null,
+        zodiac: zodiac || null,
+        children: children || null,
+        smoking: smoking || null,
+        drinking: drinking || null,
+      })
       .eq("user_id", user.id);
 
     if (error) {
@@ -281,6 +323,83 @@ const Profile = () => {
                   ))}
                 </div>
                 <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="О себе" />
+
+                {/* Расширенные поля */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    type="number"
+                    value={heightCm}
+                    onChange={(e) =>
+                      setHeightCm(e.target.value ? Number(e.target.value) : "")
+                    }
+                    placeholder="Рост, см"
+                    min={100}
+                    max={250}
+                  />
+                  <Input
+                    value={occupation}
+                    onChange={(e) => setOccupation(e.target.value)}
+                    placeholder="Кем работаете"
+                  />
+                </div>
+
+                <Select value={education} onValueChange={setEducation}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Образование" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EDUCATION_OPTIONS.map((o) => (
+                      <SelectItem key={o} value={o}>{o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={zodiac} onValueChange={setZodiac}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Знак зодиака" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ZODIAC_OPTIONS.map((o) => (
+                        <SelectItem key={o} value={o}>{o}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={children} onValueChange={setChildren}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Дети" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CHILDREN_OPTIONS.map((o) => (
+                        <SelectItem key={o} value={o}>{o}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={smoking} onValueChange={setSmoking}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Курение" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HABIT_OPTIONS.map((o) => (
+                        <SelectItem key={o} value={o}>{o}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={drinking} onValueChange={setDrinking}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Алкоголь" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HABIT_OPTIONS.map((o) => (
+                        <SelectItem key={o} value={o}>{o}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <Button onClick={handleSave} className="gradient-primary w-full text-primary-foreground">
                   Сохранить
                 </Button>
@@ -309,6 +428,47 @@ const Profile = () => {
                   </div>
                 )}
                 {bio && <p className="text-card-foreground/80">{bio}</p>}
+
+                {/* Расширенная информация */}
+                {(heightCm || education || occupation || zodiac || children || smoking || drinking) && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {heightCm && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        📏 {heightCm} см
+                      </span>
+                    )}
+                    {occupation && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        💼 {occupation}
+                      </span>
+                    )}
+                    {education && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        🎓 {education}
+                      </span>
+                    )}
+                    {zodiac && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        ✨ {zodiac}
+                      </span>
+                    )}
+                    {children && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        👶 {children}
+                      </span>
+                    )}
+                    {smoking && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        🚬 {smoking}
+                      </span>
+                    )}
+                    {drinking && (
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                        🍷 {drinking}
+                      </span>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -357,6 +517,14 @@ const Profile = () => {
           ))}
         </div>
       </div>
+
+      {/* Промпты */}
+      {user && (
+        <div className="mt-6 px-6">
+          <h3 className="mb-3 text-lg font-semibold text-foreground">О себе</h3>
+          <PromptsEditor userId={user.id} editing={editing} />
+        </div>
+      )}
 
       <BottomNav />
     </div>

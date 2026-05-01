@@ -20,6 +20,13 @@ interface DBProfile {
   gender: string | null;
   city: string | null;
   is_verified?: boolean;
+  height_cm?: number | null;
+  education?: string | null;
+  occupation?: string | null;
+  zodiac?: string | null;
+  children?: string | null;
+  smoking?: string | null;
+  drinking?: string | null;
 }
 
 const Index = () => {
@@ -60,11 +67,16 @@ const Index = () => {
       console.error("search_profiles failed", error);
     }
 
-    // Fetch photos for all profiles
+    // Fetch photos and prompts for all profiles
     const userIds = (data || []).map((p: DBProfile) => p.user_id);
-    const { data: allPhotos } = userIds.length > 0
-      ? await supabase.from("profile_photos").select("*").in("user_id", userIds).order("position")
-      : { data: [] };
+    const [photosResp, promptsResp] = userIds.length > 0
+      ? await Promise.all([
+          supabase.from("profile_photos").select("*").in("user_id", userIds).order("position"),
+          supabase.from("profile_prompts").select("*").in("user_id", userIds).order("position"),
+        ])
+      : [{ data: [] }, { data: [] }];
+    const allPhotos = photosResp.data || [];
+    const allPrompts = promptsResp.data || [];
 
     const mapped: (Profile & { isVerified?: boolean })[] = (data || []).map((p: DBProfile) => ({
       id: p.user_id,
@@ -73,11 +85,21 @@ const Index = () => {
       bio: p.bio || "",
       distance: p.city || "—",
       image: p.avatar_url || "/placeholder.svg",
-      images: (allPhotos || [])
-        .filter((photo: any) => photo.user_id === p.user_id)
-        .map((photo: any) => photo.photo_url),
+      images: (allPhotos as Array<{ user_id: string; photo_url: string }>)
+        .filter((photo) => photo.user_id === p.user_id)
+        .map((photo) => photo.photo_url),
       interests: p.interests || [],
       isVerified: p.is_verified ?? false,
+      heightCm: p.height_cm ?? null,
+      education: p.education ?? null,
+      occupation: p.occupation ?? null,
+      zodiac: p.zodiac ?? null,
+      children: p.children ?? null,
+      smoking: p.smoking ?? null,
+      drinking: p.drinking ?? null,
+      prompts: (allPrompts as Array<{ user_id: string; prompt: string; answer: string }>)
+        .filter((pr) => pr.user_id === p.user_id)
+        .map((pr) => ({ prompt: pr.prompt, answer: pr.answer })),
     }));
 
     setCards(mapped);

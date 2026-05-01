@@ -123,7 +123,7 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked }: SwipeCardProps) => {
         )}
 
         {/* Profile info */}
-        <div className="absolute bottom-0 left-0 right-0 p-6">
+        <div className="absolute bottom-0 left-0 right-0 max-h-[70%] overflow-y-auto p-6">
           <h2 className="flex items-center gap-2 text-3xl font-bold text-primary-foreground">
             {profile.name}, {profile.age}
             {profile.isVerified && (
@@ -134,17 +134,76 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked }: SwipeCardProps) => {
             <MapPin className="h-4 w-4" />
             <span className="text-sm">{profile.distance}</span>
           </div>
-          <p className="mt-2 text-primary-foreground/90">{profile.bio}</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {profile.interests.map((interest) => (
-              <span
-                key={interest}
-                className="rounded-full bg-primary-foreground/20 px-3 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm"
-              >
-                {interest}
-              </span>
-            ))}
-          </div>
+          {profile.bio && <p className="mt-2 text-primary-foreground/90">{profile.bio}</p>}
+
+          {/* Расширенная инфо */}
+          {(profile.heightCm || profile.occupation || profile.education || profile.zodiac || profile.children || profile.smoking || profile.drinking) && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {profile.heightCm && (
+                <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">
+                  📏 {profile.heightCm} см
+                </span>
+              )}
+              {profile.occupation && (
+                <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">
+                  💼 {profile.occupation}
+                </span>
+              )}
+              {profile.education && (
+                <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">
+                  🎓 {profile.education}
+                </span>
+              )}
+              {profile.zodiac && (
+                <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">
+                  ✨ {profile.zodiac}
+                </span>
+              )}
+              {profile.children && (
+                <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">
+                  👶 {profile.children}
+                </span>
+              )}
+              {profile.smoking && (
+                <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">
+                  🚬 {profile.smoking}
+                </span>
+              )}
+              {profile.drinking && (
+                <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">
+                  🍷 {profile.drinking}
+                </span>
+              )}
+            </div>
+          )}
+
+          {profile.interests.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {profile.interests.map((interest) => (
+                <span
+                  key={interest}
+                  className="rounded-full bg-primary-foreground/20 px-3 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm"
+                >
+                  {interest}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Промпты */}
+          {profile.prompts && profile.prompts.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {profile.prompts.map((pr, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl bg-primary-foreground/15 p-3 backdrop-blur-sm"
+                >
+                  <p className="text-xs font-semibold text-secondary">{pr.prompt}</p>
+                  <p className="mt-0.5 text-sm text-primary-foreground">{pr.answer}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
