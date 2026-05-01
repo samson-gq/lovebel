@@ -9,6 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import DraggablePhotoGrid from "@/components/DraggablePhotoGrid";
+import PromptsEditor from "@/components/PromptsEditor";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  EDUCATION_OPTIONS,
+  ZODIAC_OPTIONS,
+  CHILDREN_OPTIONS,
+  HABIT_OPTIONS,
+} from "@/lib/profileOptions";
 
 const INTEREST_OPTIONS = [
   "Путешествия", "Музыка", "Спорт", "Кино", "Книги",
