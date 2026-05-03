@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Heart, Star, LogOut, MapPin } from "lucide-react";
+import { X, Heart, Star, LogOut, MapPin, Undo2 } from "lucide-react";
+import { toast } from "sonner";
 import SwipeCard from "@/components/SwipeCard";
 import BottomNav from "@/components/BottomNav";
 import SwipeFilters from "@/components/SwipeFilters";
@@ -35,6 +36,8 @@ const Index = () => {
   const [cards, setCards] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [superLikesLeft, setSuperLikesLeft] = useState<number>(1);
+  const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
   const { count: liveCount, loading: countLoading, error: countError } = useProfilesCount({
     user,
     filters,
@@ -104,6 +107,18 @@ const Index = () => {
 
     setCards(mapped);
     setCurrentIndex(0);
+    setLastSwipeId(null);
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const { count: usedToday } = await supabase
+      .from("swipes")
+      .select("id", { count: "exact", head: true })
+      .eq("swiper_id", user.id)
+      .eq("direction", "superlike")
+      .gte("created_at", startOfDay.toISOString());
+    setSuperLikesLeft(Math.max(0, 1 - (usedToday ?? 0)));
+
     setLoading(false);
   }, [user, filters]);
 
@@ -112,20 +127,60 @@ const Index = () => {
   }, [fetchProfiles]);
 
   const handleSwipe = useCallback(
-    async (direction: "left" | "right") => {
+    async (direction: "left" | "right" | "super") => {
       if (!user || currentIndex >= cards.length) return;
       const profile = cards[currentIndex];
 
-      await supabase.from("swipes").insert({
-        swiper_id: user.id,
-        swiped_id: profile.id,
-        direction: direction === "right" ? "like" : "dislike",
-      });
+      if (direction === "super" && superLikesLeft <= 0) {
+        toast.info("Лимит Super Like исчерпан", {
+          description: "Возвращайся завтра — даём 1 Super Like в день",
+        });
+        return;
+      }
 
+      const dbDirection =
+        direction === "super" ? "superlike" : direction === "right" ? "like" : "dislike";
+
+      const { data: inserted, error } = await supabase
+        .from("swipes")
+        .insert({
+          swiper_id: user.id,
+          swiped_id: profile.id,
+          direction: dbDirection,
+        })
+        .select("id")
+        .single();
+
+      if (error) {
+        toast.error("Не удалось сохранить свайп");
+        return;
+      }
+
+      setLastSwipeId(inserted?.id ?? null);
+      if (direction === "super") {
+        setSuperLikesLeft((n) => Math.max(0, n - 1));
+        toast.success("⭐ Super Like отправлен!");
+      }
       setCurrentIndex((prev) => prev + 1);
     },
-    [user, currentIndex, cards]
+    [user, currentIndex, cards, superLikesLeft]
   );
+
+  const handleRewind = useCallback(async () => {
+    if (!user || !lastSwipeId || currentIndex === 0) return;
+    const { error } = await supabase
+      .from("swipes")
+      .delete()
+      .eq("id", lastSwipeId)
+      .eq("swiper_id", user.id);
+    if (error) {
+      toast.error("Не удалось отменить свайп");
+      return;
+    }
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+    setLastSwipeId(null);
+    toast("↩️ Свайп отменён");
+  }, [user, lastSwipeId, currentIndex]);
 
   const remaining = cards.slice(currentIndex);
 
@@ -231,15 +286,36 @@ const Index = () => {
       </div>
 
       {remaining.length > 0 && !loading && (
-        <div className="fixed bottom-20 left-0 right-0 flex items-center justify-center gap-6">
+        <div className="fixed bottom-20 left-0 right-0 flex items-center justify-center gap-4">
+          <button
+            onClick={handleRewind}
+            disabled={!lastSwipeId}
+            aria-label="Отменить последний свайп"
+            className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-secondary/40 bg-card shadow-card transition-transform hover:scale-110 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+          >
+            <Undo2 className="h-6 w-6 text-secondary" />
+          </button>
           <button
             onClick={() => handleSwipe("left")}
+            aria-label="Не нравится"
             className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/30 bg-card shadow-card transition-transform hover:scale-110 active:scale-95"
           >
             <X className="h-7 w-7 text-primary" />
           </button>
           <button
+            onClick={() => handleSwipe("super")}
+            disabled={superLikesLeft <= 0}
+            aria-label="Super Like"
+            className="relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-blue-400 bg-card shadow-card transition-transform hover:scale-110 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+          >
+            <Star className="h-7 w-7 fill-blue-500 text-blue-500" />
+            <span className="absolute -bottom-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-bold text-primary-foreground">
+              {superLikesLeft}
+            </span>
+          </button>
+          <button
             onClick={() => handleSwipe("right")}
+            aria-label="Нравится"
             className="gradient-primary flex h-20 w-20 items-center justify-center rounded-full shadow-elevated transition-transform hover:scale-110 active:scale-95"
           >
             <Heart className="h-9 w-9 text-primary-foreground" />
