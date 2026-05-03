@@ -36,6 +36,8 @@ const Index = () => {
   const [cards, setCards] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [superLikesLeft, setSuperLikesLeft] = useState<number>(1);
+  const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
   const { count: liveCount, loading: countLoading, error: countError } = useProfilesCount({
     user,
     filters,
