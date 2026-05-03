@@ -107,6 +107,18 @@ const Index = () => {
 
     setCards(mapped);
     setCurrentIndex(0);
+    setLastSwipeId(null);
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const { count: usedToday } = await supabase
+      .from("swipes")
+      .select("id", { count: "exact", head: true })
+      .eq("swiper_id", user.id)
+      .eq("direction", "superlike")
+      .gte("created_at", startOfDay.toISOString());
+    setSuperLikesLeft(Math.max(0, 1 - (usedToday ?? 0)));
+
     setLoading(false);
   }, [user, filters]);
 
@@ -115,20 +127,60 @@ const Index = () => {
   }, [fetchProfiles]);
 
   const handleSwipe = useCallback(
-    async (direction: "left" | "right") => {
+    async (direction: "left" | "right" | "super") => {
       if (!user || currentIndex >= cards.length) return;
       const profile = cards[currentIndex];
 
-      await supabase.from("swipes").insert({
-        swiper_id: user.id,
-        swiped_id: profile.id,
-        direction: direction === "right" ? "like" : "dislike",
-      });
+      if (direction === "super" && superLikesLeft <= 0) {
+        toast.info("Лимит Super Like исчерпан", {
+          description: "Возвращайся завтра — даём 1 Super Like в день",
+        });
+        return;
+      }
 
+      const dbDirection =
+        direction === "super" ? "superlike" : direction === "right" ? "like" : "dislike";
+
+      const { data: inserted, error } = await supabase
+        .from("swipes")
+        .insert({
+          swiper_id: user.id,
+          swiped_id: profile.id,
+          direction: dbDirection,
+        })
+        .select("id")
+        .single();
+
+      if (error) {
+        toast.error("Не удалось сохранить свайп");
+        return;
+      }
+
+      setLastSwipeId(inserted?.id ?? null);
+      if (direction === "super") {
+        setSuperLikesLeft((n) => Math.max(0, n - 1));
+        toast.success("⭐ Super Like отправлен!");
+      }
       setCurrentIndex((prev) => prev + 1);
     },
-    [user, currentIndex, cards]
+    [user, currentIndex, cards, superLikesLeft]
   );
+
+  const handleRewind = useCallback(async () => {
+    if (!user || !lastSwipeId || currentIndex === 0) return;
+    const { error } = await supabase
+      .from("swipes")
+      .delete()
+      .eq("id", lastSwipeId)
+      .eq("swiper_id", user.id);
+    if (error) {
+      toast.error("Не удалось отменить свайп");
+      return;
+    }
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+    setLastSwipeId(null);
+    toast("↩️ Свайп отменён");
+  }, [user, lastSwipeId, currentIndex]);
 
   const remaining = cards.slice(currentIndex);
 
