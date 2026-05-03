@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Heart, Star, LogOut, MapPin } from "lucide-react";
+import { X, Heart, Star, LogOut, MapPin, Undo2 } from "lucide-react";
+import { toast } from "sonner";
 import SwipeCard from "@/components/SwipeCard";
 import BottomNav from "@/components/BottomNav";
 import SwipeFilters from "@/components/SwipeFilters";
