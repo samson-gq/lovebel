@@ -82,24 +82,33 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachment_url: string | null
           content: string
+          content_type: string
           created_at: string
           id: string
           match_id: string
+          read_at: string | null
           sender_id: string
         }
         Insert: {
+          attachment_url?: string | null
           content: string
+          content_type?: string
           created_at?: string
           id?: string
           match_id: string
+          read_at?: string | null
           sender_id: string
         }
         Update: {
+          attachment_url?: string | null
           content?: string
+          content_type?: string
           created_at?: string
           id?: string
           match_id?: string
+          read_at?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -476,6 +485,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_match_member: {
+        Args: { _match_id: string; _user_id: string }
         Returns: boolean
       }
       normalize_city: { Args: { input: string }; Returns: string }
