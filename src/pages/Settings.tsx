@@ -209,6 +209,36 @@ const Settings = () => {
           </div>
         </section>
 
+        {/* Push notifications */}
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              {pushEnabled ? <Bell className="h-5 w-5 text-primary" /> : <BellOff className="h-5 w-5 text-primary" />}
+            </div>
+            <div className="flex-1">
+              <h2 className="font-semibold text-foreground">Push-уведомления</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {pushEnabled
+                  ? "Вы получаете уведомления о новых матчах и сообщениях."
+                  : "Включите, чтобы не пропускать новые матчи и сообщения."}
+              </p>
+              <Button
+                onClick={togglePush}
+                disabled={pushBusy || !isPushSupported()}
+                variant={pushEnabled ? "outline" : "default"}
+                className={pushEnabled ? "mt-3" : "mt-3 gradient-primary text-primary-foreground"}
+              >
+                {pushBusy ? "..." : pushEnabled ? "Отключить" : "Включить уведомления"}
+              </Button>
+              {!isPushSupported() && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Ваш браузер не поддерживает Web Push.
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+
         {/* Blocked users */}
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center gap-2">
