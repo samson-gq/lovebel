@@ -244,7 +244,7 @@ const Profile = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-24">
-      <header className="flex items-center justify-between px-6 pt-6">
+      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 pt-6">
         <h1 className="text-2xl font-bold text-foreground">Профиль</h1>
         <div className="flex gap-2">
           <button
@@ -267,9 +267,9 @@ const Profile = () => {
         </div>
       </header>
 
-      <div className="mt-6 px-6">
-        <div className="relative overflow-hidden rounded-2xl bg-card shadow-card">
-          <div className="relative">
+      <div className="mx-auto mt-6 grid w-full max-w-5xl gap-6 px-6 md:grid-cols-[320px_1fr]">
+        <div className="relative overflow-hidden rounded-2xl bg-card shadow-card md:sticky md:top-6 md:self-start">
+          <div className="relative mx-auto w-full max-w-xs md:max-w-none">
             <img
               src={avatarUrl || "/placeholder.svg"}
               alt="Мой профиль"
@@ -284,7 +284,8 @@ const Profile = () => {
             />
             <button
               onClick={() => fileRef.current?.click()}
-              className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-primary shadow-elevated transition-transform hover:scale-110"
+              className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary shadow-elevated transition-transform hover:scale-110"
+              aria-label="Сменить фото"
             >
               <Camera className="h-5 w-5 text-primary-foreground" />
             </button>
