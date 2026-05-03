@@ -28,6 +28,46 @@ const Settings = () => {
   const [deleting, setDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteReason, setDeleteReason] = useState("");
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+
+  useEffect(() => {
+    if (!isPushSupported()) return;
+    navigator.serviceWorker.getRegistration("/push-sw.js").then(async (reg) => {
+      const sub = await reg?.pushManager.getSubscription();
+      setPushEnabled(!!sub && getPushPermission() === "granted");
+    });
+  }, []);
+
+  const togglePush = async () => {
+    if (!user) return;
+    setPushBusy(true);
+    try {
+      if (pushEnabled) {
+        await disablePush();
+        setPushEnabled(false);
+        toast.success("Push-уведомления отключены");
+      } else {
+        if (!canEnablePush()) {
+          toast.info("Push-уведомления доступны только в опубликованной версии", {
+            description: "Откройте lovebel.lovable.app в обычной вкладке браузера",
+          });
+          return;
+        }
+        const ok = await enablePush(user.id);
+        if (ok) {
+          setPushEnabled(true);
+          toast.success("Push-уведомления включены");
+        } else {
+          toast.error("Не удалось включить push", {
+            description: "Проверьте разрешения уведомлений в браузере",
+          });
+        }
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
