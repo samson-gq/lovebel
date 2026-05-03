@@ -203,27 +203,18 @@ const Chat = () => {
   const fetchGifs = useCallback(async (q: string) => {
     setGifLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("tenor-search", {
-        method: "GET" as never,
-        // supabase-js doesn't pass query for invoke, so use direct fetch
-      });
-      if (error || !data) {
-        // fallback to direct fetch via project URL
-        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-        const r = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/tenor-search?q=${encodeURIComponent(q)}&limit=24`,
-          {
-            headers: {
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            },
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const r = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/tenor-search?q=${encodeURIComponent(q)}&limit=24`,
+        {
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-        );
-        const json = await r.json();
-        setGifs(json.results || []);
-      } else {
-        setGifs((data as { results: TenorGif[] }).results || []);
-      }
+        },
+      );
+      const json = await r.json();
+      setGifs(json.results || []);
     } catch {
       toast.error("Не удалось загрузить GIF");
     } finally {
