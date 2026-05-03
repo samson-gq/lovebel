@@ -244,7 +244,7 @@ const Profile = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-24">
-      <header className="flex items-center justify-between px-6 pt-6">
+      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 pt-6">
         <h1 className="text-2xl font-bold text-foreground">Профиль</h1>
         <div className="flex gap-2">
           <button
@@ -267,9 +267,9 @@ const Profile = () => {
         </div>
       </header>
 
-      <div className="mt-6 px-6">
-        <div className="relative overflow-hidden rounded-2xl bg-card shadow-card">
-          <div className="relative">
+      <div className="mx-auto mt-6 grid w-full max-w-5xl gap-6 px-6 md:grid-cols-[320px_1fr]">
+        <div className="relative overflow-hidden rounded-2xl bg-card shadow-card md:sticky md:top-6 md:self-start">
+          <div className="relative mx-auto w-full max-w-xs md:max-w-none">
             <img
               src={avatarUrl || "/placeholder.svg"}
               alt="Мой профиль"
@@ -284,7 +284,8 @@ const Profile = () => {
             />
             <button
               onClick={() => fileRef.current?.click()}
-              className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-primary shadow-elevated transition-transform hover:scale-110"
+              className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary shadow-elevated transition-transform hover:scale-110"
+              aria-label="Сменить фото"
             >
               <Camera className="h-5 w-5 text-primary-foreground" />
             </button>
@@ -473,58 +474,60 @@ const Profile = () => {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Photos Gallery */}
-      <div className="mt-6 px-6">
-        <h3 className="mb-3 text-lg font-semibold text-foreground">
-          Фото ({photos.length}/{MAX_PHOTOS})
-        </h3>
-        <DraggablePhotoGrid
-          photos={photos}
-          editing={editing}
-          maxPhotos={MAX_PHOTOS}
-          onReorder={handleReorder}
-          onDelete={handleDeletePhoto}
-          onAddClick={() => photosFileRef.current?.click()}
-        />
-        <input
-          ref={photosFileRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={handlePhotoUpload}
-        />
-      </div>
+        <div className="space-y-6">
+          {/* Photos Gallery */}
+          <div>
+            <h3 className="mb-3 text-lg font-semibold text-foreground">
+              Фото ({photos.length}/{MAX_PHOTOS})
+            </h3>
+            <DraggablePhotoGrid
+              photos={photos}
+              editing={editing}
+              maxPhotos={MAX_PHOTOS}
+              onReorder={handleReorder}
+              onDelete={handleDeletePhoto}
+              onAddClick={() => photosFileRef.current?.click()}
+            />
+            <input
+              ref={photosFileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handlePhotoUpload}
+            />
+          </div>
 
-      {/* Interests */}
-      <div className="mt-6 px-6">
-        <h3 className="mb-3 text-lg font-semibold text-foreground">Интересы</h3>
-        <div className="flex flex-wrap gap-2">
-          {(editing ? INTEREST_OPTIONS : interests).map((interest) => (
-            <button
-              key={interest}
-              onClick={() => editing && toggleInterest(interest)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                interests.includes(interest)
-                  ? "border border-primary/30 bg-primary/10 text-primary"
-                  : "bg-muted text-muted-foreground"
-              } ${editing ? "cursor-pointer" : "cursor-default"}`}
-            >
-              {interest}
-            </button>
-          ))}
+          {/* Interests */}
+          <div>
+            <h3 className="mb-3 text-lg font-semibold text-foreground">Интересы</h3>
+            <div className="flex flex-wrap gap-2">
+              {(editing ? INTEREST_OPTIONS : interests).map((interest) => (
+                <button
+                  key={interest}
+                  onClick={() => editing && toggleInterest(interest)}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    interests.includes(interest)
+                      ? "border border-primary/30 bg-primary/10 text-primary"
+                      : "bg-muted text-muted-foreground"
+                  } ${editing ? "cursor-pointer" : "cursor-default"}`}
+                >
+                  {interest}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Промпты */}
+          {user && (
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">О себе</h3>
+              <PromptsEditor userId={user.id} editing={editing} />
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Промпты */}
-      {user && (
-        <div className="mt-6 px-6">
-          <h3 className="mb-3 text-lg font-semibold text-foreground">О себе</h3>
-          <PromptsEditor userId={user.id} editing={editing} />
-        </div>
-      )}
 
       <BottomNav />
     </div>
