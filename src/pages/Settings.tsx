@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ShieldCheck, Download, Trash2, Ban, BadgeCheck } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Download, Trash2, Ban, BadgeCheck, Bell, BellOff } from "lucide-react";
+import { canEnablePush, disablePush, enablePush, getPushPermission, isPushSupported } from "@/lib/push";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,6 +28,46 @@ const Settings = () => {
   const [deleting, setDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteReason, setDeleteReason] = useState("");
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+
+  useEffect(() => {
+    if (!isPushSupported()) return;
+    navigator.serviceWorker.getRegistration("/push-sw.js").then(async (reg) => {
+      const sub = await reg?.pushManager.getSubscription();
+      setPushEnabled(!!sub && getPushPermission() === "granted");
+    });
+  }, []);
+
+  const togglePush = async () => {
+    if (!user) return;
+    setPushBusy(true);
+    try {
+      if (pushEnabled) {
+        await disablePush();
+        setPushEnabled(false);
+        toast.success("Push-уведомления отключены");
+      } else {
+        if (!canEnablePush()) {
+          toast.info("Push-уведомления доступны только в опубликованной версии", {
+            description: "Откройте lovebel.lovable.app в обычной вкладке браузера",
+          });
+          return;
+        }
+        const ok = await enablePush(user.id);
+        if (ok) {
+          setPushEnabled(true);
+          toast.success("Push-уведомления включены");
+        } else {
+          toast.error("Не удалось включить push", {
+            description: "Проверьте разрешения уведомлений в браузере",
+          });
+        }
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -163,6 +204,36 @@ const Settings = () => {
                 >
                   Пройти верификацию
                 </Button>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Push notifications */}
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              {pushEnabled ? <Bell className="h-5 w-5 text-primary" /> : <BellOff className="h-5 w-5 text-primary" />}
+            </div>
+            <div className="flex-1">
+              <h2 className="font-semibold text-foreground">Push-уведомления</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {pushEnabled
+                  ? "Вы получаете уведомления о новых матчах и сообщениях."
+                  : "Включите, чтобы не пропускать новые матчи и сообщения."}
+              </p>
+              <Button
+                onClick={togglePush}
+                disabled={pushBusy || !isPushSupported()}
+                variant={pushEnabled ? "outline" : "default"}
+                className={pushEnabled ? "mt-3" : "mt-3 gradient-primary text-primary-foreground"}
+              >
+                {pushBusy ? "..." : pushEnabled ? "Отключить" : "Включить уведомления"}
+              </Button>
+              {!isPushSupported() && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Ваш браузер не поддерживает Web Push.
+                </p>
               )}
             </div>
           </div>
