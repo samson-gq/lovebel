@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck } from "lucide-react";
+import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck, Film, LocateFixed, Trash2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,6 +38,13 @@ interface ProfilePhoto {
   position: number;
 }
 
+interface ProfileVideo {
+  id: string;
+  video_url: string;
+  storage_path: string;
+  duration_seconds: number | null;
+}
+
 const Profile = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -58,17 +65,23 @@ const Profile = () => {
   const [children, setChildren] = useState<string>("");
   const [smoking, setSmoking] = useState<string>("");
   const [drinking, setDrinking] = useState<string>("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [video, setVideo] = useState<ProfileVideo | null>(null);
+  const [locating, setLocating] = useState(false);
   const [loading, setLoading] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
   const photosFileRef = useRef<HTMLInputElement>(null);
+  const videoFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
-      const [{ data: profile }, { data: photoData }] = await Promise.all([
+      const [{ data: profile }, { data: photoData }, { data: videoData }] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", user.id).single(),
         supabase.from("profile_photos").select("*").eq("user_id", user.id).order("position"),
+        (supabase as any).from("profile_videos").select("*").eq("user_id", user.id).maybeSingle(),
       ]);
 
       if (profile) {
@@ -87,9 +100,12 @@ const Profile = () => {
         setChildren(profile.children ?? "");
         setSmoking(profile.smoking ?? "");
         setDrinking(profile.drinking ?? "");
+        setLatitude((profile as any).latitude ?? null);
+        setLongitude((profile as any).longitude ?? null);
       }
 
       setPhotos((photoData as ProfilePhoto[]) || []);
+      setVideo((videoData as ProfileVideo) || null);
       setLoading(false);
     };
 
@@ -114,6 +130,9 @@ const Profile = () => {
         children: children || null,
         smoking: smoking || null,
         drinking: drinking || null,
+        latitude,
+        longitude,
+        onboarding_completed: Boolean(name.trim() && (avatarUrl || photos.length > 0)),
       })
       .eq("user_id", user.id);
 
