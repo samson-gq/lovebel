@@ -403,6 +403,14 @@ const Profile = () => {
                   />
                   <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Город" />
                 </div>
+                <button
+                  type="button"
+                  onClick={requestLocation}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                >
+                  <LocateFixed className="h-4 w-4" />
+                  {locating ? "Определяем GPS…" : latitude && longitude ? "Обновить GPS" : "Добавить GPS"}
+                </button>
                 <div className="flex gap-2">
                   {[
                     { value: "male", label: "М" },
@@ -527,6 +535,12 @@ const Profile = () => {
                     <span className="text-sm">{city}</span>
                   </div>
                 )}
+                {latitude && longitude && (
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <LocateFixed className="h-4 w-4" />
+                    <span className="text-sm">GPS включён</span>
+                  </div>
+                )}
                 {bio && <p className="text-card-foreground/80">{bio}</p>}
 
                 {/* Расширенная информация */}
@@ -597,6 +611,53 @@ const Profile = () => {
               onChange={handlePhotoUpload}
             />
           </div>
+
+          {/* Profile Video */}
+          <div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h3 className="text-lg font-semibold text-foreground">Короткий клип</h3>
+              {editing && (
+                <Button type="button" variant="outline" size="sm" onClick={() => videoFileRef.current?.click()}>
+                  <Film className="mr-2 h-4 w-4" />
+                  {video ? "Заменить" : "Добавить"}
+                </Button>
+              )}
+            </div>
+            {video ? (
+              <div className="relative overflow-hidden rounded-2xl bg-card shadow-card">
+                <video src={video.video_url} className="aspect-video w-full object-cover" controls playsInline />
+                {editing && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteVideo}
+                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-card/80 text-destructive shadow-card backdrop-blur-sm"
+                    aria-label="Удалить видео"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => editing && videoFileRef.current?.click()}
+                className="flex aspect-video w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/50 text-muted-foreground"
+              >
+                <Film className="mb-2 h-8 w-8" />
+                <span className="text-sm font-medium">Видео до 15 секунд</span>
+              </button>
+            )}
+            <input ref={videoFileRef} type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={handleVideoUpload} />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate("/premium")}
+            className="gradient-primary flex w-full items-center justify-between rounded-2xl px-5 py-4 text-primary-foreground shadow-card"
+          >
+            <span className="flex items-center gap-2 font-semibold"><Zap className="h-5 w-5" /> Premium и Boost</span>
+            <span className="text-sm opacity-90">Открыть</span>
+          </button>
 
           {/* Interests */}
           <div>
