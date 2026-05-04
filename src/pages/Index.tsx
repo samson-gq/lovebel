@@ -233,6 +233,19 @@ const Index = () => {
               {filters.ageRange[0]}–{filters.ageRange[1]} лет
             </span>
           )}
+          {filters.useGps && filters.latitude && filters.longitude && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              <MapPin className="h-3 w-3" />
+              GPS до {filters.maxDistance} км
+              <button
+                onClick={() => setFilters({ ...filters, useGps: false })}
+                className="ml-1 rounded-full text-primary/70 hover:text-primary"
+                aria-label="Убрать GPS"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
           <button
             onClick={reset}
             className="ml-auto text-xs font-medium text-primary hover:underline"
