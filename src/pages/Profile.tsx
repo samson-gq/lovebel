@@ -133,7 +133,7 @@ const Profile = () => {
         latitude,
         longitude,
         onboarding_completed: Boolean(name.trim() && (avatarUrl || photos.length > 0)),
-      })
+      } as any)
       .eq("user_id", user.id);
 
     if (error) {
