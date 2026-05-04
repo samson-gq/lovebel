@@ -28,6 +28,10 @@ interface DBProfile {
   children?: string | null;
   smoking?: string | null;
   drinking?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  distance_km?: number | null;
+  boost_until?: string | null;
 }
 
 const Index = () => {
@@ -58,12 +62,15 @@ const Index = () => {
     const excludeIds = [user.id, ...swipedIds];
 
     // Use server-side RPC that leverages the normalized-city index
-    const { data, error } = await supabase.rpc("search_profiles", {
+    const { data, error } = await (supabase as any).rpc("search_profiles", {
       exclude_ids: excludeIds,
       min_age: filters.ageRange[0],
       max_age: filters.ageRange[1],
       gender_filter: filters.gender,
       city_query: filters.city.trim(),
+      user_lat: filters.useGps ? filters.latitude : null,
+      user_lng: filters.useGps ? filters.longitude : null,
+      radius_km: filters.useGps ? filters.maxDistance : null,
     });
 
     if (error) {
@@ -72,25 +79,29 @@ const Index = () => {
 
     // Fetch photos and prompts for all profiles
     const userIds = (data || []).map((p: DBProfile) => p.user_id);
-    const [photosResp, promptsResp] = userIds.length > 0
+    const [photosResp, promptsResp, videosResp] = userIds.length > 0
       ? await Promise.all([
           supabase.from("profile_photos").select("*").in("user_id", userIds).order("position"),
           supabase.from("profile_prompts").select("*").in("user_id", userIds).order("position"),
+          (supabase as any).from("profile_videos").select("user_id, video_url").in("user_id", userIds),
         ])
-      : [{ data: [] }, { data: [] }];
+      : [{ data: [] }, { data: [] }, { data: [] }];
     const allPhotos = photosResp.data || [];
     const allPrompts = promptsResp.data || [];
+    const allVideos = videosResp.data || [];
 
     const mapped: (Profile & { isVerified?: boolean })[] = (data || []).map((p: DBProfile) => ({
       id: p.user_id,
       name: p.name,
       age: p.age || 0,
       bio: p.bio || "",
-      distance: p.city || "—",
+      distance: p.distance_km != null ? `${Math.round(p.distance_km)} км` : p.city || "—",
       image: p.avatar_url || "/placeholder.svg",
       images: (allPhotos as Array<{ user_id: string; photo_url: string }>)
         .filter((photo) => photo.user_id === p.user_id)
         .map((photo) => photo.photo_url),
+      videoUrl: (allVideos as Array<{ user_id: string; video_url: string }>)
+        .find((video) => video.user_id === p.user_id)?.video_url ?? null,
       interests: p.interests || [],
       isVerified: p.is_verified ?? false,
       heightCm: p.height_cm ?? null,
@@ -241,6 +252,7 @@ const Index = () => {
             Найдено анкет:{" "}
             <span className="font-semibold text-foreground">{liveCount}</span>
             {filters.city.trim() && <> в городе «{filters.city.trim()}»</>}
+            {filters.useGps && <> в радиусе {filters.maxDistance} км</>}
             {countLoading && <span className="ml-1 opacity-60">обновляем…</span>}
           </>
         ) : null}
