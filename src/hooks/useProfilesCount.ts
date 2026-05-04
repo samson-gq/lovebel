@@ -49,7 +49,7 @@ export function useProfilesCount({ user, filters, debounceMs = 300 }: Args): Sta
       for (let i = 0; i < delays.length; i++) {
         if (delays[i] > 0) await sleep(delays[i]);
         if (cancelled) return;
-        const { data, error } = await supabase.rpc("count_search_profiles", {
+        const { data, error } = await (supabase as any).rpc("count_search_profiles", {
           exclude_ids: excludeIds,
           min_age: filters.ageRange[0],
           max_age: filters.ageRange[1],
