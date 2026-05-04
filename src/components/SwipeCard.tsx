@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { MapPin, ChevronLeft, ChevronRight, BadgeCheck } from "lucide-react";
+import { MapPin, ChevronLeft, ChevronRight, BadgeCheck, Play } from "lucide-react";
 import type { Profile } from "@/data/profiles";
 import ProfileActionsMenu from "./ProfileActionsMenu";
 
@@ -18,7 +18,11 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked }: SwipeCardProps) => {
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
   const [photoIndex, setPhotoIndex] = useState(0);
 
-  const allImages = profile.images.length > 0 ? profile.images : [profile.image];
+  const mediaItems = [
+    ...(profile.videoUrl ? [{ type: "video" as const, url: profile.videoUrl }] : []),
+    ...(profile.images.length > 0 ? profile.images : [profile.image]).map((url) => ({ type: "image" as const, url })),
+  ];
+  const activeMedia = mediaItems[photoIndex] ?? mediaItems[0];
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (info.offset.x > 120) {
@@ -30,7 +34,7 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked }: SwipeCardProps) => {
 
   const nextPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setPhotoIndex((prev) => Math.min(prev + 1, allImages.length - 1));
+    setPhotoIndex((prev) => Math.min(prev + 1, mediaItems.length - 1));
   };
 
   const prevPhoto = (e: React.MouseEvent) => {
@@ -49,19 +53,30 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked }: SwipeCardProps) => {
       exit={{ x: 300, opacity: 0, transition: { duration: 0.3 } }}
     >
       <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-elevated">
-        <img
-          src={allImages[photoIndex]}
-          alt={profile.name}
-          className="h-full w-full object-cover"
-          draggable={false}
-        />
+        {activeMedia.type === "video" ? (
+          <video
+            src={activeMedia.url}
+            className="h-full w-full object-cover"
+            muted
+            playsInline
+            loop
+            autoPlay={isTop}
+          />
+        ) : (
+          <img
+            src={activeMedia.url}
+            alt={profile.name}
+            className="h-full w-full object-cover"
+            draggable={false}
+          />
+        )}
 
         {/* Photo indicators */}
-        {allImages.length > 1 && (
+        {mediaItems.length > 1 && (
           <div className="absolute left-0 right-0 top-3 flex justify-center gap-1 px-4">
-            {allImages.map((_, i) => (
+            {mediaItems.map((item, i) => (
               <div
-                key={i}
+                key={`${item.type}-${i}`}
                 className={`h-1 flex-1 rounded-full transition-colors ${
                   i === photoIndex ? "bg-primary-foreground" : "bg-primary-foreground/40"
                 }`}
@@ -71,7 +86,7 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked }: SwipeCardProps) => {
         )}
 
         {/* Photo navigation zones */}
-        {allImages.length > 1 && isTop && (
+        {mediaItems.length > 1 && isTop && (
           <>
             {photoIndex > 0 && (
               <button
@@ -81,7 +96,7 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked }: SwipeCardProps) => {
                 <ChevronLeft className="h-8 w-8 text-primary-foreground/70 drop-shadow" />
               </button>
             )}
-            {photoIndex < allImages.length - 1 && (
+            {photoIndex < mediaItems.length - 1 && (
               <button
                 onClick={nextPhoto}
                 className="absolute right-0 top-0 flex h-3/4 w-1/4 items-center justify-end pr-2"
@@ -94,6 +109,13 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked }: SwipeCardProps) => {
 
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
+
+        {activeMedia.type === "video" && (
+          <div className="absolute left-4 top-7 inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/20 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur-sm">
+            <Play className="h-3.5 w-3.5 fill-current" />
+            Клип
+          </div>
+        )}
 
         {/* LIKE indicator */}
         <motion.div
