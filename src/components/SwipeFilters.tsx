@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { SlidersHorizontal, X } from "lucide-react";
+import { LocateFixed, SlidersHorizontal, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { suggestCities } from "@/lib/cities";
@@ -11,6 +11,9 @@ interface FilterValues {
   maxDistance: number;
   gender: string;
   city: string;
+  useGps: boolean;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface FiltersProps {
@@ -22,6 +25,7 @@ const SwipeFilters = ({ filters, onChange }: FiltersProps) => {
   const [open, setOpen] = useState(false);
   const [cityFocused, setCityFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [locating, setLocating] = useState(false);
   const popularCities = usePopularCities();
   const suggestions = suggestCities(filters.city, popularCities);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -55,6 +59,24 @@ const SwipeFilters = ({ filters, onChange }: FiltersProps) => {
       e.preventDefault();
       setCityFocused(false);
     }
+  };
+
+  const requestGps = () => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        onChange({
+          ...filters,
+          useGps: true,
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
   };
 
   if (!open) {
@@ -99,9 +121,23 @@ const SwipeFilters = ({ filters, onChange }: FiltersProps) => {
 
       {/* Distance */}
       <div className="mb-5">
-        <label className="mb-2 block text-sm font-medium text-card-foreground">
-          Расстояние: до {filters.maxDistance} км
-        </label>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <label className="block text-sm font-medium text-card-foreground">
+            Радиус: до {filters.maxDistance} км
+          </label>
+          <button
+            type="button"
+            onClick={requestGps}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+              filters.useGps && filters.latitude && filters.longitude
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <LocateFixed className="h-3.5 w-3.5" />
+            {locating ? "Ищем…" : "GPS"}
+          </button>
+        </div>
         <Slider
           min={1}
           max={100}
@@ -109,6 +145,15 @@ const SwipeFilters = ({ filters, onChange }: FiltersProps) => {
           value={[filters.maxDistance]}
           onValueChange={(val) => onChange({ ...filters, maxDistance: val[0] })}
         />
+        {filters.useGps && filters.latitude && filters.longitude && (
+          <button
+            type="button"
+            onClick={() => onChange({ ...filters, useGps: false })}
+            className="mt-2 text-xs font-medium text-primary hover:underline"
+          >
+            Искать без GPS-радиуса
+          </button>
+        )}
       </div>
 
       {/* City */}

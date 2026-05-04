@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck } from "lucide-react";
+import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck, Film, LocateFixed, Trash2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,6 +38,13 @@ interface ProfilePhoto {
   position: number;
 }
 
+interface ProfileVideo {
+  id: string;
+  video_url: string;
+  storage_path: string;
+  duration_seconds: number | null;
+}
+
 const Profile = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -58,17 +65,23 @@ const Profile = () => {
   const [children, setChildren] = useState<string>("");
   const [smoking, setSmoking] = useState<string>("");
   const [drinking, setDrinking] = useState<string>("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [video, setVideo] = useState<ProfileVideo | null>(null);
+  const [locating, setLocating] = useState(false);
   const [loading, setLoading] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
   const photosFileRef = useRef<HTMLInputElement>(null);
+  const videoFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
-      const [{ data: profile }, { data: photoData }] = await Promise.all([
+      const [{ data: profile }, { data: photoData }, { data: videoData }] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", user.id).single(),
         supabase.from("profile_photos").select("*").eq("user_id", user.id).order("position"),
+        (supabase as any).from("profile_videos").select("*").eq("user_id", user.id).maybeSingle(),
       ]);
 
       if (profile) {
@@ -87,9 +100,12 @@ const Profile = () => {
         setChildren(profile.children ?? "");
         setSmoking(profile.smoking ?? "");
         setDrinking(profile.drinking ?? "");
+        setLatitude((profile as any).latitude ?? null);
+        setLongitude((profile as any).longitude ?? null);
       }
 
       setPhotos((photoData as ProfilePhoto[]) || []);
+      setVideo((videoData as ProfileVideo) || null);
       setLoading(false);
     };
 
@@ -114,7 +130,10 @@ const Profile = () => {
         children: children || null,
         smoking: smoking || null,
         drinking: drinking || null,
-      })
+        latitude,
+        longitude,
+        onboarding_completed: Boolean(name.trim() && (avatarUrl || photos.length > 0)),
+      } as any)
       .eq("user_id", user.id);
 
     if (error) {
@@ -205,6 +224,86 @@ const Profile = () => {
 
     toast.success("Фото добавлены!");
     if (photosFileRef.current) photosFileRef.current.value = "";
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("video/")) {
+      toast.error("Выберите видеофайл");
+      return;
+    }
+
+    const duration = await new Promise<number>((resolve) => {
+      const el = document.createElement("video");
+      el.preload = "metadata";
+      el.onloadedmetadata = () => {
+        URL.revokeObjectURL(el.src);
+        resolve(el.duration || 0);
+      };
+      el.onerror = () => resolve(0);
+      el.src = URL.createObjectURL(file);
+    });
+
+    if (duration > 15.5) {
+      toast.error("Видео должно быть до 15 секунд");
+      return;
+    }
+
+    const path = `${user.id}/profile-video-${Date.now()}.${file.name.split(".").pop() || "mp4"}`;
+    const { error: uploadError } = await supabase.storage.from("profile-videos").upload(path, file, { upsert: true });
+    if (uploadError) {
+      toast.error("Ошибка загрузки видео");
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from("profile-videos").getPublicUrl(path);
+    const { data, error } = await (supabase as any)
+      .from("profile_videos")
+      .upsert({ user_id: user.id, video_url: publicUrl, storage_path: path, duration_seconds: Math.round(duration) }, { onConflict: "user_id" })
+      .select("*")
+      .single();
+
+    if (error) {
+      toast.error("Не удалось сохранить видео");
+      return;
+    }
+    setVideo(data as ProfileVideo);
+    toast.success("Видео добавлено");
+    if (videoFileRef.current) videoFileRef.current.value = "";
+  };
+
+  const handleDeleteVideo = async () => {
+    if (!video) return;
+    const { error } = await (supabase as any).from("profile_videos").delete().eq("id", video.id);
+    if (error) {
+      toast.error("Ошибка удаления видео");
+      return;
+    }
+    await supabase.storage.from("profile-videos").remove([video.storage_path]);
+    setVideo(null);
+    toast.success("Видео удалено");
+  };
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("GPS недоступен в браузере");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(pos.coords.latitude);
+        setLongitude(pos.coords.longitude);
+        setLocating(false);
+        toast.success("Локация обновлена");
+      },
+      () => {
+        setLocating(false);
+        toast.error("Не удалось получить GPS");
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
   };
 
   const handleDeletePhoto = async (photo: ProfilePhoto) => {
@@ -304,6 +403,14 @@ const Profile = () => {
                   />
                   <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Город" />
                 </div>
+                <button
+                  type="button"
+                  onClick={requestLocation}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                >
+                  <LocateFixed className="h-4 w-4" />
+                  {locating ? "Определяем GPS…" : latitude && longitude ? "Обновить GPS" : "Добавить GPS"}
+                </button>
                 <div className="flex gap-2">
                   {[
                     { value: "male", label: "М" },
@@ -428,6 +535,12 @@ const Profile = () => {
                     <span className="text-sm">{city}</span>
                   </div>
                 )}
+                {latitude && longitude && (
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <LocateFixed className="h-4 w-4" />
+                    <span className="text-sm">GPS включён</span>
+                  </div>
+                )}
                 {bio && <p className="text-card-foreground/80">{bio}</p>}
 
                 {/* Расширенная информация */}
@@ -498,6 +611,53 @@ const Profile = () => {
               onChange={handlePhotoUpload}
             />
           </div>
+
+          {/* Profile Video */}
+          <div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h3 className="text-lg font-semibold text-foreground">Короткий клип</h3>
+              {editing && (
+                <Button type="button" variant="outline" size="sm" onClick={() => videoFileRef.current?.click()}>
+                  <Film className="mr-2 h-4 w-4" />
+                  {video ? "Заменить" : "Добавить"}
+                </Button>
+              )}
+            </div>
+            {video ? (
+              <div className="relative overflow-hidden rounded-2xl bg-card shadow-card">
+                <video src={video.video_url} className="aspect-video w-full object-cover" controls playsInline />
+                {editing && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteVideo}
+                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-card/80 text-destructive shadow-card backdrop-blur-sm"
+                    aria-label="Удалить видео"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => editing && videoFileRef.current?.click()}
+                className="flex aspect-video w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/50 text-muted-foreground"
+              >
+                <Film className="mb-2 h-8 w-8" />
+                <span className="text-sm font-medium">Видео до 15 секунд</span>
+              </button>
+            )}
+            <input ref={videoFileRef} type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={handleVideoUpload} />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate("/premium")}
+            className="gradient-primary flex w-full items-center justify-between rounded-2xl px-5 py-4 text-primary-foreground shadow-card"
+          >
+            <span className="flex items-center gap-2 font-semibold"><Zap className="h-5 w-5" /> Premium и Boost</span>
+            <span className="text-sm opacity-90">Открыть</span>
+          </button>
 
           {/* Interests */}
           <div>

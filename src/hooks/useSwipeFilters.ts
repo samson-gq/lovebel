@@ -8,6 +8,9 @@ export const DEFAULT_FILTERS: FilterValues = {
   maxDistance: 50,
   gender: "all",
   city: "",
+  useGps: false,
+  latitude: null,
+  longitude: null,
 };
 
 export const isDefaultFilters = (f: FilterValues) =>
@@ -15,7 +18,8 @@ export const isDefaultFilters = (f: FilterValues) =>
   f.ageRange[1] === DEFAULT_FILTERS.ageRange[1] &&
   f.maxDistance === DEFAULT_FILTERS.maxDistance &&
   f.gender === DEFAULT_FILTERS.gender &&
-  f.city.trim() === "";
+  f.city.trim() === "" &&
+  !f.useGps;
 
 const clampNum = (v: unknown, fallback: number) => {
   const n = Number(v);
@@ -36,12 +40,15 @@ const fromObject = (obj: Record<string, unknown>): FilterValues => {
     maxDistance: clampNum(obj.maxDistance, DEFAULT_FILTERS.maxDistance),
     gender: sanitizeGender(obj.gender),
     city: typeof obj.city === "string" ? obj.city : "",
+    useGps: Boolean(obj.useGps),
+    latitude: obj.latitude == null ? null : clampNum(obj.latitude, 0),
+    longitude: obj.longitude == null ? null : clampNum(obj.longitude, 0),
   };
 };
 
 const fromUrl = (search: string): FilterValues | null => {
   const params = new URLSearchParams(search);
-  if (![...params.keys()].some((k) => ["city", "gender", "ageMin", "ageMax", "maxDistance"].includes(k))) {
+  if (![...params.keys()].some((k) => ["city", "gender", "ageMin", "ageMax", "maxDistance", "useGps", "lat", "lng"].includes(k))) {
     return null;
   }
   return fromObject({
@@ -50,6 +57,9 @@ const fromUrl = (search: string): FilterValues | null => {
     ageMin: params.get("ageMin") ?? undefined,
     ageMax: params.get("ageMax") ?? undefined,
     maxDistance: params.get("maxDistance") ?? undefined,
+    useGps: params.get("useGps") === "1",
+    latitude: params.get("lat") ?? undefined,
+    longitude: params.get("lng") ?? undefined,
   });
 };
 
@@ -70,6 +80,11 @@ const toUrl = (f: FilterValues): string => {
   if (f.ageRange[0] !== DEFAULT_FILTERS.ageRange[0]) p.set("ageMin", String(f.ageRange[0]));
   if (f.ageRange[1] !== DEFAULT_FILTERS.ageRange[1]) p.set("ageMax", String(f.ageRange[1]));
   if (f.maxDistance !== DEFAULT_FILTERS.maxDistance) p.set("maxDistance", String(f.maxDistance));
+  if (f.useGps && f.latitude != null && f.longitude != null) {
+    p.set("useGps", "1");
+    p.set("lat", String(f.latitude));
+    p.set("lng", String(f.longitude));
+  }
   return p.toString();
 };
 

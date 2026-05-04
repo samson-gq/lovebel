@@ -14,6 +14,9 @@ const baseFilters: FilterValues = {
   maxDistance: 50,
   gender: "all",
   city: "",
+  useGps: false,
+  latitude: null,
+  longitude: null,
 };
 
 const setup = (initial: FilterValues = baseFilters) => {

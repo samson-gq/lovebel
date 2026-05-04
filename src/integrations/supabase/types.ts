@@ -238,11 +238,67 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_videos: {
+        Row: {
+          created_at: string
+          duration_seconds: number
+          id: string
+          storage_path: string
+          thumbnail_url: string | null
+          updated_at: string
+          user_id: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          storage_path: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          storage_path?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
+      profile_views: {
+        Row: {
+          id: string
+          viewed_at: string
+          viewed_id: string
+          viewer_id: string
+        }
+        Insert: {
+          id?: string
+          viewed_at?: string
+          viewed_id: string
+          viewer_id: string
+        }
+        Update: {
+          id?: string
+          viewed_at?: string
+          viewed_id?: string
+          viewer_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
           avatar_url: string | null
           bio: string | null
+          boost_count: number
+          boost_until: string | null
           children: string | null
           city: string | null
           created_at: string
@@ -253,8 +309,13 @@ export type Database = {
           id: string
           interests: string[] | null
           is_verified: boolean
+          latitude: number | null
+          longitude: number | null
           name: string
           occupation: string | null
+          onboarding_completed: boolean
+          premium_plan: string | null
+          premium_until: string | null
           smoking: string | null
           updated_at: string
           user_id: string
@@ -265,6 +326,8 @@ export type Database = {
           age?: number | null
           avatar_url?: string | null
           bio?: string | null
+          boost_count?: number
+          boost_until?: string | null
           children?: string | null
           city?: string | null
           created_at?: string
@@ -275,8 +338,13 @@ export type Database = {
           id?: string
           interests?: string[] | null
           is_verified?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           occupation?: string | null
+          onboarding_completed?: boolean
+          premium_plan?: string | null
+          premium_until?: string | null
           smoking?: string | null
           updated_at?: string
           user_id: string
@@ -287,6 +355,8 @@ export type Database = {
           age?: number | null
           avatar_url?: string | null
           bio?: string | null
+          boost_count?: number
+          boost_until?: string | null
           children?: string | null
           city?: string | null
           created_at?: string
@@ -297,8 +367,13 @@ export type Database = {
           id?: string
           interests?: string[] | null
           is_verified?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           occupation?: string | null
+          onboarding_completed?: boolean
+          premium_plan?: string | null
+          premium_until?: string | null
           smoking?: string | null
           updated_at?: string
           user_id?: string
@@ -507,6 +582,9 @@ export type Database = {
           gender_filter: string
           max_age: number
           min_age: number
+          radius_km?: number
+          user_lat?: number
+          user_lng?: number
         }
         Returns: number
       }
@@ -522,6 +600,7 @@ export type Database = {
         Returns: boolean
       }
       normalize_city: { Args: { input: string }; Returns: string }
+      record_profile_view: { Args: { _viewed_id: string }; Returns: undefined }
       search_profiles: {
         Args: {
           city_query: string
@@ -529,14 +608,19 @@ export type Database = {
           gender_filter: string
           max_age: number
           min_age: number
+          radius_km?: number
+          user_lat?: number
+          user_lng?: number
         }
         Returns: {
           age: number
           avatar_url: string
           bio: string
+          boost_until: string
           children: string
           city: string
           created_at: string
+          distance_km: number
           drinking: string
           education: string
           gender: string
@@ -544,6 +628,8 @@ export type Database = {
           id: string
           interests: string[]
           is_verified: boolean
+          latitude: number
+          longitude: number
           name: string
           occupation: string
           smoking: string
