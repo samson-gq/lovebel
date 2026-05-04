@@ -226,6 +226,86 @@ const Profile = () => {
     if (photosFileRef.current) photosFileRef.current.value = "";
   };
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("video/")) {
+      toast.error("Выберите видеофайл");
+      return;
+    }
+
+    const duration = await new Promise<number>((resolve) => {
+      const el = document.createElement("video");
+      el.preload = "metadata";
+      el.onloadedmetadata = () => {
+        URL.revokeObjectURL(el.src);
+        resolve(el.duration || 0);
+      };
+      el.onerror = () => resolve(0);
+      el.src = URL.createObjectURL(file);
+    });
+
+    if (duration > 15.5) {
+      toast.error("Видео должно быть до 15 секунд");
+      return;
+    }
+
+    const path = `${user.id}/profile-video-${Date.now()}.${file.name.split(".").pop() || "mp4"}`;
+    const { error: uploadError } = await supabase.storage.from("profile-videos").upload(path, file, { upsert: true });
+    if (uploadError) {
+      toast.error("Ошибка загрузки видео");
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from("profile-videos").getPublicUrl(path);
+    const { data, error } = await (supabase as any)
+      .from("profile_videos")
+      .upsert({ user_id: user.id, video_url: publicUrl, storage_path: path, duration_seconds: Math.round(duration) }, { onConflict: "user_id" })
+      .select("*")
+      .single();
+
+    if (error) {
+      toast.error("Не удалось сохранить видео");
+      return;
+    }
+    setVideo(data as ProfileVideo);
+    toast.success("Видео добавлено");
+    if (videoFileRef.current) videoFileRef.current.value = "";
+  };
+
+  const handleDeleteVideo = async () => {
+    if (!video) return;
+    const { error } = await (supabase as any).from("profile_videos").delete().eq("id", video.id);
+    if (error) {
+      toast.error("Ошибка удаления видео");
+      return;
+    }
+    await supabase.storage.from("profile-videos").remove([video.storage_path]);
+    setVideo(null);
+    toast.success("Видео удалено");
+  };
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("GPS недоступен в браузере");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(pos.coords.latitude);
+        setLongitude(pos.coords.longitude);
+        setLocating(false);
+        toast.success("Локация обновлена");
+      },
+      () => {
+        setLocating(false);
+        toast.error("Не удалось получить GPS");
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
   const handleDeletePhoto = async (photo: ProfilePhoto) => {
     const { error } = await supabase.from("profile_photos").delete().eq("id", photo.id);
     if (error) {
