@@ -55,6 +55,9 @@ export function useProfilesCount({ user, filters, debounceMs = 300 }: Args): Sta
           max_age: filters.ageRange[1],
           gender_filter: filters.gender,
           city_query: filters.city.trim(),
+          user_lat: filters.useGps ? filters.latitude : null,
+          user_lng: filters.useGps ? filters.longitude : null,
+          radius_km: filters.useGps ? filters.maxDistance : null,
         });
         if (cancelled) return;
         if (!error) {
@@ -70,7 +73,7 @@ export function useProfilesCount({ user, filters, debounceMs = 300 }: Args): Sta
     return () => {
       cancelled = true;
     };
-  }, [user, filters.ageRange, filters.gender, filters.city, filters.maxDistance, debounceMs]);
+  }, [user, filters.ageRange, filters.gender, filters.city, filters.maxDistance, filters.useGps, filters.latitude, filters.longitude, debounceMs]);
 
   return state;
 }
