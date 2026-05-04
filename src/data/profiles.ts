@@ -18,6 +18,7 @@ export interface Profile {
   distance: string;
   image: string;
   images: string[];
+  videoUrl?: string | null;
   interests: string[];
   heightCm?: number | null;
   education?: string | null;
