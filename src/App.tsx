@@ -19,6 +19,7 @@ import LikesMe from "./pages/LikesMe";
 import Premium from "./pages/Premium";
 import NotFound from "./pages/NotFound";
 import { supabase } from "@/integrations/supabase/client";
+import AppShell from "@/components/AppShell";
 
 const queryClient = new QueryClient();
 
@@ -59,7 +60,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   if (user && checkingProfile) return null;
   if (user && needsOnboarding && location.pathname !== "/onboarding") return <Navigate to="/onboarding" replace />;
-  return user ? <>{children}</> : <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/auth" replace />;
+  // Onboarding gets no shell (full-screen flow)
+  if (location.pathname === "/onboarding") return <>{children}</>;
+  return <AppShell>{children}</AppShell>;
 };
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {

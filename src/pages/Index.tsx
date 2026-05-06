@@ -197,14 +197,15 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="relative flex items-center justify-between px-4 py-4">
+      <header className="relative flex items-center justify-between px-4 py-4 md:py-6">
         <SwipeFilters filters={filters} onChange={setFilters} />
-        <h1 className="bg-clip-text text-2xl font-extrabold tracking-tight text-transparent" style={{ backgroundImage: 'var(--gradient-primary)' }}>
+        <h1 className="bg-clip-text text-2xl font-extrabold tracking-tight text-transparent md:hidden" style={{ backgroundImage: 'var(--gradient-primary)' }}>
           LoveBel
         </h1>
-        <button onClick={signOut} className="rounded-full p-2.5 text-muted-foreground hover:bg-muted">
+        <button onClick={signOut} className="rounded-full p-2.5 text-muted-foreground hover:bg-muted md:hidden">
           <LogOut className="h-5 w-5" />
         </button>
+        <span className="hidden md:block" />
       </header>
 
       {!isDefaultFilters(filters) && (
@@ -271,7 +272,7 @@ const Index = () => {
         ) : null}
       </p>
 
-      <div className="relative mx-auto flex w-full max-w-sm flex-1 px-4 pb-24">
+      <div className="relative mx-auto flex w-full max-w-sm flex-1 justify-center px-4 pb-32 md:max-w-md md:pb-40">
         <div className="relative h-[520px] w-full">
           {loading ? (
             <div className="flex h-full items-center justify-center">
@@ -311,7 +312,7 @@ const Index = () => {
       </div>
 
       {remaining.length > 0 && !loading && (
-        <div className="fixed bottom-20 left-0 right-0 flex items-center justify-center gap-4">
+        <div className="fixed bottom-20 left-0 right-0 z-40 flex items-center justify-center gap-4 md:bottom-8 md:left-60 md:right-0">
           <button
             onClick={handleRewind}
             disabled={!lastSwipeId}
