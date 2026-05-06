@@ -19,6 +19,7 @@ import LikesMe from "./pages/LikesMe";
 import Premium from "./pages/Premium";
 import NotFound from "./pages/NotFound";
 import { supabase } from "@/integrations/supabase/client";
+import AppShell from "@/components/AppShell";
 
 const queryClient = new QueryClient();
 
