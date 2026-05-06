@@ -272,7 +272,7 @@ const Index = () => {
         ) : null}
       </p>
 
-      <div className="relative mx-auto flex w-full max-w-sm flex-1 px-4 pb-24">
+      <div className="relative mx-auto flex w-full max-w-sm flex-1 justify-center px-4 pb-32 md:max-w-md md:pb-40">
         <div className="relative h-[520px] w-full">
           {loading ? (
             <div className="flex h-full items-center justify-center">
