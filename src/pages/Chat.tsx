@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import ProfileActionsMenu from "@/components/ProfileActionsMenu";
+import ChatList from "@/components/ChatList";
 import { toast } from "sonner";
 
 interface Message {
