@@ -204,9 +204,12 @@ const Index = () => {
         <h1 className="bg-clip-text text-2xl font-extrabold tracking-tight text-transparent md:hidden" style={{ backgroundImage: 'var(--gradient-primary)' }}>
           LoveBel
         </h1>
-        <button onClick={signOut} className="rounded-full p-2.5 text-muted-foreground hover:bg-muted md:hidden">
-          <LogOut className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle className="h-10 w-10" />
+          <button onClick={signOut} aria-label="Выйти" className="rounded-full p-2.5 text-muted-foreground hover:bg-muted">
+            <LogOut className="h-5 w-5" />
+          </button>
+        </div>
         <span className="hidden md:block" />
       </header>
 
@@ -278,7 +281,7 @@ const Index = () => {
         <div className="relative h-[520px] w-full">
           {loading ? (
             <div className="flex h-full items-center justify-center">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <Skeleton className="h-full w-full rounded-3xl" />
             </div>
           ) : remaining.length > 0 ? (
             <AnimatePresence>
