@@ -67,8 +67,10 @@ const LikesMe = () => {
       </header>
 
       {loading ? (
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="mt-6 grid grid-cols-2 gap-4 px-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-muted" />
+          ))}
         </div>
       ) : likes.length > 0 ? (
         <main className="mt-6 px-6">
@@ -78,7 +80,7 @@ const LikesMe = () => {
               <Sparkles className="h-5 w-5" />
             </button>
           )}
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {likes.map((like) => {
               const profile = profiles.find((item) => item.user_id === like.swiper_id);
               return (

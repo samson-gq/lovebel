@@ -74,18 +74,21 @@ const Matches = () => {
       </header>
 
       {loading ? (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="mt-6 grid grid-cols-2 gap-4 px-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-muted" />
+          ))}
         </div>
       ) : matchedProfiles.length > 0 ? (
-        <div className="mt-6 grid grid-cols-2 gap-4 px-6">
+        <div className="mt-6 grid grid-cols-2 gap-4 px-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {matchedProfiles.map((profile, i) => (
             <motion.div
               key={profile.matchId}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="group relative overflow-hidden rounded-2xl shadow-card"
+              transition={{ delay: i * 0.05 }}
+              className="group relative cursor-pointer overflow-hidden rounded-2xl shadow-card"
+              onClick={() => navigate(`/chat/${profile.matchId}`)}
             >
               <img
                 src={profile.avatar_url || "/placeholder.svg"}
@@ -98,12 +101,9 @@ const Matches = () => {
                   {profile.name}{profile.age ? `, ${profile.age}` : ""}
                 </p>
               </div>
-              <button
-                onClick={() => navigate(`/chat/${profile.matchId}`)}
-                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary-foreground/20 backdrop-blur-sm transition-colors hover:bg-primary"
-              >
+              <span className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary-foreground/20 backdrop-blur-sm transition-colors group-hover:bg-primary">
                 <MessageCircle className="h-4 w-4 text-primary-foreground" />
-              </button>
+              </span>
             </motion.div>
           ))}
         </div>
