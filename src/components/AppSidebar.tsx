@@ -1,6 +1,7 @@
 import { Crown, Flame, Heart, LogOut, Settings as SettingsIcon, Sparkles, User } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const items = [
   { path: "/", icon: Flame, label: "Обзор" },
