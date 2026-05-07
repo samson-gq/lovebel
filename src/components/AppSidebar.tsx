@@ -1,6 +1,7 @@
 import { Crown, Flame, Heart, LogOut, Settings as SettingsIcon, Sparkles, User } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const items = [
   { path: "/", icon: Flame, label: "Обзор" },
@@ -15,13 +16,14 @@ const AppSidebar = () => {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-border bg-card/80 backdrop-blur-xl md:flex">
-      <div className="flex items-center gap-2 px-6 py-5">
+      <div className="flex items-center justify-between gap-2 px-6 py-5">
         <span
           className="bg-clip-text text-2xl font-extrabold tracking-tight text-transparent"
           style={{ backgroundImage: "var(--gradient-primary)" }}
         >
           LoveBel
         </span>
+        <ThemeToggle className="h-9 w-9" />
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 px-3">

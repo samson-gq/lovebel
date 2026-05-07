@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import ProfileActionsMenu from "@/components/ProfileActionsMenu";
+import ChatList from "@/components/ChatList";
 import { toast } from "sonner";
 
 interface Message {
@@ -242,7 +243,9 @@ const Chat = () => {
   const lastReadMyId = [...myMessages].reverse().find((m) => !!m.read_at)?.id;
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-screen bg-background">
+      <ChatList />
+      <div className="flex h-screen flex-1 flex-col">
       <header className="flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur-xl">
         <button onClick={() => navigate("/matches")} className="text-foreground" aria-label="Назад">
           <ArrowLeft className="h-5 w-5" />
@@ -445,6 +448,7 @@ const Chat = () => {
           <Send className="h-4 w-4" />
         </button>
       </form>
+      </div>
     </div>
   );
 };
