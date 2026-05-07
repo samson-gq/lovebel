@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import SwipeCard from "@/components/SwipeCard";
 import BottomNav from "@/components/BottomNav";
 import SwipeFilters from "@/components/SwipeFilters";
+import ThemeToggle from "@/components/ThemeToggle";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useSwipeFilters, DEFAULT_FILTERS, isDefaultFilters } from "@/hooks/useSwipeFilters";
 import { useProfilesCount } from "@/hooks/useProfilesCount";
