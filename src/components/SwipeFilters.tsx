@@ -141,23 +141,6 @@ const SwipeFilters = ({ filters, onChange }: FiltersProps) => {
           <span>60</span>
         </div>
       </div>
-
-      {/* Age */}
-      <div className="mb-5">
-        <label className="mb-2 block text-sm font-medium text-card-foreground">
-          Возраст: {filters.ageRange[0]}–{filters.ageRange[1]}
-        </label>
-        <Slider
-          min={18}
-          max={60}
-          step={1}
-          value={filters.ageRange}
-          onValueChange={(val) =>
-            onChange({ ...filters, ageRange: val as [number, number] })
-          }
-        />
-      </div>
-
       {/* Distance */}
       <div className="mb-5">
         <div className="mb-2 flex items-center justify-between gap-3">
