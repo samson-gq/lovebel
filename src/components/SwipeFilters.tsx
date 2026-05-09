@@ -5,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { suggestCities } from "@/lib/cities";
 import { usePopularCities } from "@/hooks/usePopularCities";
+import { DEFAULT_FILTERS, isDefaultFilters } from "@/hooks/useSwipeFilters";
 
 interface FilterValues {
   ageRange: [number, number];
