@@ -5,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { suggestCities } from "@/lib/cities";
 import { usePopularCities } from "@/hooks/usePopularCities";
+import { DEFAULT_FILTERS, isDefaultFilters } from "@/hooks/useSwipeFilters";
 
 interface FilterValues {
   ageRange: [number, number];
@@ -96,29 +97,50 @@ const SwipeFilters = ({ filters, onChange }: FiltersProps) => {
       animate={{ opacity: 1, y: 0 }}
       className="absolute left-4 right-4 top-16 z-50 rounded-2xl bg-card p-5 shadow-elevated"
     >
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-2">
         <h3 className="text-lg font-semibold text-card-foreground">Фильтры</h3>
-        <button onClick={() => setOpen(false)} className="text-muted-foreground">
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {!isDefaultFilters(filters) && (
+            <button
+              onClick={() => onChange(DEFAULT_FILTERS)}
+              className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Сбросить
+            </button>
+          )}
+          <button onClick={() => setOpen(false)} className="text-muted-foreground" aria-label="Закрыть">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Age */}
       <div className="mb-5">
-        <label className="mb-2 block text-sm font-medium text-card-foreground">
-          Возраст: {filters.ageRange[0]}–{filters.ageRange[1]}
-        </label>
+        <div className="mb-2 flex items-center justify-between text-sm font-medium text-card-foreground">
+          <span>Возраст</span>
+          <span className="text-muted-foreground">
+            от <span className="font-semibold text-foreground">{filters.ageRange[0]}</span> до{" "}
+            <span className="font-semibold text-foreground">{filters.ageRange[1]}</span> лет
+          </span>
+        </div>
         <Slider
           min={18}
           max={60}
           step={1}
+          minStepsBetweenThumbs={1}
           value={filters.ageRange}
-          onValueChange={(val) =>
-            onChange({ ...filters, ageRange: val as [number, number] })
-          }
+          onValueChange={(val) => {
+            const [a, b] = val as [number, number];
+            const lo = Math.max(18, Math.min(60, Math.min(a, b)));
+            const hi = Math.max(18, Math.min(60, Math.max(a, b)));
+            onChange({ ...filters, ageRange: [lo, hi] });
+          }}
         />
+        <div className="mt-1 flex justify-between text-xs text-muted-foreground">
+          <span>18</span>
+          <span>60</span>
+        </div>
       </div>
-
       {/* Distance */}
       <div className="mb-5">
         <div className="mb-2 flex items-center justify-between gap-3">
