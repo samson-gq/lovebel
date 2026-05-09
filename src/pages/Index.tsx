@@ -306,11 +306,37 @@ const Index = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex h-full flex-col items-center justify-center text-center"
+              className="flex h-full flex-col items-center justify-center px-6 text-center"
             >
-              <Star className="mb-4 h-16 w-16 text-secondary" />
-              <h2 className="text-2xl font-bold text-foreground">Все просмотрено!</h2>
-              <p className="mt-2 text-muted-foreground">Новые анкеты скоро появятся</p>
+              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                <Star className="h-10 w-10 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">
+                {!isDefaultFilters(filters) ? "Никого не нашли" : "Все просмотрено!"}
+              </h2>
+              <p className="mt-2 text-muted-foreground">
+                {!isDefaultFilters(filters)
+                  ? "Попробуй смягчить фильтры — например, расширить возраст или радиус."
+                  : "Новые анкеты скоро появятся"}
+              </p>
+              {!isDefaultFilters(filters) && (
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                  {filters.useGps && filters.maxDistance < 100 && (
+                    <button
+                      onClick={() => setFilters({ ...filters, maxDistance: 100 })}
+                      className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted/80"
+                    >
+                      Радиус до 100 км
+                    </button>
+                  )}
+                  <button
+                    onClick={reset}
+                    className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                  >
+                    Сбросить фильтры
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
         </div>
