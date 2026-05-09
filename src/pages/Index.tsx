@@ -200,7 +200,7 @@ const Index = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="relative flex items-center justify-between px-4 py-4 md:py-6">
-        <SwipeFilters filters={filters} onChange={setFilters} />
+        <SwipeFilters filters={filters} onChange={setFilters} resultCount={liveCount} countLoading={countLoading} />
         <h1 className="bg-clip-text text-2xl font-extrabold tracking-tight text-transparent md:hidden" style={{ backgroundImage: 'var(--gradient-primary)' }}>
           LoveBel
         </h1>
