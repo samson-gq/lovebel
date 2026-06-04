@@ -1,12 +1,27 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, BadgeCheck, Smile, ImagePlus, Sparkles, Check, CheckCheck, X, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Send,
+  BadgeCheck,
+  Smile,
+  ImagePlus,
+  Sparkles,
+  Check,
+  CheckCheck,
+  X,
+  Loader2,
+  ChevronDown,
+} from "lucide-react";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import ProfileActionsMenu from "@/components/ProfileActionsMenu";
 import ChatList from "@/components/ChatList";
+import ImageLightbox from "@/components/ImageLightbox";
+import { formatDayLabel, formatTime, sameDay, linkify } from "@/lib/chatUtils";
 import { toast } from "sonner";
 
 interface Message {
@@ -17,6 +32,9 @@ interface Message {
   content_type?: "text" | "image" | "gif" | "sticker";
   attachment_url?: string | null;
   read_at?: string | null;
+  // client-only:
+  _optimistic?: boolean;
+  _failed?: boolean;
 }
 
 interface TenorGif {
@@ -24,6 +42,13 @@ interface TenorGif {
   preview: string;
   url: string;
 }
+
+const STARTERS = [
+  "Привет! Как настроение? ✨",
+  "Что обычно делаешь по выходным?",
+  "Расскажи о себе в трёх словах 😊",
+  "Куда бы поехал(а) прямо сейчас?",
+];
 
 const Chat = () => {
   const { matchId } = useParams<{ matchId: string }>();
@@ -35,6 +60,7 @@ const Chat = () => {
   const [partnerAvatar, setPartnerAvatar] = useState<string | null>(null);
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [partnerVerified, setPartnerVerified] = useState(false);
+  const [partnerOnline, setPartnerOnline] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
   const [gifQuery, setGifQuery] = useState("");
@@ -43,11 +69,16 @@ const Chat = () => {
   const [uploading, setUploading] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [showScrollDown, setShowScrollDown] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimerRef = useRef<number | null>(null);
+  const isAtBottomRef = useRef(true);
 
   // Fetch partner + messages + realtime
   useEffect(() => {
@@ -88,7 +119,26 @@ const Chat = () => {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
-        (payload) => setMessages((prev) => [...prev, payload.new as Message]),
+        (payload) => {
+          const incoming = payload.new as Message;
+          setMessages((prev) => {
+            // Replace matching optimistic message (same sender + content + content_type) or append
+            const idx = prev.findIndex(
+              (m) =>
+                m._optimistic &&
+                m.sender_id === incoming.sender_id &&
+                m.content === incoming.content &&
+                (m.content_type ?? "text") === (incoming.content_type ?? "text"),
+            );
+            if (idx !== -1) {
+              const next = [...prev];
+              next[idx] = incoming;
+              return next;
+            }
+            if (prev.some((m) => m.id === incoming.id)) return prev;
+            return [...prev, incoming];
+          });
+        },
       )
       .on(
         "postgres_changes",
@@ -106,7 +156,16 @@ const Chat = () => {
           typingTimerRef.current = window.setTimeout(() => setPartnerTyping(false), 3000);
         }
       })
-      .subscribe();
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState() as Record<string, unknown[]>;
+        const others = Object.keys(state).filter((k) => k !== user.id);
+        setPartnerOnline(others.length > 0);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track({ online_at: new Date().toISOString() });
+        }
+      });
 
     channelRef.current = channel;
 
@@ -119,7 +178,9 @@ const Chat = () => {
   // Mark partner messages as read
   useEffect(() => {
     if (!user || !matchId) return;
-    const unread = messages.filter((m) => m.sender_id !== user.id && !m.read_at).map((m) => m.id);
+    const unread = messages
+      .filter((m) => m.sender_id !== user.id && !m.read_at && !m._optimistic)
+      .map((m) => m.id);
     if (unread.length === 0) return;
     supabase
       .from("messages")
@@ -147,27 +208,88 @@ const Chat = () => {
     })();
   }, [messages, signedUrls]);
 
+  // Smart auto-scroll: only when user is at bottom
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isAtBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, partnerTyping]);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const atBottom = distance < 80;
+    isAtBottomRef.current = atBottom;
+    setShowScrollDown(!atBottom);
+  }, []);
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    isAtBottomRef.current = true;
+    setShowScrollDown(false);
+  };
 
   const broadcastTyping = useCallback(() => {
     if (!user || !channelRef.current) return;
     channelRef.current.send({ type: "broadcast", event: "typing", payload: { user_id: user.id } });
   }, [user]);
 
+  const insertOptimistic = useCallback(
+    (msg: Omit<Message, "id" | "created_at" | "sender_id">) => {
+      if (!user) return null;
+      const optimistic: Message = {
+        ...msg,
+        id: `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        sender_id: user.id,
+        created_at: new Date().toISOString(),
+        _optimistic: true,
+      };
+      setMessages((prev) => [...prev, optimistic]);
+      isAtBottomRef.current = true;
+      return optimistic.id;
+    },
+    [user],
+  );
+
+  const markFailed = (tmpId: string | null) => {
+    if (!tmpId) return;
+    setMessages((prev) => prev.map((m) => (m.id === tmpId ? { ...m, _failed: true } : m)));
+  };
+
+  const sendText = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed || !user || !matchId) return;
+      const tmpId = insertOptimistic({ content: trimmed, content_type: "text" });
+      const { error } = await supabase.from("messages").insert({
+        match_id: matchId,
+        sender_id: user.id,
+        content: trimmed,
+        content_type: "text",
+      });
+      if (error) {
+        markFailed(tmpId);
+        toast.error("Не удалось отправить");
+      }
+    },
+    [user, matchId, insertOptimistic],
+  );
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user || !matchId) return;
-    const text = newMessage.trim();
+    const text = newMessage;
     setNewMessage("");
-    const { error } = await supabase.from("messages").insert({
-      match_id: matchId,
-      sender_id: user.id,
-      content: text,
-      content_type: "text",
-    });
-    if (error) toast.error("Не удалось отправить");
+    await sendText(text);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      const text = newMessage;
+      setNewMessage("");
+      sendText(text);
+    }
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -239,216 +361,385 @@ const Chat = () => {
     });
   };
 
-  const myMessages = messages.filter((m) => m.sender_id === user?.id);
+  // Auto-grow textarea
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+  }, [newMessage]);
+
+  const myMessages = messages.filter((m) => m.sender_id === user?.id && !m._optimistic);
   const lastReadMyId = [...myMessages].reverse().find((m) => !!m.read_at)?.id;
+
+  // Build grouped rows: date separators + grouped consecutive messages
+  type Row =
+    | { kind: "day"; key: string; label: string }
+    | { kind: "msg"; key: string; msg: Message; showTail: boolean; isFirstInGroup: boolean };
+
+  const rows: Row[] = useMemo(() => {
+    const out: Row[] = [];
+    for (let i = 0; i < messages.length; i++) {
+      const m = messages[i];
+      const date = new Date(m.created_at);
+      const prev = i > 0 ? messages[i - 1] : null;
+      const next = i < messages.length - 1 ? messages[i + 1] : null;
+      const prevDate = prev ? new Date(prev.created_at) : null;
+      const nextDate = next ? new Date(next.created_at) : null;
+
+      if (!prevDate || !sameDay(prevDate, date)) {
+        out.push({ kind: "day", key: `day-${date.toDateString()}-${i}`, label: formatDayLabel(date) });
+      }
+
+      const isFirstInGroup =
+        !prev || prev.sender_id !== m.sender_id || (prevDate && !sameDay(prevDate, date));
+      // "Tail" = show timestamp & status: last in group OR gap > 5 min to next from same sender
+      const sameSenderNext = next && next.sender_id === m.sender_id && nextDate && sameDay(nextDate, date);
+      const gapBig = nextDate ? nextDate.getTime() - date.getTime() > 5 * 60 * 1000 : false;
+      const showTail = !sameSenderNext || gapBig;
+
+      out.push({ kind: "msg", key: m.id, msg: m, showTail, isFirstInGroup: Boolean(isFirstInGroup) });
+    }
+    return out;
+  }, [messages]);
+
+  const isEmpty = !messages.length;
 
   return (
     <div className="flex h-screen bg-background">
       <ChatList />
       <div className="flex h-screen flex-1 flex-col">
-      <header className="flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur-xl">
-        <button onClick={() => navigate("/matches")} className="text-foreground" aria-label="Назад">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        {partnerAvatar && (
-          <img src={partnerAvatar} alt={partnerName} className="h-9 w-9 rounded-full object-cover" />
-        )}
-        <div className="flex flex-1 flex-col">
-          <span className="flex items-center gap-1 font-semibold text-foreground">
-            {partnerName}
-            {partnerVerified && <BadgeCheck className="h-4 w-4 text-primary" aria-label="Верифицирован" />}
-          </span>
-          {partnerTyping && (
-            <span className="text-xs text-primary animate-pulse">печатает…</span>
-          )}
-        </div>
-        {partnerId && (
-          <ProfileActionsMenu
-            targetUserId={partnerId}
-            targetUserName={partnerName}
-            onBlocked={() => navigate("/matches")}
-            triggerClassName="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
-          />
-        )}
-      </header>
-
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        {messages.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground">Напишите первое сообщение! 👋</p>
-        )}
-        {messages.map((msg) => {
-          const isMine = msg.sender_id === user?.id;
-          const isLastReadMine = isMine && msg.id === lastReadMyId;
-          return (
-            <div key={msg.id} className={`mb-3 flex ${isMine ? "justify-end" : "justify-start"}`}>
-              <div className="flex max-w-[75%] flex-col items-end gap-1">
-                {msg.content_type === "image" && msg.attachment_url ? (
-                  <img
-                    src={signedUrls[msg.id] || ""}
-                    alt="Изображение"
-                    className="max-h-72 rounded-2xl object-cover"
-                    loading="lazy"
-                  />
-                ) : msg.content_type === "gif" && msg.attachment_url ? (
-                  <img
-                    src={msg.attachment_url}
-                    alt="GIF"
-                    className="max-h-64 rounded-2xl object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div
-                    className={`rounded-2xl px-4 py-2.5 text-sm ${
-                      isMine ? "gradient-primary text-primary-foreground" : "bg-muted text-foreground"
-                    }`}
-                  >
-                    {msg.content}
-                  </div>
-                )}
-                {isMine && (
-                  <div className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                    {msg.read_at || isLastReadMine ? (
-                      <CheckCheck className="h-3.5 w-3.5 text-primary" />
-                    ) : (
-                      <Check className="h-3.5 w-3.5" />
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-        {partnerTyping && (
-          <div className="mb-3 flex justify-start">
-            <div className="rounded-2xl bg-muted px-4 py-2.5 text-sm text-muted-foreground">
-              <span className="inline-flex gap-1">
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-foreground/60" style={{ animationDelay: "0ms" }} />
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-foreground/60" style={{ animationDelay: "150ms" }} />
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-foreground/60" style={{ animationDelay: "300ms" }} />
-              </span>
-            </div>
+        <header className="flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur-xl">
+          <button onClick={() => navigate("/matches")} className="text-foreground" aria-label="Назад">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="relative">
+            {partnerAvatar && (
+              <img
+                src={partnerAvatar}
+                alt={partnerName}
+                className="h-9 w-9 rounded-full object-cover"
+              />
+            )}
+            {partnerOnline && (
+              <span
+                className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500"
+                aria-label="В сети"
+              />
+            )}
           </div>
-        )}
-        <div ref={bottomRef} />
-      </div>
-
-      {/* Emoji picker */}
-      {showEmoji && (
-        <div className="border-t border-border bg-card">
-          <EmojiPicker
-            onEmojiClick={(e) => {
-              setNewMessage((prev) => prev + e.emoji);
-            }}
-            theme={Theme.AUTO}
-            emojiStyle={EmojiStyle.NATIVE}
-            width="100%"
-            height={320}
-            searchPlaceholder="Найти эмодзи..."
-            previewConfig={{ showPreview: false }}
-          />
-        </div>
-      )}
-
-      {/* GIF picker */}
-      {showGif && (
-        <div className="flex max-h-80 flex-col border-t border-border bg-card">
-          <div className="flex items-center gap-2 p-2">
-            <Input
-              value={gifQuery}
-              onChange={(e) => setGifQuery(e.target.value)}
-              placeholder="Поиск GIF в Tenor..."
-              className="flex-1"
-            />
-            <button
-              onClick={() => setShowGif(false)}
-              className="rounded-full p-2 text-muted-foreground hover:bg-muted"
-              aria-label="Закрыть"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2">
-            {gifLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
+          <div className="flex flex-1 flex-col">
+            <span className="flex items-center gap-1 font-semibold text-foreground">
+              {partnerName}
+              {partnerVerified && <BadgeCheck className="h-4 w-4 text-primary" aria-label="Верифицирован" />}
+            </span>
+            {partnerTyping ? (
+              <span className="text-xs text-primary animate-pulse">печатает…</span>
+            ) : partnerOnline ? (
+              <span className="text-xs text-emerald-500">в сети</span>
             ) : (
-              <div className="grid grid-cols-3 gap-1.5">
-                {gifs.map((g) => (
+              <span className="text-xs text-muted-foreground">не в сети</span>
+            )}
+          </div>
+          {partnerId && (
+            <ProfileActionsMenu
+              targetUserId={partnerId}
+              targetUserName={partnerName}
+              onBlocked={() => navigate("/matches")}
+              triggerClassName="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+            />
+          )}
+        </header>
+
+        <div
+          ref={scrollerRef}
+          onScroll={handleScroll}
+          className="relative flex-1 overflow-y-auto px-4 py-4"
+        >
+          {isEmpty && (
+            <div className="mx-auto flex max-w-sm flex-col items-center gap-4 pt-10 text-center">
+              {partnerAvatar && (
+                <img
+                  src={partnerAvatar}
+                  alt={partnerName}
+                  className="h-20 w-20 rounded-full object-cover ring-4 ring-primary/10"
+                />
+              )}
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Вы совпали с {partnerName}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Начните разговор — выберите подсказку или напишите своё
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {STARTERS.map((s) => (
                   <button
-                    key={g.id}
-                    onClick={() => sendGif(g)}
-                    className="overflow-hidden rounded-lg bg-muted transition-transform active:scale-95"
+                    key={s}
+                    onClick={() => sendText(s)}
+                    className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
                   >
-                    <img src={g.preview} alt="" className="h-24 w-full object-cover" loading="lazy" />
+                    {s}
                   </button>
                 ))}
               </div>
-            )}
-          </div>
-        </div>
-      )}
+            </div>
+          )}
 
-      <form
-        onSubmit={sendMessage}
-        className="flex items-center gap-2 border-t border-border bg-card px-3 py-2.5"
-      >
-        <input
-          type="file"
-          accept="image/*"
-          ref={fileInputRef}
-          onChange={handleImageSelect}
-          className="hidden"
-        />
-        <button
-          type="button"
-          onClick={() => {
-            setShowEmoji((v) => !v);
-            setShowGif(false);
-          }}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
-          aria-label="Эмодзи"
+          {rows.map((row) => {
+            if (row.kind === "day") {
+              return (
+                <div key={row.key} className="my-4 flex items-center justify-center">
+                  <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                    {row.label}
+                  </span>
+                </div>
+              );
+            }
+            const msg = row.msg;
+            const isMine = msg.sender_id === user?.id;
+            const isLastReadMine = isMine && msg.id === lastReadMyId;
+            const time = formatTime(new Date(msg.created_at));
+            return (
+              <div
+                key={row.key}
+                className={`flex ${isMine ? "justify-end" : "justify-start"} ${
+                  row.isFirstInGroup ? "mt-3" : "mt-0.5"
+                }`}
+              >
+                <div className={`flex max-w-[75%] flex-col ${isMine ? "items-end" : "items-start"} gap-1`}>
+                  {msg.content_type === "image" && msg.attachment_url ? (
+                    <button
+                      type="button"
+                      onClick={() => signedUrls[msg.id] && setLightboxUrl(signedUrls[msg.id])}
+                      className="overflow-hidden rounded-2xl transition-opacity hover:opacity-90"
+                    >
+                      <img
+                        src={signedUrls[msg.id] || ""}
+                        alt="Изображение"
+                        className="max-h-72 rounded-2xl object-cover"
+                        loading="lazy"
+                      />
+                    </button>
+                  ) : msg.content_type === "gif" && msg.attachment_url ? (
+                    <button
+                      type="button"
+                      onClick={() => setLightboxUrl(msg.attachment_url!)}
+                      className="overflow-hidden rounded-2xl transition-opacity hover:opacity-90"
+                    >
+                      <img
+                        src={msg.attachment_url}
+                        alt="GIF"
+                        className="max-h-64 rounded-2xl object-cover"
+                        loading="lazy"
+                      />
+                    </button>
+                  ) : (
+                    <div
+                      className={`whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm ${
+                        isMine
+                          ? "gradient-primary text-primary-foreground"
+                          : "bg-muted text-foreground"
+                      } ${msg._optimistic ? "opacity-70" : ""} ${
+                        msg._failed ? "ring-2 ring-destructive" : ""
+                      }`}
+                    >
+                      {linkify(msg.content).map((part, i) =>
+                        part.type === "link" ? (
+                          <a
+                            key={i}
+                            href={part.value}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className={`underline underline-offset-2 ${
+                              isMine ? "text-primary-foreground" : "text-primary"
+                            }`}
+                          >
+                            {part.value}
+                          </a>
+                        ) : (
+                          <span key={i}>{part.value}</span>
+                        ),
+                      )}
+                    </div>
+                  )}
+                  {row.showTail && (
+                    <div className="flex items-center gap-1 px-1 text-[10px] text-muted-foreground">
+                      <span>{time}</span>
+                      {isMine &&
+                        (msg._failed ? (
+                          <span className="text-destructive">не отправлено</span>
+                        ) : msg._optimistic ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : msg.read_at || isLastReadMine ? (
+                          <CheckCheck className="h-3.5 w-3.5 text-primary" />
+                        ) : (
+                          <Check className="h-3.5 w-3.5" />
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {partnerTyping && (
+            <div className="mt-3 flex justify-start">
+              <div className="rounded-2xl bg-muted px-4 py-2.5 text-sm text-muted-foreground">
+                <span className="inline-flex gap-1">
+                  <span
+                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-foreground/60"
+                    style={{ animationDelay: "0ms" }}
+                  />
+                  <span
+                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-foreground/60"
+                    style={{ animationDelay: "150ms" }}
+                  />
+                  <span
+                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-foreground/60"
+                    style={{ animationDelay: "300ms" }}
+                  />
+                </span>
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
+
+          {showScrollDown && (
+            <button
+              type="button"
+              onClick={scrollToBottom}
+              aria-label="К новым сообщениям"
+              className="sticky bottom-2 ml-auto flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-card hover:bg-muted"
+              style={{ float: "right" }}
+            >
+              <ChevronDown className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Emoji picker */}
+        {showEmoji && (
+          <div className="border-t border-border bg-card">
+            <EmojiPicker
+              onEmojiClick={(e) => {
+                setNewMessage((prev) => prev + e.emoji);
+              }}
+              theme={Theme.AUTO}
+              emojiStyle={EmojiStyle.NATIVE}
+              width="100%"
+              height={320}
+              searchPlaceholder="Найти эмодзи..."
+              previewConfig={{ showPreview: false }}
+            />
+          </div>
+        )}
+
+        {/* GIF picker */}
+        {showGif && (
+          <div className="flex max-h-80 flex-col border-t border-border bg-card">
+            <div className="flex items-center gap-2 p-2">
+              <Input
+                value={gifQuery}
+                onChange={(e) => setGifQuery(e.target.value)}
+                placeholder="Поиск GIF в Tenor..."
+                className="flex-1"
+              />
+              <button
+                onClick={() => setShowGif(false)}
+                className="rounded-full p-2 text-muted-foreground hover:bg-muted"
+                aria-label="Закрыть"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              {gifLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-1.5">
+                  {gifs.map((g) => (
+                    <button
+                      key={g.id}
+                      onClick={() => sendGif(g)}
+                      className="overflow-hidden rounded-lg bg-muted transition-transform active:scale-95"
+                    >
+                      <img src={g.preview} alt="" className="h-24 w-full object-cover" loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <form
+          onSubmit={sendMessage}
+          className="flex items-end gap-2 border-t border-border bg-card px-3 py-2.5"
         >
-          <Smile className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted disabled:opacity-50"
-          aria-label="Изображение"
-        >
-          {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setShowGif((v) => !v);
-            setShowEmoji(false);
-          }}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
-          aria-label="GIF"
-        >
-          <Sparkles className="h-5 w-5" />
-        </button>
-        <Input
-          value={newMessage}
-          onChange={(e) => {
-            setNewMessage(e.target.value);
-            broadcastTyping();
-          }}
-          placeholder="Сообщение..."
-          className="flex-1"
-        />
-        <button
-          type="submit"
-          disabled={!newMessage.trim()}
-          className="gradient-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-primary-foreground disabled:opacity-50"
-        >
-          <Send className="h-4 w-4" />
-        </button>
-      </form>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setShowEmoji((v) => !v);
+              setShowGif(false);
+            }}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+            aria-label="Эмодзи"
+          >
+            <Smile className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted disabled:opacity-50"
+            aria-label="Изображение"
+          >
+            {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowGif((v) => !v);
+              setShowEmoji(false);
+            }}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+            aria-label="GIF"
+          >
+            <Sparkles className="h-5 w-5" />
+          </button>
+          <Textarea
+            ref={textareaRef}
+            value={newMessage}
+            rows={1}
+            onChange={(e) => {
+              setNewMessage(e.target.value);
+              broadcastTyping();
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Сообщение… (Enter — отправить, Shift+Enter — новая строка)"
+            className="min-h-[40px] flex-1 resize-none py-2"
+          />
+          <button
+            type="submit"
+            disabled={!newMessage.trim()}
+            aria-label="Отправить"
+            className="gradient-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-primary-foreground disabled:opacity-50"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </form>
       </div>
+
+      {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
     </div>
   );
 };
