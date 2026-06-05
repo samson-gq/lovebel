@@ -621,72 +621,206 @@ const Chat = () => {
             const isMine = msg.sender_id === user?.id;
             const isLastReadMine = isMine && msg.id === lastReadMyId;
             const time = formatTime(new Date(msg.created_at));
+            const isDeleted = !!msg.deleted_at;
+            const isEditing = editingId === msg.id;
+            const msgReactions = reactionsByMessage[msg.id] || [];
+            // Aggregate reactions by emoji
+            const grouped = msgReactions.reduce<Record<string, { count: number; mine: boolean }>>(
+              (acc, r) => {
+                const e = (acc[r.emoji] ||= { count: 0, mine: false });
+                e.count += 1;
+                if (r.user_id === user?.id) e.mine = true;
+                return acc;
+              },
+              {},
+            );
+            const canEdit = isMine && !isDeleted && msg.content_type === "text" && !msg._optimistic;
+            const canDelete = isMine && !isDeleted && !msg._optimistic;
+            const showActions = !isDeleted && !msg._optimistic && !isEditing;
+
             return (
               <div
                 key={row.key}
-                className={`flex ${isMine ? "justify-end" : "justify-start"} ${
+                className={`group flex ${isMine ? "justify-end" : "justify-start"} ${
                   row.isFirstInGroup ? "mt-3" : "mt-0.5"
                 }`}
               >
                 <div className={`flex max-w-[75%] flex-col ${isMine ? "items-end" : "items-start"} gap-1`}>
-                  {msg.content_type === "image" && msg.attachment_url ? (
-                    <button
-                      type="button"
-                      onClick={() => signedUrls[msg.id] && setLightboxUrl(signedUrls[msg.id])}
-                      className="overflow-hidden rounded-2xl transition-opacity hover:opacity-90"
-                    >
-                      <img
-                        src={signedUrls[msg.id] || ""}
-                        alt="Изображение"
-                        className="max-h-72 rounded-2xl object-cover"
-                        loading="lazy"
-                      />
-                    </button>
-                  ) : msg.content_type === "gif" && msg.attachment_url ? (
-                    <button
-                      type="button"
-                      onClick={() => setLightboxUrl(msg.attachment_url!)}
-                      className="overflow-hidden rounded-2xl transition-opacity hover:opacity-90"
-                    >
-                      <img
-                        src={msg.attachment_url}
-                        alt="GIF"
-                        className="max-h-64 rounded-2xl object-cover"
-                        loading="lazy"
-                      />
-                    </button>
-                  ) : (
-                    <div
-                      className={`whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm ${
-                        isMine
-                          ? "gradient-primary text-primary-foreground"
-                          : "bg-muted text-foreground"
-                      } ${msg._optimistic ? "opacity-70" : ""} ${
-                        msg._failed ? "ring-2 ring-destructive" : ""
-                      }`}
-                    >
-                      {linkify(msg.content).map((part, i) =>
-                        part.type === "link" ? (
-                          <a
-                            key={i}
-                            href={part.value}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                            className={`underline underline-offset-2 ${
-                              isMine ? "text-primary-foreground" : "text-primary"
-                            }`}
+                  <div className={`flex items-center gap-1 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
+                    {isDeleted ? (
+                      <div className="rounded-2xl bg-muted/60 px-4 py-2 text-sm italic text-muted-foreground">
+                        Сообщение удалено
+                      </div>
+                    ) : isEditing ? (
+                      <div className="flex w-full max-w-md flex-col gap-2 rounded-2xl border border-primary/40 bg-card p-2">
+                        <Textarea
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              saveEdit();
+                            }
+                            if (e.key === "Escape") cancelEdit();
+                          }}
+                          rows={2}
+                          className="resize-none text-sm"
+                          autoFocus
+                        />
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={cancelEdit}
+                            className="rounded-full px-3 py-1 text-xs text-muted-foreground hover:bg-muted"
                           >
-                            {part.value}
-                          </a>
-                        ) : (
-                          <span key={i}>{part.value}</span>
-                        ),
-                      )}
+                            Отмена
+                          </button>
+                          <button
+                            type="button"
+                            onClick={saveEdit}
+                            className="gradient-primary rounded-full px-3 py-1 text-xs text-primary-foreground"
+                          >
+                            Сохранить
+                          </button>
+                        </div>
+                      </div>
+                    ) : msg.content_type === "image" && msg.attachment_url ? (
+                      <button
+                        type="button"
+                        onClick={() => signedUrls[msg.id] && setLightboxUrl(signedUrls[msg.id])}
+                        className="overflow-hidden rounded-2xl transition-opacity hover:opacity-90"
+                      >
+                        <img
+                          src={signedUrls[msg.id] || ""}
+                          alt="Изображение"
+                          className="max-h-72 rounded-2xl object-cover"
+                          loading="lazy"
+                        />
+                      </button>
+                    ) : msg.content_type === "gif" && msg.attachment_url ? (
+                      <button
+                        type="button"
+                        onClick={() => setLightboxUrl(msg.attachment_url!)}
+                        className="overflow-hidden rounded-2xl transition-opacity hover:opacity-90"
+                      >
+                        <img
+                          src={msg.attachment_url}
+                          alt="GIF"
+                          className="max-h-64 rounded-2xl object-cover"
+                          loading="lazy"
+                        />
+                      </button>
+                    ) : (
+                      <div
+                        className={`whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm ${
+                          isMine
+                            ? "gradient-primary text-primary-foreground"
+                            : "bg-muted text-foreground"
+                        } ${msg._optimistic ? "opacity-70" : ""} ${
+                          msg._failed ? "ring-2 ring-destructive" : ""
+                        }`}
+                      >
+                        {linkify(msg.content).map((part, i) =>
+                          part.type === "link" ? (
+                            <a
+                              key={i}
+                              href={part.value}
+                              target="_blank"
+                              rel="noreferrer noopener"
+                              className={`underline underline-offset-2 ${
+                                isMine ? "text-primary-foreground" : "text-primary"
+                              }`}
+                            >
+                              {part.value}
+                            </a>
+                          ) : (
+                            <span key={i}>{part.value}</span>
+                          ),
+                        )}
+                      </div>
+                    )}
+
+                    {showActions && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label="Действия с сообщением"
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:bg-muted focus:opacity-100 group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          align={isMine ? "end" : "start"}
+                          className="w-auto p-2"
+                          side="top"
+                        >
+                          <div className="flex items-center gap-1">
+                            {QUICK_REACTIONS.map((e) => (
+                              <button
+                                key={e}
+                                type="button"
+                                onClick={() => toggleReaction(msg.id, e)}
+                                className="rounded-full p-1.5 text-lg transition-transform hover:scale-125"
+                                aria-label={`Реакция ${e}`}
+                              >
+                                {e}
+                              </button>
+                            ))}
+                          </div>
+                          {(canEdit || canDelete) && (
+                            <div className="mt-1 flex flex-col border-t border-border pt-1">
+                              {canEdit && (
+                                <button
+                                  type="button"
+                                  onClick={() => startEdit(msg)}
+                                  className="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
+                                >
+                                  <Pencil className="h-4 w-4" /> Изменить
+                                </button>
+                              )}
+                              {canDelete && (
+                                <button
+                                  type="button"
+                                  onClick={() => deleteMessage(msg)}
+                                  className="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-destructive hover:bg-muted"
+                                >
+                                  <Trash2 className="h-4 w-4" /> Удалить
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  </div>
+
+                  {Object.keys(grouped).length > 0 && !isDeleted && (
+                    <div className={`flex flex-wrap gap-1 ${isMine ? "justify-end" : "justify-start"}`}>
+                      {Object.entries(grouped).map(([emoji, info]) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => toggleReaction(msg.id, emoji)}
+                          className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors ${
+                            info.mine
+                              ? "border-primary/50 bg-primary/10 text-foreground"
+                              : "border-border bg-card text-muted-foreground hover:bg-muted"
+                          }`}
+                          aria-label={`${emoji} ${info.count}`}
+                        >
+                          <span>{emoji}</span>
+                          <span>{info.count}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
+
                   {row.showTail && (
                     <div className="flex items-center gap-1 px-1 text-[10px] text-muted-foreground">
                       <span>{time}</span>
+                      {msg.edited_at && !isDeleted && <span>· изменено</span>}
                       {isMine &&
                         (msg._failed ? (
                           <span className="text-destructive">не отправлено</span>
