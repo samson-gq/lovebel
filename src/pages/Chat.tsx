@@ -87,6 +87,9 @@ const Chat = () => {
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
