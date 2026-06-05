@@ -12,12 +12,16 @@ import {
   X,
   Loader2,
   ChevronDown,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import ProfileActionsMenu from "@/components/ProfileActionsMenu";
 import ChatList from "@/components/ChatList";
 import ImageLightbox from "@/components/ImageLightbox";
@@ -32,10 +36,21 @@ interface Message {
   content_type?: "text" | "image" | "gif" | "sticker";
   attachment_url?: string | null;
   read_at?: string | null;
+  edited_at?: string | null;
+  deleted_at?: string | null;
   // client-only:
   _optimistic?: boolean;
   _failed?: boolean;
 }
+
+interface Reaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  emoji: string;
+}
+
+const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "🔥", "👍"];
 
 interface TenorGif {
   id: string;
@@ -71,6 +86,9 @@ const Chat = () => {
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -108,7 +126,16 @@ const Chat = () => {
         .select("*")
         .eq("match_id", matchId)
         .order("created_at", { ascending: true });
-      setMessages((data as Message[]) || []);
+      const msgs = (data as Message[]) || [];
+      setMessages(msgs);
+      // Fetch reactions for these messages
+      if (msgs.length) {
+        const { data: rx } = await supabase
+          .from("message_reactions")
+          .select("*")
+          .in("message_id", msgs.map((m) => m.id));
+        setReactions((rx as Reaction[]) || []);
+      }
     };
 
     fetchPartner();
@@ -146,6 +173,24 @@ const Chat = () => {
         (payload) => {
           const updated = payload.new as Message;
           setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "message_reactions" },
+        (payload) => {
+          const r = payload.new as Reaction;
+          setReactions((prev) =>
+            prev.some((x) => x.id === r.id) ? prev : [...prev, r],
+          );
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "message_reactions" },
+        (payload) => {
+          const old = payload.old as { id: string };
+          setReactions((prev) => prev.filter((x) => x.id !== old.id));
         },
       )
       .on("broadcast", { event: "typing" }, (payload) => {
@@ -372,6 +417,82 @@ const Chat = () => {
   const myMessages = messages.filter((m) => m.sender_id === user?.id && !m._optimistic);
   const lastReadMyId = [...myMessages].reverse().find((m) => !!m.read_at)?.id;
 
+  // Reactions grouped by message
+  const reactionsByMessage = useMemo(() => {
+    const map: Record<string, Reaction[]> = {};
+    for (const r of reactions) {
+      (map[r.message_id] ||= []).push(r);
+    }
+    return map;
+  }, [reactions]);
+
+  const toggleReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
+    const mine = reactions.find(
+      (r) => r.message_id === messageId && r.user_id === user.id && r.emoji === emoji,
+    );
+    if (mine) {
+      // Optimistic remove
+      setReactions((prev) => prev.filter((r) => r.id !== mine.id));
+      const { error } = await supabase.from("message_reactions").delete().eq("id", mine.id);
+      if (error) toast.error("Не удалось убрать реакцию");
+    } else {
+      const { data, error } = await supabase
+        .from("message_reactions")
+        .insert({ message_id: messageId, user_id: user.id, emoji })
+        .select()
+        .single();
+      if (error) {
+        toast.error("Не удалось добавить реакцию");
+      } else if (data) {
+        setReactions((prev) =>
+          prev.some((r) => r.id === (data as Reaction).id) ? prev : [...prev, data as Reaction],
+        );
+      }
+    }
+  };
+
+  const startEdit = (m: Message) => {
+    setEditingId(m.id);
+    setEditingText(m.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingText("");
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    const trimmed = editingText.trim();
+    if (!trimmed) return;
+    const id = editingId;
+    setMessages((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, content: trimmed, edited_at: new Date().toISOString() } : m)),
+    );
+    cancelEdit();
+    const { error } = await supabase
+      .from("messages")
+      .update({ content: trimmed, edited_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) toast.error("Не удалось сохранить изменения");
+  };
+
+  const deleteMessage = async (m: Message) => {
+    if (!confirm("Удалить сообщение?")) return;
+    setMessages((prev) =>
+      prev.map((x) =>
+        x.id === m.id ? { ...x, deleted_at: new Date().toISOString(), content: "" } : x,
+      ),
+    );
+    const { error } = await supabase
+      .from("messages")
+      .update({ deleted_at: new Date().toISOString(), content: "" })
+      .eq("id", m.id);
+    if (error) toast.error("Не удалось удалить");
+  };
+
+
   // Build grouped rows: date separators + grouped consecutive messages
   type Row =
     | { kind: "day"; key: string; label: string }
@@ -499,72 +620,206 @@ const Chat = () => {
             const isMine = msg.sender_id === user?.id;
             const isLastReadMine = isMine && msg.id === lastReadMyId;
             const time = formatTime(new Date(msg.created_at));
+            const isDeleted = !!msg.deleted_at;
+            const isEditing = editingId === msg.id;
+            const msgReactions = reactionsByMessage[msg.id] || [];
+            // Aggregate reactions by emoji
+            const grouped = msgReactions.reduce<Record<string, { count: number; mine: boolean }>>(
+              (acc, r) => {
+                const e = (acc[r.emoji] ||= { count: 0, mine: false });
+                e.count += 1;
+                if (r.user_id === user?.id) e.mine = true;
+                return acc;
+              },
+              {},
+            );
+            const canEdit = isMine && !isDeleted && msg.content_type === "text" && !msg._optimistic;
+            const canDelete = isMine && !isDeleted && !msg._optimistic;
+            const showActions = !isDeleted && !msg._optimistic && !isEditing;
+
             return (
               <div
                 key={row.key}
-                className={`flex ${isMine ? "justify-end" : "justify-start"} ${
+                className={`group flex ${isMine ? "justify-end" : "justify-start"} ${
                   row.isFirstInGroup ? "mt-3" : "mt-0.5"
                 }`}
               >
                 <div className={`flex max-w-[75%] flex-col ${isMine ? "items-end" : "items-start"} gap-1`}>
-                  {msg.content_type === "image" && msg.attachment_url ? (
-                    <button
-                      type="button"
-                      onClick={() => signedUrls[msg.id] && setLightboxUrl(signedUrls[msg.id])}
-                      className="overflow-hidden rounded-2xl transition-opacity hover:opacity-90"
-                    >
-                      <img
-                        src={signedUrls[msg.id] || ""}
-                        alt="Изображение"
-                        className="max-h-72 rounded-2xl object-cover"
-                        loading="lazy"
-                      />
-                    </button>
-                  ) : msg.content_type === "gif" && msg.attachment_url ? (
-                    <button
-                      type="button"
-                      onClick={() => setLightboxUrl(msg.attachment_url!)}
-                      className="overflow-hidden rounded-2xl transition-opacity hover:opacity-90"
-                    >
-                      <img
-                        src={msg.attachment_url}
-                        alt="GIF"
-                        className="max-h-64 rounded-2xl object-cover"
-                        loading="lazy"
-                      />
-                    </button>
-                  ) : (
-                    <div
-                      className={`whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm ${
-                        isMine
-                          ? "gradient-primary text-primary-foreground"
-                          : "bg-muted text-foreground"
-                      } ${msg._optimistic ? "opacity-70" : ""} ${
-                        msg._failed ? "ring-2 ring-destructive" : ""
-                      }`}
-                    >
-                      {linkify(msg.content).map((part, i) =>
-                        part.type === "link" ? (
-                          <a
-                            key={i}
-                            href={part.value}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                            className={`underline underline-offset-2 ${
-                              isMine ? "text-primary-foreground" : "text-primary"
-                            }`}
+                  <div className={`flex items-center gap-1 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
+                    {isDeleted ? (
+                      <div className="rounded-2xl bg-muted/60 px-4 py-2 text-sm italic text-muted-foreground">
+                        Сообщение удалено
+                      </div>
+                    ) : isEditing ? (
+                      <div className="flex w-full max-w-md flex-col gap-2 rounded-2xl border border-primary/40 bg-card p-2">
+                        <Textarea
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              saveEdit();
+                            }
+                            if (e.key === "Escape") cancelEdit();
+                          }}
+                          rows={2}
+                          className="resize-none text-sm"
+                          autoFocus
+                        />
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={cancelEdit}
+                            className="rounded-full px-3 py-1 text-xs text-muted-foreground hover:bg-muted"
                           >
-                            {part.value}
-                          </a>
-                        ) : (
-                          <span key={i}>{part.value}</span>
-                        ),
-                      )}
+                            Отмена
+                          </button>
+                          <button
+                            type="button"
+                            onClick={saveEdit}
+                            className="gradient-primary rounded-full px-3 py-1 text-xs text-primary-foreground"
+                          >
+                            Сохранить
+                          </button>
+                        </div>
+                      </div>
+                    ) : msg.content_type === "image" && msg.attachment_url ? (
+                      <button
+                        type="button"
+                        onClick={() => signedUrls[msg.id] && setLightboxUrl(signedUrls[msg.id])}
+                        className="overflow-hidden rounded-2xl transition-opacity hover:opacity-90"
+                      >
+                        <img
+                          src={signedUrls[msg.id] || ""}
+                          alt="Изображение"
+                          className="max-h-72 rounded-2xl object-cover"
+                          loading="lazy"
+                        />
+                      </button>
+                    ) : msg.content_type === "gif" && msg.attachment_url ? (
+                      <button
+                        type="button"
+                        onClick={() => setLightboxUrl(msg.attachment_url!)}
+                        className="overflow-hidden rounded-2xl transition-opacity hover:opacity-90"
+                      >
+                        <img
+                          src={msg.attachment_url}
+                          alt="GIF"
+                          className="max-h-64 rounded-2xl object-cover"
+                          loading="lazy"
+                        />
+                      </button>
+                    ) : (
+                      <div
+                        className={`whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm ${
+                          isMine
+                            ? "gradient-primary text-primary-foreground"
+                            : "bg-muted text-foreground"
+                        } ${msg._optimistic ? "opacity-70" : ""} ${
+                          msg._failed ? "ring-2 ring-destructive" : ""
+                        }`}
+                      >
+                        {linkify(msg.content).map((part, i) =>
+                          part.type === "link" ? (
+                            <a
+                              key={i}
+                              href={part.value}
+                              target="_blank"
+                              rel="noreferrer noopener"
+                              className={`underline underline-offset-2 ${
+                                isMine ? "text-primary-foreground" : "text-primary"
+                              }`}
+                            >
+                              {part.value}
+                            </a>
+                          ) : (
+                            <span key={i}>{part.value}</span>
+                          ),
+                        )}
+                      </div>
+                    )}
+
+                    {showActions && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label="Действия с сообщением"
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:bg-muted focus:opacity-100 group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          align={isMine ? "end" : "start"}
+                          className="w-auto p-2"
+                          side="top"
+                        >
+                          <div className="flex items-center gap-1">
+                            {QUICK_REACTIONS.map((e) => (
+                              <button
+                                key={e}
+                                type="button"
+                                onClick={() => toggleReaction(msg.id, e)}
+                                className="rounded-full p-1.5 text-lg transition-transform hover:scale-125"
+                                aria-label={`Реакция ${e}`}
+                              >
+                                {e}
+                              </button>
+                            ))}
+                          </div>
+                          {(canEdit || canDelete) && (
+                            <div className="mt-1 flex flex-col border-t border-border pt-1">
+                              {canEdit && (
+                                <button
+                                  type="button"
+                                  onClick={() => startEdit(msg)}
+                                  className="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted"
+                                >
+                                  <Pencil className="h-4 w-4" /> Изменить
+                                </button>
+                              )}
+                              {canDelete && (
+                                <button
+                                  type="button"
+                                  onClick={() => deleteMessage(msg)}
+                                  className="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-destructive hover:bg-muted"
+                                >
+                                  <Trash2 className="h-4 w-4" /> Удалить
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  </div>
+
+                  {Object.keys(grouped).length > 0 && !isDeleted && (
+                    <div className={`flex flex-wrap gap-1 ${isMine ? "justify-end" : "justify-start"}`}>
+                      {Object.entries(grouped).map(([emoji, info]) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => toggleReaction(msg.id, emoji)}
+                          className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors ${
+                            info.mine
+                              ? "border-primary/50 bg-primary/10 text-foreground"
+                              : "border-border bg-card text-muted-foreground hover:bg-muted"
+                          }`}
+                          aria-label={`${emoji} ${info.count}`}
+                        >
+                          <span>{emoji}</span>
+                          <span>{info.count}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
+
                   {row.showTail && (
                     <div className="flex items-center gap-1 px-1 text-[10px] text-muted-foreground">
                       <span>{time}</span>
+                      {msg.edited_at && !isDeleted && <span>· изменено</span>}
                       {isMine &&
                         (msg._failed ? (
                           <span className="text-destructive">не отправлено</span>
