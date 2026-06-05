@@ -176,6 +176,24 @@ const Chat = () => {
           setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "message_reactions" },
+        (payload) => {
+          const r = payload.new as Reaction;
+          setReactions((prev) =>
+            prev.some((x) => x.id === r.id) ? prev : [...prev, r],
+          );
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "message_reactions" },
+        (payload) => {
+          const old = payload.old as { id: string };
+          setReactions((prev) => prev.filter((x) => x.id !== old.id));
+        },
+      )
       .on("broadcast", { event: "typing" }, (payload) => {
         const senderId = (payload.payload as { user_id: string }).user_id;
         if (senderId !== user.id) {
