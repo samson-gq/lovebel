@@ -418,6 +418,82 @@ const Chat = () => {
   const myMessages = messages.filter((m) => m.sender_id === user?.id && !m._optimistic);
   const lastReadMyId = [...myMessages].reverse().find((m) => !!m.read_at)?.id;
 
+  // Reactions grouped by message
+  const reactionsByMessage = useMemo(() => {
+    const map: Record<string, Reaction[]> = {};
+    for (const r of reactions) {
+      (map[r.message_id] ||= []).push(r);
+    }
+    return map;
+  }, [reactions]);
+
+  const toggleReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
+    const mine = reactions.find(
+      (r) => r.message_id === messageId && r.user_id === user.id && r.emoji === emoji,
+    );
+    if (mine) {
+      // Optimistic remove
+      setReactions((prev) => prev.filter((r) => r.id !== mine.id));
+      const { error } = await supabase.from("message_reactions").delete().eq("id", mine.id);
+      if (error) toast.error("Не удалось убрать реакцию");
+    } else {
+      const { data, error } = await supabase
+        .from("message_reactions")
+        .insert({ message_id: messageId, user_id: user.id, emoji })
+        .select()
+        .single();
+      if (error) {
+        toast.error("Не удалось добавить реакцию");
+      } else if (data) {
+        setReactions((prev) =>
+          prev.some((r) => r.id === (data as Reaction).id) ? prev : [...prev, data as Reaction],
+        );
+      }
+    }
+  };
+
+  const startEdit = (m: Message) => {
+    setEditingId(m.id);
+    setEditingText(m.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingText("");
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    const trimmed = editingText.trim();
+    if (!trimmed) return;
+    const id = editingId;
+    setMessages((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, content: trimmed, edited_at: new Date().toISOString() } : m)),
+    );
+    cancelEdit();
+    const { error } = await supabase
+      .from("messages")
+      .update({ content: trimmed, edited_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) toast.error("Не удалось сохранить изменения");
+  };
+
+  const deleteMessage = async (m: Message) => {
+    if (!confirm("Удалить сообщение?")) return;
+    setMessages((prev) =>
+      prev.map((x) =>
+        x.id === m.id ? { ...x, deleted_at: new Date().toISOString(), content: "" } : x,
+      ),
+    );
+    const { error } = await supabase
+      .from("messages")
+      .update({ deleted_at: new Date().toISOString(), content: "" })
+      .eq("id", m.id);
+    if (error) toast.error("Не удалось удалить");
+  };
+
+
   // Build grouped rows: date separators + grouped consecutive messages
   type Row =
     | { kind: "day"; key: string; label: string }
