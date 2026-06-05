@@ -12,12 +12,17 @@ import {
   X,
   Loader2,
   ChevronDown,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  SmilePlus,
 } from "lucide-react";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import ProfileActionsMenu from "@/components/ProfileActionsMenu";
 import ChatList from "@/components/ChatList";
 import ImageLightbox from "@/components/ImageLightbox";
@@ -32,10 +37,21 @@ interface Message {
   content_type?: "text" | "image" | "gif" | "sticker";
   attachment_url?: string | null;
   read_at?: string | null;
+  edited_at?: string | null;
+  deleted_at?: string | null;
   // client-only:
   _optimistic?: boolean;
   _failed?: boolean;
 }
+
+interface Reaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  emoji: string;
+}
+
+const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "🔥", "👍"];
 
 interface TenorGif {
   id: string;
