@@ -127,7 +127,16 @@ const Chat = () => {
         .select("*")
         .eq("match_id", matchId)
         .order("created_at", { ascending: true });
-      setMessages((data as Message[]) || []);
+      const msgs = (data as Message[]) || [];
+      setMessages(msgs);
+      // Fetch reactions for these messages
+      if (msgs.length) {
+        const { data: rx } = await supabase
+          .from("message_reactions")
+          .select("*")
+          .in("message_id", msgs.map((m) => m.id));
+        setReactions((rx as Reaction[]) || []);
+      }
     };
 
     fetchPartner();
