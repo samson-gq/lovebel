@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck, Film, LocateFixed, Trash2, Zap } from "lucide-react";
 import { toast } from "sonner";
-import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";

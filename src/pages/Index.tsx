@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X, Heart, Star, LogOut, MapPin, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import SwipeCard from "@/components/SwipeCard";
-import BottomNav from "@/components/BottomNav";
 import SwipeFilters from "@/components/SwipeFilters";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Skeleton } from "@/components/ui/skeleton";
