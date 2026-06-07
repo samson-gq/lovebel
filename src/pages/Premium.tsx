@@ -102,7 +102,7 @@ const Premium = () => {
         </section>
       </main>
 
-      <BottomNav />
+      
     </div>
   );
 };

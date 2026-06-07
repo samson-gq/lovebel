@@ -689,7 +689,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <BottomNav />
+      
     </div>
   );
 };

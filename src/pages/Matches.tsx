@@ -117,7 +117,7 @@ const Matches = () => {
         </div>
       )}
 
-      <BottomNav />
+      
     </div>
   );
 };

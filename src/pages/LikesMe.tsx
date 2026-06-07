@@ -103,7 +103,7 @@ const LikesMe = () => {
         </div>
       )}
 
-      <BottomNav />
+      
     </div>
   );
 };

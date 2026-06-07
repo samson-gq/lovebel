@@ -380,7 +380,7 @@ const Index = () => {
         </div>
       )}
 
-      <BottomNav />
+      
     </div>
   );
 };
