@@ -35,11 +35,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [checkingProfile, setCheckingProfile] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setCheckingProfile(false);
+      setNeedsOnboarding(false);
+      return;
+    }
     let cancelled = false;
+    setCheckingProfile(true);
     const run = async () => {
       const [{ data: profile }, { data: photos }] = await Promise.all([
-        (supabase as any).from("profiles").select("name, avatar_url, onboarding_completed").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("name, avatar_url, onboarding_completed").eq("user_id", user.id).maybeSingle(),
         supabase.from("profile_photos").select("id").eq("user_id", user.id).limit(1),
       ]);
       if (cancelled) return;
@@ -49,7 +54,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     };
     run();
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user?.id]);
 
   if (loading) {
     return (

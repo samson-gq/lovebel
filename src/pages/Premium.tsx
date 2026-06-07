@@ -1,6 +1,5 @@
 import { Check, Crown, Flame, Heart, Sparkles, X, Zap } from "lucide-react";
 import { toast } from "sonner";
-import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 
 const plans = [
@@ -102,7 +101,7 @@ const Premium = () => {
         </section>
       </main>
 
-      <BottomNav />
+      
     </div>
   );
 };

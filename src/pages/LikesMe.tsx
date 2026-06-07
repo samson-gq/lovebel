@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Crown, Heart, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,7 +102,7 @@ const LikesMe = () => {
         </div>
       )}
 
-      <BottomNav />
+      
     </div>
   );
 };
