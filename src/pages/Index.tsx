@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Heart, Star, LogOut, MapPin, Undo2 } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useSwipeFilters, DEFAULT_FILTERS, isDefaultFilters } from "@/hooks/useSwipeFilters";
 import { useProfilesCount } from "@/hooks/useProfilesCount";
+import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/data/profiles";
 
@@ -33,6 +34,8 @@ interface DBProfile {
   longitude?: number | null;
   distance_km?: number | null;
   boost_until?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 const Index = () => {
@@ -47,6 +50,8 @@ const Index = () => {
     user,
     filters,
   });
+  const onlineUsers = useOnlineUsers();
+  const prefetchedRef = useRef<Set<string>>(new Set());
 
 
   const fetchProfiles = useCallback(async () => {
@@ -112,6 +117,9 @@ const Index = () => {
       children: p.children ?? null,
       smoking: p.smoking ?? null,
       drinking: p.drinking ?? null,
+      createdAt: p.created_at ?? null,
+      updatedAt: p.updated_at ?? null,
+      isBoosted: !!p.boost_until && new Date(p.boost_until).getTime() > Date.now(),
       prompts: (allPrompts as Array<{ user_id: string; prompt: string; answer: string }>)
         .filter((pr) => pr.user_id === p.user_id)
         .map((pr) => ({ prompt: pr.prompt, answer: pr.answer })),
@@ -137,6 +145,20 @@ const Index = () => {
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);
+
+  // Prefetch the next 3 cards' images so they appear instantly when swiped to.
+  useEffect(() => {
+    const upcoming = cards.slice(currentIndex + 1, currentIndex + 4);
+    for (const profile of upcoming) {
+      const urls = [profile.image, ...profile.images].filter(Boolean).slice(0, 3);
+      for (const url of urls) {
+        if (prefetchedRef.current.has(url)) continue;
+        prefetchedRef.current.add(url);
+        const img = new Image();
+        img.src = url;
+      }
+    }
+  }, [cards, currentIndex]);
 
   const handleSwipe = useCallback(
     async (direction: "left" | "right" | "super") => {
