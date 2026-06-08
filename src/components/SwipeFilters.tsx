@@ -102,8 +102,10 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
 
   const setAgeRange = (lo: number, hi: number) => {
     const a = clampAge(Math.min(lo, hi));
-    const b = clampAge(Math.max(lo, hi));
-    onChange({ ...filters, ageRange: [a, b === a ? Math.min(AGE_MAX, a + 1) : b] });
+    const rawB = clampAge(Math.max(lo, hi));
+    const b = rawB === a ? Math.min(AGE_MAX, a + 1) : rawB;
+    if (a === filters.ageRange[0] && b === filters.ageRange[1]) return;
+    onChange({ ...filters, ageRange: [a, b] });
   };
 
   const commitAgeMin = () => {
