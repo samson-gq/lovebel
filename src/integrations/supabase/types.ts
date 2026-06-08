@@ -613,6 +613,13 @@ export type Database = {
       }
     }
     Functions: {
+      activate_boost: {
+        Args: never
+        Returns: {
+          boost_count: number
+          boost_until: string
+        }[]
+      }
       count_search_profiles: {
         Args: {
           city_query: string

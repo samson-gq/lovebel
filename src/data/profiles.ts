@@ -28,6 +28,12 @@ export interface Profile {
   smoking?: string | null;
   drinking?: string | null;
   prompts?: ProfilePromptItem[];
+  /** ISO timestamp of profile creation (used for "Новый" badge). */
+  createdAt?: string | null;
+  /** ISO timestamp of last profile update (used for "Возвращается" badge). */
+  updatedAt?: string | null;
+  /** True while the user has an active boost. */
+  isBoosted?: boolean;
 }
 
 export const profiles: Profile[] = [

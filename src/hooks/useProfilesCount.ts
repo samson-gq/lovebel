@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { FilterValues } from "@/components/SwipeFilters";
 
@@ -15,65 +16,64 @@ interface State {
   error: string | null;
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 /**
  * Live counter of matching profiles for the current filter.
- * - Debounces filter changes (default 300ms) so typing is smooth.
- * - Retries failed RPC calls with exponential backoff (200ms, 600ms) before
- *   surfacing an error.
+ * - Debounces filter changes (default 300ms) before triggering a fresh query.
+ * - Cached via React Query so re-mounts (or filter toggles back to a known
+ *   combination) are instant.
  */
 export function useProfilesCount({ user, filters, debounceMs = 300 }: Args): State {
-  const [state, setState] = useState<State>({ count: null, loading: false, error: null });
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
 
   useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
+    const t = setTimeout(() => setDebouncedFilters(filters), debounceMs);
+    return () => clearTimeout(t);
+  }, [filters, debounceMs]);
 
-    const run = async () => {
-      // Debounce
-      await sleep(debounceMs);
-      if (cancelled) return;
-
-      setState((s) => ({ ...s, loading: true, error: null }));
-
+  const query = useQuery({
+    enabled: !!user,
+    queryKey: [
+      "profiles_count",
+      user?.id,
+      debouncedFilters.ageRange[0],
+      debouncedFilters.ageRange[1],
+      debouncedFilters.gender,
+      debouncedFilters.city.trim(),
+      debouncedFilters.maxDistance,
+      debouncedFilters.useGps,
+      debouncedFilters.useGps ? debouncedFilters.latitude : null,
+      debouncedFilters.useGps ? debouncedFilters.longitude : null,
+    ],
+    queryFn: async () => {
+      if (!user) return 0;
       const swipedRes = await supabase
         .from("swipes")
         .select("swiped_id")
         .eq("swiper_id", user.id);
-      if (cancelled) return;
       const excludeIds = [user.id, ...(swipedRes.data?.map((s) => s.swiped_id) ?? [])];
 
-      const delays = [0, 200, 600];
-      let lastError: string | null = null;
-      for (let i = 0; i < delays.length; i++) {
-        if (delays[i] > 0) await sleep(delays[i]);
-        if (cancelled) return;
-        const { data, error } = await (supabase as any).rpc("count_search_profiles", {
-          exclude_ids: excludeIds,
-          min_age: filters.ageRange[0],
-          max_age: filters.ageRange[1],
-          gender_filter: filters.gender,
-          city_query: filters.city.trim(),
-          user_lat: filters.useGps ? filters.latitude : null,
-          user_lng: filters.useGps ? filters.longitude : null,
-          radius_km: filters.useGps ? filters.maxDistance : null,
-        });
-        if (cancelled) return;
-        if (!error) {
-          setState({ count: (data as number) ?? 0, loading: false, error: null });
-          return;
-        }
-        lastError = error.message;
-      }
-      setState({ count: null, loading: false, error: lastError ?? "Не удалось загрузить" });
-    };
+      const { data, error } = await (supabase as any).rpc("count_search_profiles", {
+        exclude_ids: excludeIds,
+        min_age: debouncedFilters.ageRange[0],
+        max_age: debouncedFilters.ageRange[1],
+        gender_filter: debouncedFilters.gender,
+        city_query: debouncedFilters.city.trim(),
+        user_lat: debouncedFilters.useGps ? debouncedFilters.latitude : null,
+        user_lng: debouncedFilters.useGps ? debouncedFilters.longitude : null,
+        radius_km: debouncedFilters.useGps ? debouncedFilters.maxDistance : null,
+      });
+      if (error) throw new Error(error.message);
+      return (data as number) ?? 0;
+    },
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    retry: 2,
+    retryDelay: (attempt) => 200 * Math.pow(3, attempt),
+  });
 
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, [user, filters.ageRange, filters.gender, filters.city, filters.maxDistance, filters.useGps, filters.latitude, filters.longitude, debounceMs]);
-
-  return state;
+  return {
+    count: query.data ?? null,
+    loading: query.isFetching,
+    error: query.error ? (query.error as Error).message : null,
+  };
 }

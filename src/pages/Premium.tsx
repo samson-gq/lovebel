@@ -1,10 +1,12 @@
+import { useEffect, useState } from "react";
 import { Check, Crown, Flame, Heart, Sparkles, X, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const plans = [
   { name: "Premium", price: "€9.99", period: "/мес", icon: Crown, perks: ["Кто лайкнул меня", "Безлимитные лайки", "5 Super Like в день", "Приоритет в выдаче"] },
-  { name: "Boost", price: "€3.99", period: "/30 мин", icon: Zap, perks: ["30 минут в топе", "До 10× больше показов", "Мгновенный старт", "Без подписки"] },
 ];
 
 const features = [
@@ -16,7 +18,68 @@ const features = [
   { label: "Расширенные фильтры", free: false, premium: true },
 ];
 
+/** Live countdown to a target ISO timestamp; returns mm:ss or null when expired. */
+function useCountdown(targetIso: string | null): string | null {
+  const [remaining, setRemaining] = useState<number>(() =>
+    targetIso ? new Date(targetIso).getTime() - Date.now() : 0,
+  );
+  useEffect(() => {
+    if (!targetIso) {
+      setRemaining(0);
+      return;
+    }
+    const tick = () => setRemaining(new Date(targetIso).getTime() - Date.now());
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [targetIso]);
+  if (!targetIso || remaining <= 0) return null;
+  const mins = Math.floor(remaining / 60_000);
+  const secs = Math.floor((remaining % 60_000) / 1000);
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
 const Premium = () => {
+  const { user } = useAuth();
+  const [boostUntil, setBoostUntil] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activating, setActivating] = useState(false);
+  const countdown = useCountdown(boostUntil);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("boost_until")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setBoostUntil(data?.boost_until ?? null);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const activateBoost = async () => {
+    if (!user) return;
+    setActivating(true);
+    const { data, error } = await (supabase as any).rpc("activate_boost");
+    setActivating(false);
+    if (error) {
+      toast.error(error.message?.includes("cooldown") ? "Boost доступен раз в 24ч" : "Не удалось активировать Boost");
+      return;
+    }
+    const next = Array.isArray(data) && data[0]?.boost_until ? data[0].boost_until : null;
+    if (next) {
+      setBoostUntil(next);
+      toast.success("⚡ Boost активирован на 30 минут!");
+    }
+  };
+
   const placeholder = () => toast.info("Платежи пока в режиме UI-заглушки");
 
   return (
@@ -36,6 +99,52 @@ const Premium = () => {
         </section>
 
         <div className="grid gap-4 md:grid-cols-2">
+          {/* Boost card with live state */}
+          <article className="rounded-2xl border border-border bg-card p-5 shadow-card">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-secondary/15 text-secondary">
+                  <Zap className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-xl font-bold text-card-foreground">Boost</h3>
+                  <p className="text-sm text-muted-foreground">
+                    <span className="text-lg font-semibold text-foreground">30 мин</span>
+                    <span className="ml-1">в топе выдачи</span>
+                  </p>
+                </div>
+              </div>
+              <Flame className="h-5 w-5 text-secondary" />
+            </div>
+
+            <ul className="mt-5 space-y-2 text-sm text-card-foreground">
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> До 10× больше показов</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Мгновенный старт</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Без подписки</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> 1 бесплатный раз в сутки</li>
+            </ul>
+
+            <div className="mt-5">
+              {loading ? (
+                <Button disabled className="w-full">Загружаем…</Button>
+              ) : countdown ? (
+                <div className="flex flex-col items-center gap-1 rounded-xl border border-secondary/40 bg-secondary/10 px-4 py-3 text-center">
+                  <span className="text-xs font-medium uppercase tracking-wide text-secondary">Boost активен</span>
+                  <span className="text-2xl font-bold tabular-nums text-foreground">{countdown}</span>
+                </div>
+              ) : (
+                <Button
+                  onClick={activateBoost}
+                  disabled={activating}
+                  className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                >
+                  <Zap className="mr-2 h-4 w-4" />
+                  {activating ? "Активируем…" : "Активировать Boost"}
+                </Button>
+              )}
+            </div>
+          </article>
+
           {plans.map(({ name, price, period, icon: Icon, perks }) => (
             <article key={name} className="rounded-2xl border border-border bg-card p-5 shadow-card transition-shadow hover:shadow-elevated">
               <div className="flex items-center justify-between">
@@ -51,7 +160,7 @@ const Premium = () => {
                     </p>
                   </div>
                 </div>
-                {name === "Premium" ? <Heart className="h-5 w-5 text-primary" /> : <Flame className="h-5 w-5 text-secondary" />}
+                <Heart className="h-5 w-5 text-primary" />
               </div>
               <ul className="mt-5 space-y-2">
                 {perks.map((perk) => (
@@ -100,8 +209,6 @@ const Premium = () => {
           </div>
         </section>
       </main>
-
-      
     </div>
   );
 };
