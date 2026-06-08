@@ -315,10 +315,13 @@ const Index = () => {
                     profile={profile as Profile & { isVerified?: boolean }}
                     onSwipe={handleSwipe}
                     isTop={i === remaining.slice(0, 2).length - 1}
+                    isOnline={onlineUsers.has(profile.id)}
                     onBlocked={() => {
-                      // Remove blocked profile from current stack and refetch
                       setCards((prev) => prev.filter((p) => p.id !== profile.id));
                       fetchProfiles();
+                    }}
+                    onHide={() => {
+                      setCards((prev) => prev.filter((p) => p.id !== profile.id));
                     }}
                   />
                 ))}
