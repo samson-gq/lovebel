@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Ban, Flag, MoreVertical } from "lucide-react";
+import { Ban, EyeOff, Flag, MoreVertical } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -16,10 +16,12 @@ interface Props {
   targetUserId: string;
   targetUserName?: string;
   onBlocked?: () => void;
+  /** When provided, shows a "Не показывать снова" action that records a hide-swipe. */
+  onHide?: () => void;
   triggerClassName?: string;
 }
 
-const ProfileActionsMenu = ({ targetUserId, targetUserName, onBlocked, triggerClassName }: Props) => {
+const ProfileActionsMenu = ({ targetUserId, targetUserName, onBlocked, onHide, triggerClassName }: Props) => {
   const { user } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
   const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
@@ -59,6 +61,25 @@ const ProfileActionsMenu = ({ targetUserId, targetUserName, onBlocked, triggerCl
           <DropdownMenuItem onClick={() => setReportOpen(true)}>
             <Flag className="mr-2 h-4 w-4" /> Пожаловаться
           </DropdownMenuItem>
+          {onHide && (
+            <DropdownMenuItem
+              onClick={async () => {
+                if (!user) return;
+                const { error } = await supabase.from("swipes").upsert(
+                  { swiper_id: user.id, swiped_id: targetUserId, direction: "hide" },
+                  { onConflict: "swiper_id,swiped_id" },
+                );
+                if (error) {
+                  toast.error("Не удалось скрыть профиль");
+                  return;
+                }
+                toast.success("Больше не покажем этот профиль");
+                onHide();
+              }}
+            >
+              <EyeOff className="mr-2 h-4 w-4" /> Не показывать снова
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={() => setBlockConfirmOpen(true)}
             className="text-destructive focus:text-destructive"
