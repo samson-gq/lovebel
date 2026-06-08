@@ -1,53 +1,43 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FALLBACK_POPULAR_CITIES } from "@/lib/cities";
 
-let cache: string[] | null = null;
-let inflight: Promise<string[]> | null = null;
+const QUERY_KEY = ["popular_cities"] as const;
 
-async function loadOnce(): Promise<string[]> {
-  if (cache) return cache;
-  if (inflight) return inflight;
-  inflight = (async () => {
-    const { data, error } = await supabase
-      .from("popular_cities")
-      .select("name, display_order")
-      .order("display_order", { ascending: true });
-    if (error || !data || data.length === 0) {
-      cache = FALLBACK_POPULAR_CITIES;
-    } else {
-      cache = data.map((row) => row.name);
-    }
-    return cache;
-  })();
-  return inflight;
+async function fetchPopularCities(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("popular_cities")
+    .select("name, display_order")
+    .order("display_order", { ascending: true });
+  if (error || !data || data.length === 0) return FALLBACK_POPULAR_CITIES;
+  return data.map((row) => row.name);
 }
 
 export function usePopularCities(): string[] {
-  const [cities, setCities] = useState<string[]>(cache ?? FALLBACK_POPULAR_CITIES);
-  useEffect(() => {
-    let active = true;
-    loadOnce().then((list) => {
-      if (active) setCities(list);
-    });
+  const qc = useQueryClient();
+  const { data } = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: fetchPopularCities,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: FALLBACK_POPULAR_CITIES,
+  });
 
-    // Stay in sync with DB inserts/updates
+  // Keep cache in sync with realtime DB changes.
+  useEffect(() => {
     const channel = supabase
       .channel("popular_cities_sync")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "popular_cities" },
-        () => {
-          cache = null;
-          loadOnce().then((list) => active && setCities(list));
-        },
+        () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
       )
       .subscribe();
-
     return () => {
-      active = false;
       supabase.removeChannel(channel);
     };
-  }, []);
-  return cities;
+  }, [qc]);
+
+  return data ?? FALLBACK_POPULAR_CITIES;
 }

@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FilterValues } from "@/components/SwipeFilters";
 
 const STORAGE_KEY = "lovebel.swipe.filters.v1";
+const SYNC_DEBOUNCE_MS = 300;
 
 export const DEFAULT_FILTERS: FilterValues = {
   ageRange: [18, 45],
@@ -96,23 +97,37 @@ const initial = (): FilterValues => {
 /**
  * Filter state synced to URL (so back/forward restores it) AND localStorage
  * (so opening the app fresh restores the last used filters).
+ *
+ * URL and localStorage writes are debounced (~300ms) so dragging the age or
+ * distance slider doesn't spam `history.replaceState` and trigger every
+ * browser extension/devtools listener on each pixel.
  */
 export function useSwipeFilters() {
   const [filters, setFilters] = useState<FilterValues>(initial);
+  const timerRef = useRef<number | null>(null);
 
-  // Persist to localStorage + reflect into URL whenever filters change.
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
-    } catch {
-      /* ignore quota */
-    }
-    const qs = toUrl(filters);
-    const target = qs ? `?${qs}` : window.location.pathname;
-    const current = window.location.search.replace(/^\?/, "");
-    if (qs !== current) {
-      window.history.replaceState(null, "", target + window.location.hash);
-    }
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+      } catch {
+        /* ignore quota */
+      }
+      const qs = toUrl(filters);
+      const target = qs ? `?${qs}` : window.location.pathname;
+      const current = window.location.search.replace(/^\?/, "");
+      if (qs !== current) {
+        window.history.replaceState(null, "", target + window.location.hash);
+      }
+    }, SYNC_DEBOUNCE_MS);
+
+    return () => {
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [filters]);
 
   // React to back/forward navigation.
