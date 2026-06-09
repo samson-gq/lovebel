@@ -22,6 +22,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import ProfileActionsMenu from "@/components/ProfileActionsMenu";
 import ChatList from "@/components/ChatList";
 import ImageLightbox from "@/components/ImageLightbox";
@@ -89,6 +99,7 @@ const Chat = () => {
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -371,12 +382,20 @@ const Chat = () => {
   const fetchGifs = useCallback(async (q: string) => {
     setGifLoading(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      // Use the user's JWT so the edge function can authenticate the caller
+      // and rate-limit by user (not by anon key).
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        toast.error("Нужна авторизация");
+        return;
+      }
+      const base = import.meta.env.VITE_SUPABASE_URL;
       const r = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/tenor-search?q=${encodeURIComponent(q)}&limit=24`,
+        `${base}/functions/v1/tenor-search?q=${encodeURIComponent(q)}&limit=24`,
         {
           headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${token}`,
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
         },
@@ -478,13 +497,13 @@ const Chat = () => {
     if (error) toast.error("Не удалось сохранить изменения");
   };
 
-  const deleteMessage = async (m: Message) => {
-    if (!confirm("Удалить сообщение?")) return;
+  const confirmDelete = async (m: Message) => {
     setMessages((prev) =>
       prev.map((x) =>
         x.id === m.id ? { ...x, deleted_at: new Date().toISOString(), content: "" } : x,
       ),
     );
+    setDeletingId(null);
     const { error } = await supabase
       .from("messages")
       .update({ deleted_at: new Date().toISOString(), content: "" })
@@ -782,7 +801,7 @@ const Chat = () => {
                               {canDelete && (
                                 <button
                                   type="button"
-                                  onClick={() => deleteMessage(msg)}
+                                  onClick={() => setDeletingId(msg.id)}
                                   className="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-destructive hover:bg-muted"
                                 >
                                   <Trash2 className="h-4 w-4" /> Удалить
@@ -995,6 +1014,28 @@ const Chat = () => {
       </div>
 
       {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
+
+      <AlertDialog open={deletingId !== null} onOpenChange={(o) => !o && setDeletingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить сообщение?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Сообщение будет удалено для обоих участников чата.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const target = messages.find((m) => m.id === deletingId);
+                if (target) confirmDelete(target);
+              }}
+            >
+              Удалить
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
