@@ -371,12 +371,20 @@ const Chat = () => {
   const fetchGifs = useCallback(async (q: string) => {
     setGifLoading(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      // Use the user's JWT so the edge function can authenticate the caller
+      // and rate-limit by user (not by anon key).
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        toast.error("Нужна авторизация");
+        return;
+      }
+      const base = import.meta.env.VITE_SUPABASE_URL;
       const r = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/tenor-search?q=${encodeURIComponent(q)}&limit=24`,
+        `${base}/functions/v1/tenor-search?q=${encodeURIComponent(q)}&limit=24`,
         {
           headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${token}`,
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
         },
@@ -478,13 +486,13 @@ const Chat = () => {
     if (error) toast.error("Не удалось сохранить изменения");
   };
 
-  const deleteMessage = async (m: Message) => {
-    if (!confirm("Удалить сообщение?")) return;
+  const confirmDelete = async (m: Message) => {
     setMessages((prev) =>
       prev.map((x) =>
         x.id === m.id ? { ...x, deleted_at: new Date().toISOString(), content: "" } : x,
       ),
     );
+    setDeletingId(null);
     const { error } = await supabase
       .from("messages")
       .update({ deleted_at: new Date().toISOString(), content: "" })

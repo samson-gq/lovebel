@@ -143,9 +143,25 @@ const Profile = () => {
     }
   };
 
+  const validateImage = (file: File): boolean => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Можно загружать только изображения");
+      return false;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Файл слишком большой (макс. 8 МБ)");
+      return false;
+    }
+    return true;
+  };
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    if (!validateImage(file)) {
+      e.target.value = "";
+      return;
+    }
 
     const path = `${user.id}/${Date.now()}.${file.name.split(".").pop()}`;
     const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
@@ -171,7 +187,11 @@ const Profile = () => {
       return;
     }
 
-    const filesToUpload = Array.from(files).slice(0, remaining);
+    const filesToUpload = Array.from(files).slice(0, remaining).filter(validateImage);
+    if (filesToUpload.length === 0) {
+      if (photosFileRef.current) photosFileRef.current.value = "";
+      return;
+    }
 
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i];
@@ -317,11 +337,21 @@ const Profile = () => {
 
   const handleReorder = async (reordered: ProfilePhoto[]) => {
     setPhotos(reordered);
-    for (const photo of reordered) {
-      await supabase
-        .from("profile_photos")
-        .update({ position: photo.position })
-        .eq("id", photo.id);
+    // Single round-trip: upsert all rows at once on the primary key.
+    const { error } = await supabase
+      .from("profile_photos")
+      .upsert(
+        reordered.map((p) => ({
+          id: p.id,
+          user_id: p.user_id,
+          photo_url: p.photo_url,
+          position: p.position,
+        })),
+        { onConflict: "id" },
+      );
+    if (error) {
+      toast.error("Не удалось сохранить порядок");
+      return;
     }
     toast.success("Порядок фото обновлён");
   };
