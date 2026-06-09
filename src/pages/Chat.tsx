@@ -89,6 +89,7 @@ const Chat = () => {
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -790,7 +791,7 @@ const Chat = () => {
                               {canDelete && (
                                 <button
                                   type="button"
-                                  onClick={() => deleteMessage(msg)}
+                                  onClick={() => setDeletingId(msg.id)}
                                   className="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-destructive hover:bg-muted"
                                 >
                                   <Trash2 className="h-4 w-4" /> Удалить

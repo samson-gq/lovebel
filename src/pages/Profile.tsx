@@ -336,6 +336,7 @@ const Profile = () => {
   };
 
   const handleReorder = async (reordered: ProfilePhoto[]) => {
+    if (!user) return;
     setPhotos(reordered);
     // Single round-trip: upsert all rows at once on the primary key.
     const { error } = await supabase
@@ -343,7 +344,7 @@ const Profile = () => {
       .upsert(
         reordered.map((p) => ({
           id: p.id,
-          user_id: p.user_id,
+          user_id: user.id,
           photo_url: p.photo_url,
           position: p.position,
         })),
