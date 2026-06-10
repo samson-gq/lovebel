@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck, Film, LocateFixed, Trash2, Zap } from "lucide-react";
+import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck, Film, LocateFixed, Trash2, Zap, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -381,7 +381,7 @@ const Profile = () => {
             className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
             aria-label={editing ? "Сохранить" : "Редактировать"}
           >
-            {editing ? <SettingsIcon className="h-5 w-5 text-primary" /> : <Edit3 className="h-5 w-5" />}
+            {editing ? <Check className="h-5 w-5 text-primary" /> : <Edit3 className="h-5 w-5" />}
           </button>
           <button
             onClick={() => navigate("/settings")}

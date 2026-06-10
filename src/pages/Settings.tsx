@@ -84,11 +84,10 @@ const Settings = () => {
           .from("profiles")
           .select("user_id, name, avatar_url")
           .in("user_id", ids);
-        const enriched = blocks.map((b) => ({
-          ...b,
-          profile: profiles?.find((p) => p.user_id === b.blocked_id) ?? null,
-        }));
-        setBlocked(enriched);
+        const byId = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+        setBlocked(
+          blocks.map((b) => ({ ...b, profile: byId.get(b.blocked_id) ?? null })),
+        );
       } else {
         setBlocked([]);
       }
