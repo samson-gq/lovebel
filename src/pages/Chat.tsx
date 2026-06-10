@@ -35,6 +35,7 @@ import {
 import ProfileActionsMenu from "@/components/ProfileActionsMenu";
 import ChatList from "@/components/ChatList";
 import ImageLightbox from "@/components/ImageLightbox";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDayLabel, formatTime, sameDay, linkify } from "@/lib/chatUtils";
 import { toast } from "sonner";
 
@@ -245,24 +246,35 @@ const Chat = () => {
       .then();
   }, [messages, user, matchId]);
 
-  // Sign image URLs (private bucket)
+  // Sign image URLs (private bucket).
+  // We track already-signed message ids in a ref so re-renders that mutate
+  // `signedUrls` don't re-trigger this effect (avoids an infinite loop and
+  // duplicate signed-URL requests).
+  const signedUrlsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     const need = messages.filter(
-      (m) => m.content_type === "image" && m.attachment_url && !signedUrls[m.id],
+      (m) => m.content_type === "image" && m.attachment_url && !signedUrlsRef.current.has(m.id),
     );
     if (need.length === 0) return;
+    let cancelled = false;
     (async () => {
       const updates: Record<string, string> = {};
       await Promise.all(
         need.map(async (m) => {
           const path = m.attachment_url!;
+          signedUrlsRef.current.add(m.id);
           const { data } = await supabase.storage.from("chat-images").createSignedUrl(path, 3600);
           if (data?.signedUrl) updates[m.id] = data.signedUrl;
         }),
       );
-      if (Object.keys(updates).length) setSignedUrls((p) => ({ ...p, ...updates }));
+      if (!cancelled && Object.keys(updates).length) {
+        setSignedUrls((p) => ({ ...p, ...updates }));
+      }
     })();
-  }, [messages, signedUrls]);
+    return () => {
+      cancelled = true;
+    };
+  }, [messages]);
 
   // Smart auto-scroll: only when user is at bottom
   useEffect(() => {
@@ -409,9 +421,15 @@ const Chat = () => {
     }
   }, []);
 
+  // Debounce GIF query so each keystroke doesn't hit Tenor.
+  const [debouncedGifQuery, setDebouncedGifQuery] = useState("");
   useEffect(() => {
-    if (showGif) fetchGifs(gifQuery);
-  }, [showGif, gifQuery, fetchGifs]);
+    const t = setTimeout(() => setDebouncedGifQuery(gifQuery), 350);
+    return () => clearTimeout(t);
+  }, [gifQuery]);
+  useEffect(() => {
+    if (showGif) fetchGifs(debouncedGifQuery);
+  }, [showGif, debouncedGifQuery, fetchGifs]);
 
   const sendGif = async (gif: TenorGif) => {
     if (!user || !matchId) return;
@@ -708,12 +726,16 @@ const Chat = () => {
                         onClick={() => signedUrls[msg.id] && setLightboxUrl(signedUrls[msg.id])}
                         className="overflow-hidden rounded-2xl transition-opacity hover:opacity-90"
                       >
-                        <img
-                          src={signedUrls[msg.id] || ""}
-                          alt="Изображение"
-                          className="max-h-72 rounded-2xl object-cover"
-                          loading="lazy"
-                        />
+                        {signedUrls[msg.id] ? (
+                          <img
+                            src={signedUrls[msg.id]}
+                            alt="Изображение"
+                            className="max-h-72 rounded-2xl object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <Skeleton className="h-48 w-48 rounded-2xl" />
+                        )}
                       </button>
                     ) : msg.content_type === "gif" && msg.attachment_url ? (
                       <button

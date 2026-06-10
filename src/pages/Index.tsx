@@ -58,18 +58,11 @@ const Index = () => {
     if (!user) return;
     setLoading(true);
 
-    // Get already swiped user ids
-    const { data: swiped } = await supabase
-      .from("swipes")
-      .select("swiped_id")
-      .eq("swiper_id", user.id);
-
-    const swipedIds = swiped?.map((s) => s.swiped_id) || [];
-    const excludeIds = [user.id, ...swipedIds];
-
-    // Use server-side RPC that leverages the normalized-city index
+    // Exclusion (own id + already-swiped ids) is computed server-side in
+    // search_profiles via auth.uid(); the client no longer ships the full
+    // swipe history on every reload.
     const { data, error } = await (supabase as any).rpc("search_profiles", {
-      exclude_ids: excludeIds,
+      exclude_ids: null,
       min_age: filters.ageRange[0],
       max_age: filters.ageRange[1],
       gender_filter: filters.gender,
