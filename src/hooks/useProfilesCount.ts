@@ -46,14 +46,9 @@ export function useProfilesCount({ user, filters, debounceMs = 300 }: Args): Sta
     ],
     queryFn: async () => {
       if (!user) return 0;
-      const swipedRes = await supabase
-        .from("swipes")
-        .select("swiped_id")
-        .eq("swiper_id", user.id);
-      const excludeIds = [user.id, ...(swipedRes.data?.map((s) => s.swiped_id) ?? [])];
-
+      // exclude_ids is null → count_search_profiles excludes self + swipes via auth.uid()
       const { data, error } = await (supabase as any).rpc("count_search_profiles", {
-        exclude_ids: excludeIds,
+        exclude_ids: null,
         min_age: debouncedFilters.ageRange[0],
         max_age: debouncedFilters.ageRange[1],
         gender_filter: debouncedFilters.gender,
