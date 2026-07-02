@@ -633,6 +633,62 @@ export type Database = {
         }
         Returns: number
       }
+      get_my_photos: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          moderation_reason: string | null
+          moderation_status: Database["public"]["Enums"]["moderation_status"]
+          photo_url: string
+          position: number
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profile_photos"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_my_profile: {
+        Args: never
+        Returns: {
+          age: number | null
+          avatar_url: string | null
+          bio: string | null
+          boost_count: number
+          boost_until: string | null
+          children: string | null
+          city: string | null
+          created_at: string
+          drinking: string | null
+          education: string | null
+          gender: string | null
+          height_cm: number | null
+          id: string
+          interests: string[] | null
+          is_verified: boolean
+          latitude: number | null
+          longitude: number | null
+          name: string
+          occupation: string | null
+          onboarding_completed: boolean
+          premium_plan: string | null
+          premium_until: string | null
+          smoking: string | null
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+          zodiac: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
