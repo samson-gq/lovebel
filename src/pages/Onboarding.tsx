@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { SignedImg } from "@/components/SignedImg";
 
 const INTERESTS = ["Путешествия", "Музыка", "Спорт", "Кино", "Книги", "Кофе", "Йога", "Дизайн", "Фитнес", "Искусство", "Наука", "Еда"];
 
