@@ -6,6 +6,7 @@ import { useMatches } from "@/hooks/useMatches";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { formatDayLabel, formatTime, sameDay } from "@/lib/chatUtils";
 import { cn } from "@/lib/utils";
+import { SignedImg } from "@/components/SignedImg";
 
 const formatWhen = (iso: string | null): string => {
   if (!iso) return "";

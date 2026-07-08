@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMatches } from "@/hooks/useMatches";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { cn } from "@/lib/utils";
+import { SignedImg } from "@/components/SignedImg";
 
 const ChatList = () => {
   const { user } = useAuth();
