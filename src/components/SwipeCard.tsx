@@ -3,6 +3,8 @@ import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { MapPin, ChevronLeft, ChevronRight, BadgeCheck, Play, Sparkles, Zap, RotateCcw } from "lucide-react";
 import type { Profile } from "@/data/profiles";
 import ProfileActionsMenu from "./ProfileActionsMenu";
+import { SignedImg } from "./SignedImg";
+import { useSignedUrl } from "@/hooks/useSignedUrl";
 import { cn } from "@/lib/utils";
 
 interface SwipeCardProps {
@@ -92,16 +94,9 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
     >
       <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-elevated">
         {activeMedia.type === "video" ? (
-          <video
-            src={activeMedia.url}
-            className="h-full w-full object-cover"
-            muted
-            playsInline
-            loop
-            autoPlay={isTop}
-          />
+          <SignedVideo url={activeMedia.url} isTop={isTop} />
         ) : (
-          <img
+          <SignedImg
             src={activeMedia.url}
             alt={profile.name}
             className="h-full w-full object-cover"
