@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { SignedImg } from "@/components/SignedImg";
 
 interface LikeRow {
   swiper_id: string;
@@ -29,8 +30,8 @@ const LikesMe = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data: ownProfile }, { data: likeRows }] = await Promise.all([
-        (supabase as any).from("profiles").select("premium_until").eq("user_id", user.id).maybeSingle(),
+      const [{ data: ownProfileData }, { data: likeRows }] = await Promise.all([
+        supabase.rpc("get_my_profile" as any),
         supabase
           .from("swipes")
           .select("swiper_id, direction, created_at")
@@ -41,6 +42,7 @@ const LikesMe = () => {
 
       const rows = (likeRows || []) as LikeRow[];
       setLikes(rows);
+      const ownProfile = Array.isArray(ownProfileData) ? ownProfileData[0] : ownProfileData;
       setPremiumUntil(ownProfile?.premium_until ?? null);
 
       const ids = [...new Set(rows.map((row) => row.swiper_id))];
@@ -84,7 +86,7 @@ const LikesMe = () => {
               const profile = profiles.find((item) => item.user_id === like.swiper_id);
               return (
                 <article key={`${like.swiper_id}-${like.created_at}`} className="relative overflow-hidden rounded-2xl bg-card shadow-card">
-                  <img src={profile?.avatar_url || "/placeholder.svg"} alt={isPremium ? profile?.name || "Профиль" : "Скрытый профиль"} className={`aspect-[3/4] w-full object-cover ${isPremium ? "" : "scale-105 blur-lg"}`} />
+                  <SignedImg src={profile?.avatar_url} alt={isPremium ? profile?.name || "Профиль" : "Скрытый профиль"} className={`aspect-[3/4] w-full object-cover ${isPremium ? "" : "scale-105 blur-lg"}`} />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-3 text-primary-foreground">
                     <p className="font-semibold">{isPremium ? `${profile?.name || "—"}${profile?.age ? `, ${profile.age}` : ""}` : "Скрыто"}</p>

@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Plus, Trash2, GripVertical } from "lucide-react";
+import { SignedImg } from "@/components/SignedImg";
 
 interface ProfilePhoto {
   id: string;
@@ -71,7 +72,7 @@ const DraggablePhotoGrid = ({ photos, editing, maxPhotos, onReorder, onDelete, o
             dragIndex === index ? "scale-95 opacity-50" : ""
           } ${overIndex === index && dragIndex !== index ? "ring-2 ring-primary" : ""}`}
         >
-          <img
+          <SignedImg
             src={photo.photo_url}
             alt="Фото профиля"
             className="h-full w-full object-cover"

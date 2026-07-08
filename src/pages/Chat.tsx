@@ -35,6 +35,7 @@ import {
 import ProfileActionsMenu from "@/components/ProfileActionsMenu";
 import ChatList from "@/components/ChatList";
 import ImageLightbox from "@/components/ImageLightbox";
+import { SignedImg } from "@/components/SignedImg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDayLabel, formatTime, sameDay, linkify } from "@/lib/chatUtils";
 import { toast } from "sonner";
@@ -573,7 +574,7 @@ const Chat = () => {
           </button>
           <div className="relative">
             {partnerAvatar && (
-              <img
+              <SignedImg
                 src={partnerAvatar}
                 alt={partnerName}
                 className="h-9 w-9 rounded-full object-cover"
@@ -617,7 +618,7 @@ const Chat = () => {
           {isEmpty && (
             <div className="mx-auto flex max-w-sm flex-col items-center gap-4 pt-10 text-center">
               {partnerAvatar && (
-                <img
+                <SignedImg
                   src={partnerAvatar}
                   alt={partnerName}
                   className="h-20 w-20 rounded-full object-cover ring-4 ring-primary/10"

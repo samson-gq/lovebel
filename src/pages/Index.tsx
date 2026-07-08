@@ -80,7 +80,7 @@ const Index = () => {
     const userIds = (data || []).map((p: DBProfile) => p.user_id);
     const [photosResp, promptsResp, videosResp] = userIds.length > 0
       ? await Promise.all([
-          supabase.from("profile_photos").select("*").in("user_id", userIds).order("position"),
+          supabase.from("profile_photos").select("id, user_id, photo_url, position, created_at").in("user_id", userIds).order("position"),
           supabase.from("profile_prompts").select("*").in("user_id", userIds).order("position"),
           (supabase as any).from("profile_videos").select("user_id, video_url").in("user_id", userIds),
         ])

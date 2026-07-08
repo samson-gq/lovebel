@@ -6,6 +6,7 @@ import { useMatches } from "@/hooks/useMatches";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { formatDayLabel, formatTime, sameDay } from "@/lib/chatUtils";
 import { cn } from "@/lib/utils";
+import { SignedImg } from "@/components/SignedImg";
 
 const formatWhen = (iso: string | null): string => {
   if (!iso) return "";
@@ -58,8 +59,8 @@ const Matches = () => {
                 className="group relative overflow-hidden rounded-2xl text-left shadow-card"
                 onClick={() => navigate(`/chat/${profile.matchId}`)}
               >
-                <img
-                  src={profile.avatar_url || "/placeholder.svg"}
+                <SignedImg
+                  src={profile.avatar_url}
                   alt={profile.name}
                   className="aspect-[3/4] w-full object-cover transition-transform group-hover:scale-105"
                 />

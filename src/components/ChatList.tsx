@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMatches } from "@/hooks/useMatches";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { cn } from "@/lib/utils";
+import { SignedImg } from "@/components/SignedImg";
 
 const ChatList = () => {
   const { user } = useAuth();
@@ -45,8 +46,8 @@ const ChatList = () => {
                 )}
               >
                 <div className="relative">
-                  <img
-                    src={item.avatar_url || "/placeholder.svg"}
+                  <SignedImg
+                    src={item.avatar_url}
                     alt={item.name}
                     className="h-10 w-10 rounded-full object-cover"
                   />

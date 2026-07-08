@@ -88,6 +88,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Extract storage path and generate a short-lived signed URL so Gemini can fetch
+    // the image even though the bucket is private.
+    let visionUrl = photo_url;
+    const parsed = photo.photo_url.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/([^?]+)/);
+    if (parsed) {
+      const bucket = parsed[1];
+      const path = decodeURIComponent(parsed[2]);
+      const { data: signed } = await supabase.storage.from(bucket).createSignedUrl(path, 300);
+      if (signed?.signedUrl) visionUrl = signed.signedUrl;
+    }
+
     // Call Lovable AI Gateway (vision)
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -103,7 +114,7 @@ Deno.serve(async (req) => {
             role: "user",
             content: [
               { type: "text", text: "Оцени это фото для публикации в дейтинге." },
-              { type: "image_url", image_url: { url: photo_url } },
+              { type: "image_url", image_url: { url: visionUrl } },
             ],
           },
         ],

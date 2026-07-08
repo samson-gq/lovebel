@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { SignedImg } from "@/components/SignedImg";
 
 const INTERESTS = ["Путешествия", "Музыка", "Спорт", "Кино", "Книги", "Кофе", "Йога", "Дизайн", "Фитнес", "Искусство", "Наука", "Еда"];
 
@@ -30,17 +31,18 @@ const Onboarding = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle().then(({ data }) => {
-      if (!data) return;
-      setName(data.name || "");
-      setAge(data.age || "");
-      setBio(data.bio || "");
-      setCity(data.city || "");
-      setGender(data.gender || "other");
-      setAvatarUrl(data.avatar_url || null);
-      setInterests(data.interests || []);
-      setLatitude((data as any).latitude ?? null);
-      setLongitude((data as any).longitude ?? null);
+    supabase.rpc("get_my_profile" as any).then(({ data }) => {
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) return;
+      setName(row.name || "");
+      setAge(row.age || "");
+      setBio(row.bio || "");
+      setCity(row.city || "");
+      setGender(row.gender || "other");
+      setAvatarUrl(row.avatar_url || null);
+      setInterests(row.interests || []);
+      setLatitude(row.latitude ?? null);
+      setLongitude(row.longitude ?? null);
     });
   }, [user]);
 
@@ -128,7 +130,7 @@ const Onboarding = () => {
             <div className="space-y-4 text-center">
               <h2 className="text-2xl font-bold text-foreground">Главное фото</h2>
               <button type="button" onClick={() => fileRef.current?.click()} className="mx-auto block aspect-[4/5] w-64 overflow-hidden rounded-2xl bg-muted shadow-card">
-                {avatarUrl ? <img src={avatarUrl} alt="Фото профиля" className="h-full w-full object-cover" /> : <span className="flex h-full flex-col items-center justify-center text-muted-foreground"><Camera className="mb-3 h-10 w-10" />Добавить фото</span>}
+                {avatarUrl ? <SignedImg src={avatarUrl} alt="Фото профиля" className="h-full w-full object-cover" /> : <span className="flex h-full flex-col items-center justify-center text-muted-foreground"><Camera className="mb-3 h-10 w-10" />Добавить фото</span>}
               </button>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
             </div>
