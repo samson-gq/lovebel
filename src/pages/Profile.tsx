@@ -77,11 +77,12 @@ const Profile = () => {
     if (!user) return;
 
     const fetchData = async () => {
-      const [{ data: profile }, { data: photoData }, { data: videoData }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("user_id", user.id).single(),
-        supabase.from("profile_photos").select("*").eq("user_id", user.id).order("position"),
+      const [{ data: profileRow }, { data: photoData }, { data: videoData }] = await Promise.all([
+        supabase.rpc("get_my_profile" as any),
+        supabase.rpc("get_my_photos" as any),
         (supabase as any).from("profile_videos").select("*").eq("user_id", user.id).maybeSingle(),
       ]);
+      const profile = Array.isArray(profileRow) ? profileRow[0] : profileRow;
 
       if (profile) {
         setName(profile.name);
@@ -99,8 +100,8 @@ const Profile = () => {
         setChildren(profile.children ?? "");
         setSmoking(profile.smoking ?? "");
         setDrinking(profile.drinking ?? "");
-        setLatitude((profile as any).latitude ?? null);
-        setLongitude((profile as any).longitude ?? null);
+        setLatitude(profile.latitude ?? null);
+        setLongitude(profile.longitude ?? null);
       }
 
       setPhotos((photoData as ProfilePhoto[]) || []);
@@ -399,8 +400,8 @@ const Profile = () => {
       <div className="mx-auto mt-6 grid w-full max-w-5xl gap-6 px-6 md:grid-cols-[320px_1fr]">
         <div className="relative overflow-hidden rounded-2xl bg-card shadow-card md:sticky md:top-6 md:self-start">
           <div className="relative mx-auto w-full max-w-xs md:max-w-none">
-            <img
-              src={avatarUrl || "/placeholder.svg"}
+            <SignedImg
+              src={avatarUrl}
               alt="Мой профиль"
               className="aspect-square w-full object-cover"
             />
