@@ -69,6 +69,7 @@ const Profile = () => {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [video, setVideo] = useState<ProfileVideo | null>(null);
+  const signedVideoUrl = useSignedUrl(video?.video_url ?? null);
   const [locating, setLocating] = useState(false);
   const [loading, setLoading] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
