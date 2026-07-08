@@ -659,7 +659,7 @@ const Profile = () => {
             </div>
             {video ? (
               <div className="relative overflow-hidden rounded-2xl bg-card shadow-card">
-                <video src={video.video_url} className="aspect-video w-full object-cover" controls playsInline />
+                {signedVideoUrl && <video src={signedVideoUrl} className="aspect-video w-full object-cover" controls playsInline />}
                 {editing && (
                   <button
                     type="button"
