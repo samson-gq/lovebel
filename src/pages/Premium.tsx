@@ -50,13 +50,10 @@ const Premium = () => {
     if (!user) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("boost_until")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const { data } = await supabase.rpc("get_my_profile" as any);
       if (cancelled) return;
-      setBoostUntil(data?.boost_until ?? null);
+      const row = Array.isArray(data) ? data[0] : data;
+      setBoostUntil(row?.boost_until ?? null);
       setLoading(false);
     })();
     return () => {

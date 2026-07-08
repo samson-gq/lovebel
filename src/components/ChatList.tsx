@@ -45,8 +45,8 @@ const ChatList = () => {
                 )}
               >
                 <div className="relative">
-                  <img
-                    src={item.avatar_url || "/placeholder.svg"}
+                  <SignedImg
+                    src={item.avatar_url}
                     alt={item.name}
                     className="h-10 w-10 rounded-full object-cover"
                   />

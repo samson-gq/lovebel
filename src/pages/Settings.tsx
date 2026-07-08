@@ -250,8 +250,8 @@ const Settings = () => {
             <ul className="space-y-2">
               {blocked.map((b) => (
                 <li key={b.id} className="flex items-center gap-3 rounded-lg bg-muted/50 p-2">
-                  <img
-                    src={b.profile?.avatar_url ?? "/placeholder.svg"}
+                  <SignedImg
+                    src={b.profile?.avatar_url ?? null}
                     alt={b.profile?.name ?? "user"}
                     className="h-9 w-9 rounded-full object-cover"
                   />

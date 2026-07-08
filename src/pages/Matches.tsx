@@ -58,8 +58,8 @@ const Matches = () => {
                 className="group relative overflow-hidden rounded-2xl text-left shadow-card"
                 onClick={() => navigate(`/chat/${profile.matchId}`)}
               >
-                <img
-                  src={profile.avatar_url || "/placeholder.svg"}
+                <SignedImg
+                  src={profile.avatar_url}
                   alt={profile.name}
                   className="aspect-[3/4] w-full object-cover transition-transform group-hover:scale-105"
                 />
