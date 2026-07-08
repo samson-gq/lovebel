@@ -35,6 +35,7 @@ import {
 import ProfileActionsMenu from "@/components/ProfileActionsMenu";
 import ChatList from "@/components/ChatList";
 import ImageLightbox from "@/components/ImageLightbox";
+import { SignedImg } from "@/components/SignedImg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDayLabel, formatTime, sameDay, linkify } from "@/lib/chatUtils";
 import { toast } from "sonner";
