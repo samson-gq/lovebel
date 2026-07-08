@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import DraggablePhotoGrid from "@/components/DraggablePhotoGrid";
 import PromptsEditor from "@/components/PromptsEditor";
+import { SignedImg } from "@/components/SignedImg";
+import { useSignedUrl } from "@/hooks/useSignedUrl";
 import {
   Select,
   SelectContent,
