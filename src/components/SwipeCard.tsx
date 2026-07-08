@@ -52,6 +52,21 @@ const computeBadge = (profile: Profile): Badge => {
   return null;
 };
 
+const SignedVideo = ({ url, isTop }: { url: string; isTop: boolean }) => {
+  const signed = useSignedUrl(url);
+  if (!signed) return null;
+  return (
+    <video
+      src={signed}
+      className="h-full w-full object-cover"
+      muted
+      playsInline
+      loop
+      autoPlay={isTop}
+    />
+  );
+};
+
 const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: SwipeCardProps) => {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
