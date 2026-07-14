@@ -43,11 +43,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     let cancelled = false;
     setCheckingProfile(true);
     const run = async () => {
-      const [{ data: profile }, { data: photos }] = await Promise.all([
-        supabase.from("profiles").select("name, avatar_url, onboarding_completed").eq("user_id", user.id).maybeSingle(),
+      const [{ data: profileRows }, { data: photos }] = await Promise.all([
+        supabase.rpc("get_my_profile" as any),
         supabase.from("profile_photos").select("id").eq("user_id", user.id).limit(1),
       ]);
       if (cancelled) return;
+      const profile = Array.isArray(profileRows) ? profileRows[0] : profileRows;
       const missingBasics = !profile?.onboarding_completed && (!profile?.name?.trim() || (!profile?.avatar_url && !photos?.length));
       setNeedsOnboarding(Boolean(missingBasics));
       setCheckingProfile(false);
