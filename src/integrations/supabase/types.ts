@@ -739,6 +739,50 @@ export type Database = {
           zodiac: string
         }[]
       }
+      search_profiles_v2: {
+        Args: {
+          city_query: string
+          exclude_ids: string[]
+          gender_filter: string
+          max_age: number
+          min_age: number
+          my_age?: number
+          my_children?: string
+          my_city?: string
+          my_drinking?: string
+          my_interests?: string[]
+          my_smoking?: string
+          radius_km?: number
+          user_lat?: number
+          user_lng?: number
+        }
+        Returns: {
+          age: number
+          avatar_url: string
+          bio: string
+          boost_until: string
+          children: string
+          city: string
+          created_at: string
+          distance_km: number
+          drinking: string
+          education: string
+          gender: string
+          height_cm: number
+          id: string
+          interests: string[]
+          is_verified: boolean
+          latitude: number
+          longitude: number
+          match_score: number
+          name: string
+          occupation: string
+          smoking: string
+          updated_at: string
+          user_id: string
+          zodiac: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
