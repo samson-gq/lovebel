@@ -1,48 +1,56 @@
-Большой список — разобью на 3 волны, чтобы каждая была обозримой и тестируемой.
+Топ-5 из аудита слишком большой для одного шага. Разбиваю на 4 итерации — каждая законченная и тестируемая. После каждой возвращаю управление.
 
-## Волна 1 — Рефактор и фундамент (без новых фич)
+## Итерация 1 — Улучшенный алгоритм матчинга (сейчас)
 
-1. **React Query для `usePopularCities` и `useProfilesCount`**
-   - Заменить ручной кэш на `useQuery` с `staleTime: 5 * 60_000`.
-   - `useProfilesCount` оставить debounce 300мс через `useDeferredValue` + `staleTime`.
-2. **Debounce URL-sync в `useSwipeFilters`**
-   - `replaceState` вызывается через 300мс таймер после последнего изменения фильтра. `localStorage` тоже debounce'нуть.
-3. **`useRealtimeNotifications` — гарантированный cleanup**
-   - Проверить, что `supabase.removeChannel(channel)` вызывается в return cleanup; добавить guard от двойного subscribe в StrictMode/HMR.
-4. **`src/config/nav.ts`**
-   - Единый источник списка табов: `{ to, label, icon, exact }[]`. Подключить в `AppSidebar` и `BottomNav`.
-5. **Разбить `SwipeFilters.tsx` (401 строка)**
-   - `AgeFilter`, `DistanceFilter`, `CityFilter` (с попапом подсказок), `GenderFilter` — каждый в свой файл. Корневой `SwipeFilters` — только композиция и Sheet.
-6. **Тесты на `Chat`**
-   - Юнит-тесты на `chatUtils` (группировка по дате/отправителю, форматирование), и компонентный тест на optimistic-добавление + удаление реакции.
+Сейчас `search_profiles` сортирует только по boost + дистанции + дате. Апгрейд до scoring-модели:
 
-## Волна 2 — UX поверх существующих данных
+- **Новая RPC `search_profiles_v2`** с числовым `match_score`:
+  - +30 за общие интересы (пересечение массивов, нормализация по количеству)
+  - +20 за общий город / близость (≤ 10 км)
+  - +15 за совпадение по «дети», «курение», «алкоголь» (soft-preferences)
+  - +10 за близкий возраст (разница ≤ 5 лет)
+  - +25 boost-бонус (если `boost_until > now()`)
+  - +10 если онлайн за последние 24ч (`updated_at`)
+- Сортировка: `boost` DESC → `match_score` DESC → distance NULLS LAST
+- `Index.tsx` переводится на новую RPC
+- Никаких breaking changes — старая RPC остаётся для fallback
 
-7. **Presence «в сети сейчас» на карточках свайпа**
-   - Глобальный presence-канал `online_users` с `track({ user_id })` при логине. На `SwipeCard` зелёная точка, если `user_id` в presence-state. Хук `useOnlineUsers()`.
-8. **Прочитанные/непрочитанные индикаторы в `/matches`**
-   - Уже есть `messages.read_at`? Проверю. Если нет — добавить колонку миграцией. На `ChatList` показывать точку, если последнее сообщение от собеседника и `read_at IS NULL`.
-9. **Skeleton + prefetch следующих карточек свайпа**
-   - `search_profiles` уже возвращает пачку. Префетч следующих фото через `new Image()` для топ-3 в очереди. Skeleton-карточка, пока первая партия грузится.
-10. **Ярлык «Новый» (< 24ч с регистрации) / «Возвращается» (был неактивен > 30 дней и вернулся)**
-    - Бейдж на `SwipeCard` поверх фото. Логика: `profiles.created_at` и `profiles.updated_at`.
-11. **«Не показывать снова» в чужих матчах (anti-déjà-vu)**
-    - Добавить запись в `swipes` с `direction='hide'` при действии «не показывать» из меню профиля. `search_profiles` уже исключает по `swipes.swiper_id`.
+## Итерация 2 — Push-уведомления: замкнуть цикл
 
-## Волна 3 — Boost (монетизация)
+Уже есть: `push_subscriptions`, `send-push` edge function, триггеры на match/message, VAPID ключи.
 
-12. **Boost — буст видимости 30 мин**
-    - `search_profiles` уже сортирует по `boost_until` (вижу в существующей RPC). Значит колонка есть.
-    - Кнопка «Boost 30 мин» в `Profile` и `Premium`. RPC `activate_boost()`: `SET boost_until = now() + interval '30 min'` (с лимитом 1 раз в сутки).
-    - Визуальный таймер обратного отсчёта.
-    - Пока без реальной оплаты — фича-флаг «premium» (отдельный шаг, если попросишь).
+Нужно:
+- Убедиться что `public/push-sw.js` регистрируется в `main.tsx` (проверю)
+- Компонент `PushOptIn` — карточка на `/matches` и `/profile`: «Включить уведомления» → `Notification.requestPermission()` → сохранение подписки
+- Настройка в `Settings`: включить/выключить push, типы (матчи, сообщения, лайки)
+- Триггер на новый лайк в `swipes` (сейчас только match/message)
+- Reactivation-push: edge-функция + cron «Вас не было 7 дней» (это шаг за рамки — пока не делаю, отмечу как TODO)
 
----
+## Итерация 3 — Аналитика воронки (PostHog)
 
-## Что предлагаю сделать сейчас
+- Спрошу пользователя: PostHog Cloud (нужен API-ключ) или собственная таблица `analytics_events` в Cloud
+- Если PostHog: `posthog-js`, инициализация в `main.tsx`, ключ через `add_secret` как публичный `VITE_POSTHOG_KEY`
+- Ключевые события: `signup`, `onboarding_step`, `swipe_left/right`, `match_created`, `message_sent`, `boost_activated`, `premium_view`, `push_enabled`
+- Идентификация по `user.id` после логина
+- Опциональная event-таблица в Cloud для собственных дашбордов
 
-Если согласен — стартую с **Волной 1** (рефактор + тесты Chat) одним заходом. Это самый безопасный блок и разгребает технический долг перед фичами. Затем по очереди Волна 2 и Волна 3.
+## Итерация 4 — Монетизация (Stripe Payments)
 
-Если хочется быстрее увидеть видимые изменения — могу начать с Волны 2 (presence + unread + «Новый» бейдж).
+- Запуск `recommend_payment_provider` (dating apps — обычно Stripe)
+- Enable Stripe payments (форма от Lovable)
+- Продукты через `batch_create_product`:
+  - **Premium Monthly** — $9.99/мес
+  - **Premium Yearly** — $79/год
+  - **Boost x5** — one-time $4.99
+  - **Boost x25** — one-time $19.99
+- Checkout flow из `/premium`
+- Webhook: активация `is_premium` / инкремент `boost_credits` в `profiles`
+- Замена текущей RPC `activate_boost` — списание кредита вместо 24ч кулдауна для купивших
 
-Какой порядок?
+## Дополнительная проверка безопасности
+
+После итераций 1 и 4 — прогон `security--run_security_scan`, фикс новых находок.
+
+## Стартую с Итерации 1
+
+Она чисто backend + одна строка в `Index.tsx`, без внешних решений. Начинаю.

@@ -58,10 +58,15 @@ const Index = () => {
     if (!user) return;
     setLoading(true);
 
+    // Fetch my profile via SECURITY DEFINER RPC so the scoring model can weigh
+    // shared interests, age closeness, city and soft-preferences alignment.
+    const { data: meRows } = await (supabase as any).rpc("get_my_profile");
+    const me = Array.isArray(meRows) ? meRows[0] : meRows;
+
     // Exclusion (own id + already-swiped ids) is computed server-side in
-    // search_profiles via auth.uid(); the client no longer ships the full
+    // search_profiles_v2 via auth.uid(); the client no longer ships the full
     // swipe history on every reload.
-    const { data, error } = await (supabase as any).rpc("search_profiles", {
+    const { data, error } = await (supabase as any).rpc("search_profiles_v2", {
       exclude_ids: null,
       min_age: filters.ageRange[0],
       max_age: filters.ageRange[1],
@@ -70,11 +75,18 @@ const Index = () => {
       user_lat: filters.useGps ? filters.latitude : null,
       user_lng: filters.useGps ? filters.longitude : null,
       radius_km: filters.useGps ? filters.maxDistance : null,
+      my_interests: me?.interests ?? null,
+      my_age: me?.age ?? null,
+      my_children: me?.children ?? null,
+      my_smoking: me?.smoking ?? null,
+      my_drinking: me?.drinking ?? null,
+      my_city: me?.city ?? null,
     });
 
     if (error) {
-      console.error("search_profiles failed", error);
+      console.error("search_profiles_v2 failed", error);
     }
+
 
     // Fetch photos and prompts for all profiles
     const userIds = (data || []).map((p: DBProfile) => p.user_id);

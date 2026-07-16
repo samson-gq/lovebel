@@ -7,6 +7,7 @@ import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { formatDayLabel, formatTime, sameDay } from "@/lib/chatUtils";
 import { cn } from "@/lib/utils";
 import { SignedImg } from "@/components/SignedImg";
+import PushOptIn from "@/components/PushOptIn";
 
 const formatWhen = (iso: string | null): string => {
   if (!iso) return "";
@@ -39,6 +40,12 @@ const Matches = () => {
             : "Начните свайпать, чтобы найти пару"}
         </p>
       </header>
+
+      <div className="mt-4">
+        <PushOptIn />
+      </div>
+
+
 
       {isLoading ? (
         <div className="mt-6 grid grid-cols-2 gap-4 px-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
