@@ -41,6 +41,12 @@ const Matches = () => {
         </p>
       </header>
 
+      <div className="mt-4">
+        <PushOptIn />
+      </div>
+
+
+
       {isLoading ? (
         <div className="mt-6 grid grid-cols-2 gap-4 px-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {Array.from({ length: 8 }).map((_, i) => (
