@@ -28,6 +28,16 @@ const NotificationListener = () => {
   return null;
 };
 
+const PageviewTracker = () => {
+  const location = useLocation();
+  useEffect(() => {
+    // Fire-and-forget; analytics client swallows its own errors.
+    import("@/lib/analytics").then(({ trackPageview }) => trackPageview());
+  }, [location.pathname]);
+  return null;
+};
+
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
