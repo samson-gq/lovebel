@@ -11,6 +11,7 @@ import { useSwipeFilters, DEFAULT_FILTERS, isDefaultFilters } from "@/hooks/useS
 import { useProfilesCount } from "@/hooks/useProfilesCount";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { supabase } from "@/integrations/supabase/client";
+import { track } from "@/lib/analytics";
 import type { Profile } from "@/data/profiles";
 
 interface DBProfile {
