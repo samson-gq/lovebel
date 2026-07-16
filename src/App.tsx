@@ -96,7 +96,9 @@ const App = () => (
         <Sonner />
         <NotificationListener />
         <BrowserRouter>
+          <PageviewTracker />
           <Routes>
+
             <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/matches" element={<ProtectedRoute><Matches /></ProtectedRoute>} />
