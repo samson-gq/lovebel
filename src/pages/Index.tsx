@@ -197,6 +197,7 @@ const Index = () => {
       }
 
       setLastSwipeId(inserted?.id ?? null);
+      track(`swipe_${dbDirection}`, { profile_id: profile.id });
       if (direction === "super") {
         setSuperLikesLeft((n) => Math.max(0, n - 1));
         toast.success("⭐ Super Like отправлен!");
