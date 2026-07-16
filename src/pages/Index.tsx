@@ -11,6 +11,7 @@ import { useSwipeFilters, DEFAULT_FILTERS, isDefaultFilters } from "@/hooks/useS
 import { useProfilesCount } from "@/hooks/useProfilesCount";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { supabase } from "@/integrations/supabase/client";
+import { track } from "@/lib/analytics";
 import type { Profile } from "@/data/profiles";
 
 interface DBProfile {
@@ -196,6 +197,7 @@ const Index = () => {
       }
 
       setLastSwipeId(inserted?.id ?? null);
+      track(`swipe_${dbDirection}`, { profile_id: profile.id });
       if (direction === "super") {
         setSuperLikesLeft((n) => Math.max(0, n - 1));
         toast.success("⭐ Super Like отправлен!");
