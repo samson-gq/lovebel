@@ -17,6 +17,7 @@ import Verification from "./pages/Verification";
 import Onboarding from "./pages/Onboarding";
 import LikesMe from "./pages/LikesMe";
 import Premium from "./pages/Premium";
+import DailyPicks from "./pages/DailyPicks";
 import NotFound from "./pages/NotFound";
 import { supabase } from "@/integrations/supabase/client";
 import AppShell from "@/components/AppShell";
@@ -103,6 +104,7 @@ const App = () => (
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/matches" element={<ProtectedRoute><Matches /></ProtectedRoute>} />
             <Route path="/likes" element={<ProtectedRoute><LikesMe /></ProtectedRoute>} />
+            <Route path="/picks" element={<ProtectedRoute><DailyPicks /></ProtectedRoute>} />
             <Route path="/premium" element={<ProtectedRoute><Premium /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />

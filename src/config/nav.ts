@@ -11,7 +11,7 @@ export interface NavItem {
 /** Single source of truth for the main app navigation tabs (sidebar + bottom nav). */
 export const NAV_ITEMS: NavItem[] = [
   { path: "/", icon: Flame, label: "Обзор", exact: true },
-  { path: "/likes", icon: Sparkles, label: "Лайки" },
+  { path: "/picks", icon: Sparkles, label: "Подборка" },
   { path: "/matches", icon: Heart, label: "Матчи" },
   { path: "/premium", icon: Crown, label: "Premium" },
   { path: "/profile", icon: User, label: "Профиль" },
