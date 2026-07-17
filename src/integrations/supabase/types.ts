@@ -378,6 +378,7 @@ export type Database = {
           gender: string | null
           height_cm: number | null
           id: string
+          incognito: boolean
           interests: string[] | null
           is_verified: boolean
           latitude: number | null
@@ -407,6 +408,7 @@ export type Database = {
           gender?: string | null
           height_cm?: number | null
           id?: string
+          incognito?: boolean
           interests?: string[] | null
           is_verified?: boolean
           latitude?: number | null
@@ -436,6 +438,7 @@ export type Database = {
           gender?: string | null
           height_cm?: number | null
           id?: string
+          incognito?: boolean
           interests?: string[] | null
           is_verified?: boolean
           latitude?: number | null
@@ -666,6 +669,20 @@ export type Database = {
         }
         Returns: number
       }
+      daily_picks: {
+        Args: never
+        Returns: {
+          age: number
+          avatar_url: string
+          bio: string
+          city: string
+          interests: string[]
+          is_verified: boolean
+          match_score: number
+          name: string
+          user_id: string
+        }[]
+      }
       get_my_photos: {
         Args: never
         Returns: {
@@ -700,6 +717,7 @@ export type Database = {
           gender: string | null
           height_cm: number | null
           id: string
+          incognito: boolean
           interests: string[] | null
           is_verified: boolean
           latitude: number | null
