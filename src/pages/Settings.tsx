@@ -263,6 +263,37 @@ const Settings = () => {
           </div>
         </section>
 
+        {/* Incognito mode (Premium) */}
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <EyeOff className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h2 className="flex items-center gap-2 font-semibold text-foreground">
+                Incognito
+                {!isPremium && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                    <Crown className="h-3 w-3" /> Premium
+                  </span>
+                )}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Вас видят только те, кого вы уже лайкнули. Ваш профиль скрыт из «Обзора» и «Подборки дня».
+              </p>
+              <Button
+                onClick={toggleIncognito}
+                disabled={incognitoBusy}
+                variant={incognito ? "outline" : "default"}
+                className={incognito ? "mt-3" : "mt-3 gradient-primary text-primary-foreground"}
+              >
+                {incognitoBusy ? "..." : incognito ? "Выключить" : "Включить Incognito"}
+              </Button>
+            </div>
+          </div>
+        </section>
+
+
         {/* Blocked users */}
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center gap-2">
