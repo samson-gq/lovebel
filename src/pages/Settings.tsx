@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ShieldCheck, Download, Trash2, Ban, BadgeCheck, Bell, BellOff } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Download, Trash2, Ban, BadgeCheck, Bell, BellOff, EyeOff, Crown } from "lucide-react";
 import { canEnablePush, disablePush, enablePush, getPushPermission, isPushSupported } from "@/lib/push";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +31,9 @@ const Settings = () => {
   const [deleteReason, setDeleteReason] = useState("");
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
+  const [incognito, setIncognito] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
+  const [incognitoBusy, setIncognitoBusy] = useState(false);
 
   useEffect(() => {
     if (!isPushSupported()) return;
@@ -73,11 +76,14 @@ const Settings = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [{ data: blocks }, { data: profile }] = await Promise.all([
+      const [{ data: blocks }, { data: profileRows }] = await Promise.all([
         supabase.from("blocks").select("id, blocked_id, created_at").eq("blocker_id", user.id),
-        supabase.from("profiles").select("is_verified").eq("user_id", user.id).maybeSingle(),
+        (supabase as any).rpc("get_my_profile"),
       ]);
+      const profile = Array.isArray(profileRows) ? profileRows[0] : profileRows;
       setIsVerified(profile?.is_verified ?? false);
+      setIncognito(profile?.incognito ?? false);
+      setIsPremium(Boolean(profile?.is_premium));
 
       if (blocks?.length) {
         const ids = blocks.map((b) => b.blocked_id);
@@ -95,6 +101,24 @@ const Settings = () => {
     };
     load();
   }, [user]);
+
+  const toggleIncognito = async () => {
+    if (!user) return;
+    if (!isPremium) {
+      toast.info("Incognito доступен по Premium", { description: "Оформите подписку на странице Premium." });
+      return;
+    }
+    setIncognitoBusy(true);
+    const next = !incognito;
+    const { error } = await supabase.from("profiles").update({ incognito: next }).eq("user_id", user.id);
+    setIncognitoBusy(false);
+    if (error) {
+      toast.error("Не удалось изменить");
+      return;
+    }
+    setIncognito(next);
+    toast.success(next ? "Incognito включён" : "Incognito выключен");
+  };
 
   const handleUnblock = async (id: string) => {
     const { error } = await supabase.from("blocks").delete().eq("id", id);
