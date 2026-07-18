@@ -69,9 +69,11 @@ const SignedVideo = ({ url, isTop }: { url: string; isTop: boolean }) => {
 
 const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: SwipeCardProps) => {
   const x = useMotionValue(0);
+  const y = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
+  const superOpacity = useTransform(y, [-140, -40], [1, 0]);
   const [photoIndex, setPhotoIndex] = useState(0);
 
   const mediaItems = [
