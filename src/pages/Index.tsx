@@ -393,11 +393,14 @@ const Index = () => {
         <div className="fixed bottom-20 left-0 right-0 z-40 flex items-center justify-center gap-4 md:bottom-8 md:left-60 md:right-0">
           <button
             onClick={handleRewind}
-            disabled={!lastSwipeId}
-            aria-label="Отменить последний свайп"
-            className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-secondary/40 bg-card shadow-card transition-transform hover:scale-110 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+            disabled={isPremium && !lastSwipeId}
+            aria-label={isPremium ? "Отменить последний свайп" : "Rewind — Premium"}
+            className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-secondary/40 bg-card shadow-card transition-transform hover:scale-110 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
           >
             <Undo2 className="h-6 w-6 text-secondary" />
+            {!isPremium && (
+              <span className="absolute -top-1 -right-1 rounded-full bg-secondary px-1 text-[9px] font-bold text-secondary-foreground">PRO</span>
+            )}
           </button>
           <button
             onClick={() => handleSwipe("left")}
