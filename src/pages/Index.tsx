@@ -138,6 +138,10 @@ const Index = () => {
     setCurrentIndex(0);
     setLastSwipeId(null);
 
+    const premium = Boolean((me as any)?.is_premium);
+    setIsPremium(premium);
+    const dailyQuota = premium ? 5 : 1;
+
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const { count: usedToday } = await supabase
@@ -146,7 +150,7 @@ const Index = () => {
       .eq("swiper_id", user.id)
       .eq("direction", "superlike")
       .gte("created_at", startOfDay.toISOString());
-    setSuperLikesLeft(Math.max(0, 1 - (usedToday ?? 0)));
+    setSuperLikesLeft(Math.max(0, dailyQuota - (usedToday ?? 0)));
 
     setLoading(false);
   }, [user, filters]);
