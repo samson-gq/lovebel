@@ -215,7 +215,15 @@ const Index = () => {
   );
 
   const handleRewind = useCallback(async () => {
-    if (!user || !lastSwipeId || currentIndex === 0) return;
+    if (!user) return;
+    if (!isPremium) {
+      toast("Rewind — фича Premium", {
+        description: "Открой Premium, чтобы отменять свайпы",
+        action: { label: "Смотреть", onClick: () => navigate("/premium") },
+      });
+      return;
+    }
+    if (!lastSwipeId || currentIndex === 0) return;
     const { error } = await supabase
       .from("swipes")
       .delete()
@@ -227,8 +235,9 @@ const Index = () => {
     }
     setCurrentIndex((prev) => Math.max(0, prev - 1));
     setLastSwipeId(null);
+    track("swipe_rewind");
     toast("↩️ Свайп отменён");
-  }, [user, lastSwipeId, currentIndex]);
+  }, [user, lastSwipeId, currentIndex, isPremium, navigate]);
 
   const remaining = cards.slice(currentIndex);
 
