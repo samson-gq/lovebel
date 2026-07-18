@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 interface SwipeCardProps {
   profile: Profile & { isVerified?: boolean };
-  onSwipe: (direction: "left" | "right") => void;
+  onSwipe: (direction: "left" | "right" | "super") => void;
   isTop: boolean;
   onBlocked?: () => void;
   onHide?: () => void;
