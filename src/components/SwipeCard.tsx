@@ -85,7 +85,8 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
   const badge = computeBadge(profile);
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.offset.x > 120) onSwipe("right");
+    if (info.offset.y < -140 && Math.abs(info.offset.x) < 100) onSwipe("super");
+    else if (info.offset.x > 120) onSwipe("right");
     else if (info.offset.x < -120) onSwipe("left");
   };
 
@@ -102,9 +103,9 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
   return (
     <motion.div
       className="absolute inset-0 cursor-grab active:cursor-grabbing"
-      style={{ x, rotate, zIndex: isTop ? 10 : 0 }}
-      drag={isTop ? "x" : false}
-      dragConstraints={{ left: 0, right: 0 }}
+      style={{ x, y, rotate, zIndex: isTop ? 10 : 0 }}
+      drag={isTop ? true : false}
+      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
       dragElastic={0.9}
       onDragEnd={handleDragEnd}
       exit={{ x: 300, opacity: 0, transition: { duration: 0.3 } }}
