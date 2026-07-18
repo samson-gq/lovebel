@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Heart, Star, LogOut, MapPin, Undo2 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
 import SwipeFilters from "@/components/SwipeFilters";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -41,10 +42,12 @@ interface DBProfile {
 
 const Index = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const { filters, setFilters, reset } = useSwipeFilters();
   const [cards, setCards] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isPremium, setIsPremium] = useState<boolean>(false);
   const [superLikesLeft, setSuperLikesLeft] = useState<number>(1);
   const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
   const { count: liveCount, loading: countLoading, error: countError } = useProfilesCount({
@@ -135,6 +138,10 @@ const Index = () => {
     setCurrentIndex(0);
     setLastSwipeId(null);
 
+    const premium = Boolean((me as any)?.is_premium);
+    setIsPremium(premium);
+    const dailyQuota = premium ? 5 : 1;
+
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const { count: usedToday } = await supabase
@@ -143,7 +150,7 @@ const Index = () => {
       .eq("swiper_id", user.id)
       .eq("direction", "superlike")
       .gte("created_at", startOfDay.toISOString());
-    setSuperLikesLeft(Math.max(0, 1 - (usedToday ?? 0)));
+    setSuperLikesLeft(Math.max(0, dailyQuota - (usedToday ?? 0)));
 
     setLoading(false);
   }, [user, filters]);
@@ -208,7 +215,15 @@ const Index = () => {
   );
 
   const handleRewind = useCallback(async () => {
-    if (!user || !lastSwipeId || currentIndex === 0) return;
+    if (!user) return;
+    if (!isPremium) {
+      toast("Rewind — фича Premium", {
+        description: "Открой Premium, чтобы отменять свайпы",
+        action: { label: "Смотреть", onClick: () => navigate("/premium") },
+      });
+      return;
+    }
+    if (!lastSwipeId || currentIndex === 0) return;
     const { error } = await supabase
       .from("swipes")
       .delete()
@@ -220,8 +235,9 @@ const Index = () => {
     }
     setCurrentIndex((prev) => Math.max(0, prev - 1));
     setLastSwipeId(null);
+    track("swipe_rewind");
     toast("↩️ Свайп отменён");
-  }, [user, lastSwipeId, currentIndex]);
+  }, [user, lastSwipeId, currentIndex, isPremium, navigate]);
 
   const remaining = cards.slice(currentIndex);
 
@@ -377,11 +393,14 @@ const Index = () => {
         <div className="fixed bottom-20 left-0 right-0 z-40 flex items-center justify-center gap-4 md:bottom-8 md:left-60 md:right-0">
           <button
             onClick={handleRewind}
-            disabled={!lastSwipeId}
-            aria-label="Отменить последний свайп"
-            className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-secondary/40 bg-card shadow-card transition-transform hover:scale-110 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+            disabled={isPremium && !lastSwipeId}
+            aria-label={isPremium ? "Отменить последний свайп" : "Rewind — Premium"}
+            className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-secondary/40 bg-card shadow-card transition-transform hover:scale-110 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
           >
             <Undo2 className="h-6 w-6 text-secondary" />
+            {!isPremium && (
+              <span className="absolute -top-1 -right-1 rounded-full bg-secondary px-1 text-[9px] font-bold text-secondary-foreground">PRO</span>
+            )}
           </button>
           <button
             onClick={() => handleSwipe("left")}

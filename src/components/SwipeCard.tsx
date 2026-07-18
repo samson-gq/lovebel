@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 interface SwipeCardProps {
   profile: Profile & { isVerified?: boolean };
-  onSwipe: (direction: "left" | "right") => void;
+  onSwipe: (direction: "left" | "right" | "super") => void;
   isTop: boolean;
   onBlocked?: () => void;
   onHide?: () => void;
@@ -69,9 +69,11 @@ const SignedVideo = ({ url, isTop }: { url: string; isTop: boolean }) => {
 
 const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: SwipeCardProps) => {
   const x = useMotionValue(0);
+  const y = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
+  const superOpacity = useTransform(y, [-140, -40], [1, 0]);
   const [photoIndex, setPhotoIndex] = useState(0);
 
   const mediaItems = [
@@ -83,7 +85,8 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
   const badge = computeBadge(profile);
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.offset.x > 120) onSwipe("right");
+    if (info.offset.y < -140 && Math.abs(info.offset.x) < 100) onSwipe("super");
+    else if (info.offset.x > 120) onSwipe("right");
     else if (info.offset.x < -120) onSwipe("left");
   };
 
@@ -100,9 +103,9 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
   return (
     <motion.div
       className="absolute inset-0 cursor-grab active:cursor-grabbing"
-      style={{ x, rotate, zIndex: isTop ? 10 : 0 }}
-      drag={isTop ? "x" : false}
-      dragConstraints={{ left: 0, right: 0 }}
+      style={{ x, y, rotate, zIndex: isTop ? 10 : 0 }}
+      drag={isTop ? true : false}
+      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
       dragElastic={0.9}
       onDragEnd={handleDragEnd}
       exit={{ x: 300, opacity: 0, transition: { duration: 0.3 } }}
@@ -180,6 +183,12 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
           style={{ opacity: nopeOpacity, rotate: 15 }}
         >
           <span className="text-3xl tracking-wider">NOPE</span>
+        </motion.div>
+        <motion.div
+          className="absolute left-1/2 top-24 -translate-x-1/2 rounded-lg border-4 border-blue-500 px-4 py-2 font-bold text-blue-500"
+          style={{ opacity: superOpacity }}
+        >
+          <span className="text-3xl tracking-wider">SUPER LIKE</span>
         </motion.div>
 
         {isTop && (
