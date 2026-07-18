@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Heart, Star, LogOut, MapPin, Undo2 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
 import SwipeFilters from "@/components/SwipeFilters";
 import ThemeToggle from "@/components/ThemeToggle";
