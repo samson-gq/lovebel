@@ -184,6 +184,12 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
         >
           <span className="text-3xl tracking-wider">NOPE</span>
         </motion.div>
+        <motion.div
+          className="absolute left-1/2 top-24 -translate-x-1/2 rounded-lg border-4 border-blue-500 px-4 py-2 font-bold text-blue-500"
+          style={{ opacity: superOpacity }}
+        >
+          <span className="text-3xl tracking-wider">SUPER LIKE</span>
+        </motion.div>
 
         {isTop && (
           <div className="absolute right-3 top-6 z-10">
