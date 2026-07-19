@@ -349,7 +349,9 @@ const Chat = () => {
       });
       if (error) {
         markFailed(tmpId);
-        toast.error("Не удалось отправить");
+        toast.error("Не удалось отправить", { description: error.message });
+      } else {
+        setMatchExpiresAt(null);
       }
     },
     [user, matchId, insertOptimistic],
