@@ -87,6 +87,9 @@ const Settings = () => {
       setIsVerified(profile?.is_verified ?? false);
       setIncognito(profile?.incognito ?? false);
       setIsPremium(Boolean(profile?.is_premium));
+      setBumbleMode(profile?.bumble_mode ?? true);
+      setGender(profile?.gender ?? null);
+
 
       if (blocks?.length) {
         const ids = blocks.map((b) => b.blocked_id);
