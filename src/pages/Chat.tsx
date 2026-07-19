@@ -574,6 +574,14 @@ const Chat = () => {
 
   const isEmpty = !messages.length;
 
+  // Bumble gating: expiry active AND no messages yet AND I'm the male in an M/F pair
+  const bumbleMs = useCountdown(matchExpiresAt);
+  const bumbleActive = !!matchExpiresAt && bumbleMs > 0 && messages.length === 0;
+  const bumbleBlocksMe =
+    bumbleActive && myGender === "male" && partnerGender === "female";
+  const bumbleMyTurn =
+    bumbleActive && myGender === "female" && partnerGender === "male";
+
   return (
     <div className="flex h-screen bg-background">
       <ChatList />
