@@ -10,6 +10,16 @@ import { cn } from "@/lib/utils";
 import { SignedImg } from "@/components/SignedImg";
 import PushOptIn from "@/components/PushOptIn";
 
+const ExpiryBadge = ({ expiresAt }: { expiresAt: string }) => {
+  const ms = useCountdown(expiresAt);
+  if (ms <= 0) return null;
+  return (
+    <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-secondary/95 px-2 py-0.5 text-[10px] font-semibold text-secondary-foreground shadow">
+      <Hourglass className="h-3 w-3" /> {formatCountdown(ms)}
+    </span>
+  );
+};
+
 const formatWhen = (iso: string | null): string => {
   if (!iso) return "";
   const d = new Date(iso);
