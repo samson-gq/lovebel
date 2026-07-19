@@ -359,6 +359,10 @@ const Chat = () => {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (bumbleBlocksMe) {
+      toast.info("По правилам Bumble-режима первой пишет девушка");
+      return;
+    }
     const text = newMessage;
     setNewMessage("");
     await sendText(text);
