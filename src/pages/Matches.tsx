@@ -84,13 +84,16 @@ const Matches = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/10 to-transparent" />
 
-                {/* Online dot on avatar */}
-                {isOnline && (
+                {/* Online dot on avatar — hidden when expiry badge shown */}
+                {isOnline && !profile.expiresAt && (
                   <span
                     className="absolute right-2 top-2 inline-flex h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-card"
                     aria-label="В сети"
                   />
                 )}
+
+                {/* Bumble expiry countdown */}
+                {profile.expiresAt && <ExpiryBadge expiresAt={profile.expiresAt} />}
 
                 {/* Unread badge */}
                 {profile.unreadCount > 0 && (
