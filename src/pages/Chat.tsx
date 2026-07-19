@@ -124,18 +124,22 @@ const Chat = () => {
     const fetchPartner = async () => {
       const { data: match } = await supabase.from("matches").select("*").eq("id", matchId).single();
       if (match) {
+        setMatchExpiresAt(match.expires_at ?? null);
         const pid = match.user1_id === user.id ? match.user2_id : match.user1_id;
         setPartnerId(pid);
-        const { data: profile } = await supabase
+        const { data: rows } = await supabase
           .from("profiles")
-          .select("name, avatar_url, is_verified")
-          .eq("user_id", pid)
-          .single();
+          .select("user_id, name, avatar_url, is_verified, gender")
+          .in("user_id", [pid, user.id]);
+        const profile = rows?.find((r) => r.user_id === pid);
+        const mine = rows?.find((r) => r.user_id === user.id);
         if (profile) {
           setPartnerName(profile.name);
           setPartnerAvatar(profile.avatar_url);
           setPartnerVerified(profile.is_verified ?? false);
+          setPartnerGender(profile.gender ?? null);
         }
+        if (mine) setMyGender(mine.gender ?? null);
       }
     };
 
