@@ -314,6 +314,33 @@ const Settings = () => {
           </div>
         </section>
 
+        {/* Bumble mode — visible only for women */}
+        {gender === "female" && (
+          <section className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/20">
+                <span className="text-lg">⏳</span>
+              </div>
+              <div className="flex-1">
+                <h2 className="font-semibold text-foreground">Bumble-режим</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  В новых матчах с мужчинами первое сообщение пишете вы. У пары есть 24 часа — иначе матч исчезает.
+                </p>
+                <Button
+                  onClick={toggleBumble}
+                  disabled={bumbleBusy}
+                  variant={bumbleMode ? "outline" : "default"}
+                  className={bumbleMode ? "mt-3" : "mt-3 gradient-primary text-primary-foreground"}
+                >
+                  {bumbleBusy ? "..." : bumbleMode ? "Выключить" : "Включить"}
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
+
+
+
 
         {/* Blocked users */}
         <section className="rounded-2xl border border-border bg-card p-4">
