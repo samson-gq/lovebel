@@ -1,13 +1,24 @@
 import { motion } from "framer-motion";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Hourglass } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useMatches } from "@/hooks/useMatches";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
+import { useCountdown, formatCountdown } from "@/hooks/useCountdown";
 import { formatDayLabel, formatTime, sameDay } from "@/lib/chatUtils";
 import { cn } from "@/lib/utils";
 import { SignedImg } from "@/components/SignedImg";
 import PushOptIn from "@/components/PushOptIn";
+
+const ExpiryBadge = ({ expiresAt }: { expiresAt: string }) => {
+  const ms = useCountdown(expiresAt);
+  if (ms <= 0) return null;
+  return (
+    <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-secondary/95 px-2 py-0.5 text-[10px] font-semibold text-secondary-foreground shadow">
+      <Hourglass className="h-3 w-3" /> {formatCountdown(ms)}
+    </span>
+  );
+};
 
 const formatWhen = (iso: string | null): string => {
   if (!iso) return "";
@@ -73,13 +84,16 @@ const Matches = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/10 to-transparent" />
 
-                {/* Online dot on avatar */}
-                {isOnline && (
+                {/* Online dot on avatar — hidden when expiry badge shown */}
+                {isOnline && !profile.expiresAt && (
                   <span
                     className="absolute right-2 top-2 inline-flex h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-card"
                     aria-label="В сети"
                   />
                 )}
+
+                {/* Bumble expiry countdown */}
+                {profile.expiresAt && <ExpiryBadge expiresAt={profile.expiresAt} />}
 
                 {/* Unread badge */}
                 {profile.unreadCount > 0 && (

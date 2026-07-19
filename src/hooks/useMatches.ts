@@ -13,18 +13,27 @@ export interface MatchSummary {
   unreadCount: number;
   /** True when the most recent message in the chat is from the other user and unread. */
   hasUnread: boolean;
+  /** Bumble expiry: when set and in future, first message must come from the female. */
+  expiresAt: string | null;
+  firstMessageSender: string | null;
 }
 
 async function fetchMatches(userId: string): Promise<MatchSummary[]> {
   const { data: matches } = await supabase
     .from("matches")
-    .select("id, user1_id, user2_id, created_at")
+    .select("id, user1_id, user2_id, created_at, expires_at, first_message_sender")
     .or(`user1_id.eq.${userId},user2_id.eq.${userId}`);
 
   if (!matches || matches.length === 0) return [];
 
-  const matchIds = matches.map((m) => m.id);
-  const otherIds = matches.map((m) => (m.user1_id === userId ? m.user2_id : m.user1_id));
+  // Hide fully-expired bumble matches (expires_at set AND in the past AND no message ever sent).
+  const active = matches.filter(
+    (m) => !m.expires_at || new Date(m.expires_at).getTime() > Date.now(),
+  );
+  if (active.length === 0) return [];
+
+  const matchIds = active.map((m) => m.id);
+  const otherIds = active.map((m) => (m.user1_id === userId ? m.user2_id : m.user1_id));
 
   const [profilesRes, messagesRes] = await Promise.all([
     supabase.from("profiles").select("user_id, name, age, avatar_url").in("user_id", otherIds),
@@ -55,7 +64,7 @@ async function fetchMatches(userId: string): Promise<MatchSummary[]> {
     return m.content ?? null;
   };
 
-  const items: MatchSummary[] = matches.map((m) => {
+  const items: MatchSummary[] = active.map((m) => {
     const otherId = m.user1_id === userId ? m.user2_id : m.user1_id;
     const profile = profiles.find((p) => p.user_id === otherId);
     const last = lastByMatch.get(m.id);
@@ -70,6 +79,8 @@ async function fetchMatches(userId: string): Promise<MatchSummary[]> {
       lastMessagePreview: preview(last),
       unreadCount: unread,
       hasUnread: !!last && last.sender_id !== userId && !last.read_at && !last.deleted_at,
+      expiresAt: m.expires_at ?? null,
+      firstMessageSender: m.first_message_sender ?? null,
     };
   });
 

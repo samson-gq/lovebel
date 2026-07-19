@@ -34,6 +34,9 @@ const Settings = () => {
   const [incognito, setIncognito] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [incognitoBusy, setIncognitoBusy] = useState(false);
+  const [bumbleMode, setBumbleMode] = useState(true);
+  const [bumbleBusy, setBumbleBusy] = useState(false);
+  const [gender, setGender] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isPushSupported()) return;
@@ -84,6 +87,9 @@ const Settings = () => {
       setIsVerified(profile?.is_verified ?? false);
       setIncognito(profile?.incognito ?? false);
       setIsPremium(Boolean(profile?.is_premium));
+      setBumbleMode(profile?.bumble_mode ?? true);
+      setGender(profile?.gender ?? null);
+
 
       if (blocks?.length) {
         const ids = blocks.map((b) => b.blocked_id);
@@ -119,6 +125,21 @@ const Settings = () => {
     setIncognito(next);
     toast.success(next ? "Incognito включён" : "Incognito выключен");
   };
+
+  const toggleBumble = async () => {
+    if (!user) return;
+    setBumbleBusy(true);
+    const next = !bumbleMode;
+    const { error } = await supabase.from("profiles").update({ bumble_mode: next }).eq("user_id", user.id);
+    setBumbleBusy(false);
+    if (error) {
+      toast.error("Не удалось изменить");
+      return;
+    }
+    setBumbleMode(next);
+    toast.success(next ? "Bumble-режим включён" : "Bumble-режим выключен");
+  };
+
 
   const handleUnblock = async (id: string) => {
     const { error } = await supabase.from("blocks").delete().eq("id", id);
@@ -292,6 +313,33 @@ const Settings = () => {
             </div>
           </div>
         </section>
+
+        {/* Bumble mode — visible only for women */}
+        {gender === "female" && (
+          <section className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/20">
+                <span className="text-lg">⏳</span>
+              </div>
+              <div className="flex-1">
+                <h2 className="font-semibold text-foreground">Bumble-режим</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  В новых матчах с мужчинами первое сообщение пишете вы. У пары есть 24 часа — иначе матч исчезает.
+                </p>
+                <Button
+                  onClick={toggleBumble}
+                  disabled={bumbleBusy}
+                  variant={bumbleMode ? "outline" : "default"}
+                  className={bumbleMode ? "mt-3" : "mt-3 gradient-primary text-primary-foreground"}
+                >
+                  {bumbleBusy ? "..." : bumbleMode ? "Выключить" : "Включить"}
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
+
+
 
 
         {/* Blocked users */}

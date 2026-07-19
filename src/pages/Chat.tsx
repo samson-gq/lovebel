@@ -15,6 +15,8 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
+  Hourglass,
+  Lock,
 } from "lucide-react";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +40,7 @@ import ImageLightbox from "@/components/ImageLightbox";
 import { SignedImg } from "@/components/SignedImg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDayLabel, formatTime, sameDay, linkify } from "@/lib/chatUtils";
+import { useCountdown, formatCountdownLong } from "@/hooks/useCountdown";
 import { toast } from "sonner";
 
 interface Message {
@@ -88,6 +91,9 @@ const Chat = () => {
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [partnerVerified, setPartnerVerified] = useState(false);
   const [partnerOnline, setPartnerOnline] = useState(false);
+  const [partnerGender, setPartnerGender] = useState<string | null>(null);
+  const [myGender, setMyGender] = useState<string | null>(null);
+  const [matchExpiresAt, setMatchExpiresAt] = useState<string | null>(null);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
   const [gifQuery, setGifQuery] = useState("");
@@ -118,18 +124,22 @@ const Chat = () => {
     const fetchPartner = async () => {
       const { data: match } = await supabase.from("matches").select("*").eq("id", matchId).single();
       if (match) {
+        setMatchExpiresAt(match.expires_at ?? null);
         const pid = match.user1_id === user.id ? match.user2_id : match.user1_id;
         setPartnerId(pid);
-        const { data: profile } = await supabase
+        const { data: rows } = await supabase
           .from("profiles")
-          .select("name, avatar_url, is_verified")
-          .eq("user_id", pid)
-          .single();
+          .select("user_id, name, avatar_url, is_verified, gender")
+          .in("user_id", [pid, user.id]);
+        const profile = rows?.find((r) => r.user_id === pid);
+        const mine = rows?.find((r) => r.user_id === user.id);
         if (profile) {
           setPartnerName(profile.name);
           setPartnerAvatar(profile.avatar_url);
           setPartnerVerified(profile.is_verified ?? false);
+          setPartnerGender(profile.gender ?? null);
         }
+        if (mine) setMyGender(mine.gender ?? null);
       }
     };
 
@@ -339,7 +349,9 @@ const Chat = () => {
       });
       if (error) {
         markFailed(tmpId);
-        toast.error("Не удалось отправить");
+        toast.error("Не удалось отправить", { description: error.message });
+      } else {
+        setMatchExpiresAt(null);
       }
     },
     [user, matchId, insertOptimistic],
@@ -347,6 +359,10 @@ const Chat = () => {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (bumbleBlocksMe) {
+      toast.info("По правилам Bumble-режима первой пишет девушка");
+      return;
+    }
     const text = newMessage;
     setNewMessage("");
     await sendText(text);
@@ -563,6 +579,14 @@ const Chat = () => {
   }, [messages]);
 
   const isEmpty = !messages.length;
+
+  // Bumble gating: expiry active AND no messages yet AND I'm the male in an M/F pair
+  const bumbleMs = useCountdown(matchExpiresAt);
+  const bumbleActive = !!matchExpiresAt && bumbleMs > 0 && messages.length === 0;
+  const bumbleBlocksMe =
+    bumbleActive && myGender === "male" && partnerGender === "female";
+  const bumbleMyTurn =
+    bumbleActive && myGender === "female" && partnerGender === "male";
 
   return (
     <div className="flex h-screen bg-background">
@@ -971,9 +995,34 @@ const Chat = () => {
           </div>
         )}
 
+        {(bumbleBlocksMe || bumbleMyTurn) && (
+          <div
+            className={`flex items-center gap-2 border-t border-border px-4 py-2.5 ${bumbleBlocksMe ? "bg-muted text-muted-foreground" : "bg-secondary/20 text-secondary-foreground"}`}
+            role="status"
+          >
+            {bumbleBlocksMe ? (
+              <>
+                <Lock className="h-4 w-4 shrink-0" />
+                <span className="text-sm">
+                  Ждём первого сообщения от {partnerName || "неё"} — осталось{" "}
+                  <span className="font-mono font-semibold">{formatCountdownLong(bumbleMs)}</span>
+                </span>
+              </>
+            ) : (
+              <>
+                <Hourglass className="h-4 w-4 shrink-0" />
+                <span className="text-sm">
+                  Ваш ход: напишите первой — осталось{" "}
+                  <span className="font-mono font-semibold">{formatCountdownLong(bumbleMs)}</span>
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
         <form
           onSubmit={sendMessage}
-          className="flex items-end gap-2 border-t border-border bg-card px-3 py-2.5"
+          className={`flex items-end gap-2 border-t border-border bg-card px-3 py-2.5 ${bumbleBlocksMe ? "pointer-events-none opacity-50" : ""}`}
         >
           <input
             type="file"

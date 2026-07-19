@@ -95,18 +95,24 @@ export type Database = {
       matches: {
         Row: {
           created_at: string
+          expires_at: string | null
+          first_message_sender: string | null
           id: string
           user1_id: string
           user2_id: string
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
+          first_message_sender?: string | null
           id?: string
           user1_id: string
           user2_id: string
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
+          first_message_sender?: string | null
           id?: string
           user1_id?: string
           user2_id?: string
@@ -370,6 +376,7 @@ export type Database = {
           bio: string | null
           boost_count: number
           boost_until: string | null
+          bumble_mode: boolean
           children: string | null
           city: string | null
           created_at: string
@@ -400,6 +407,7 @@ export type Database = {
           bio?: string | null
           boost_count?: number
           boost_until?: string | null
+          bumble_mode?: boolean
           children?: string | null
           city?: string | null
           created_at?: string
@@ -430,6 +438,7 @@ export type Database = {
           bio?: string | null
           boost_count?: number
           boost_until?: string | null
+          bumble_mode?: boolean
           children?: string | null
           city?: string | null
           created_at?: string
@@ -709,6 +718,7 @@ export type Database = {
           bio: string | null
           boost_count: number
           boost_until: string | null
+          bumble_mode: boolean
           children: string | null
           city: string | null
           created_at: string
