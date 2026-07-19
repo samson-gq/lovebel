@@ -21,10 +21,16 @@ export interface MatchSummary {
 async function fetchMatches(userId: string): Promise<MatchSummary[]> {
   const { data: matches } = await supabase
     .from("matches")
-    .select("id, user1_id, user2_id, created_at")
+    .select("id, user1_id, user2_id, created_at, expires_at, first_message_sender")
     .or(`user1_id.eq.${userId},user2_id.eq.${userId}`);
 
   if (!matches || matches.length === 0) return [];
+
+  // Hide fully-expired bumble matches (expires_at set AND in the past AND no message ever sent).
+  const active = matches.filter(
+    (m) => !m.expires_at || new Date(m.expires_at).getTime() > Date.now(),
+  );
+  if (active.length === 0) return [];
 
   const matchIds = matches.map((m) => m.id);
   const otherIds = matches.map((m) => (m.user1_id === userId ? m.user2_id : m.user1_id));
