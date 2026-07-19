@@ -991,9 +991,34 @@ const Chat = () => {
           </div>
         )}
 
+        {(bumbleBlocksMe || bumbleMyTurn) && (
+          <div
+            className={cnBanner(bumbleBlocksMe)}
+            role="status"
+          >
+            {bumbleBlocksMe ? (
+              <>
+                <Lock className="h-4 w-4 shrink-0" />
+                <span className="text-sm">
+                  Ждём первого сообщения от {partnerName || "неё"} — осталось{" "}
+                  <span className="font-mono font-semibold">{formatCountdownLong(bumbleMs)}</span>
+                </span>
+              </>
+            ) : (
+              <>
+                <Hourglass className="h-4 w-4 shrink-0" />
+                <span className="text-sm">
+                  Ваш ход: напишите первой — осталось{" "}
+                  <span className="font-mono font-semibold">{formatCountdownLong(bumbleMs)}</span>
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
         <form
           onSubmit={sendMessage}
-          className="flex items-end gap-2 border-t border-border bg-card px-3 py-2.5"
+          className={`flex items-end gap-2 border-t border-border bg-card px-3 py-2.5 ${bumbleBlocksMe ? "pointer-events-none opacity-50" : ""}`}
         >
           <input
             type="file"
