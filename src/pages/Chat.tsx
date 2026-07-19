@@ -15,6 +15,8 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
+  Hourglass,
+  Lock,
 } from "lucide-react";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { supabase } from "@/integrations/supabase/client";
