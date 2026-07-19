@@ -34,6 +34,9 @@ const Settings = () => {
   const [incognito, setIncognito] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [incognitoBusy, setIncognitoBusy] = useState(false);
+  const [bumbleMode, setBumbleMode] = useState(true);
+  const [bumbleBusy, setBumbleBusy] = useState(false);
+  const [gender, setGender] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isPushSupported()) return;
