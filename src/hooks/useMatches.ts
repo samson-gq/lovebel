@@ -13,6 +13,9 @@ export interface MatchSummary {
   unreadCount: number;
   /** True when the most recent message in the chat is from the other user and unread. */
   hasUnread: boolean;
+  /** Bumble expiry: when set and in future, first message must come from the female. */
+  expiresAt: string | null;
+  firstMessageSender: string | null;
 }
 
 async function fetchMatches(userId: string): Promise<MatchSummary[]> {
