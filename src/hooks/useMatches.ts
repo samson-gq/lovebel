@@ -32,8 +32,8 @@ async function fetchMatches(userId: string): Promise<MatchSummary[]> {
   );
   if (active.length === 0) return [];
 
-  const matchIds = matches.map((m) => m.id);
-  const otherIds = matches.map((m) => (m.user1_id === userId ? m.user2_id : m.user1_id));
+  const matchIds = active.map((m) => m.id);
+  const otherIds = active.map((m) => (m.user1_id === userId ? m.user2_id : m.user1_id));
 
   const [profilesRes, messagesRes] = await Promise.all([
     supabase.from("profiles").select("user_id, name, age, avatar_url").in("user_id", otherIds),
@@ -64,7 +64,7 @@ async function fetchMatches(userId: string): Promise<MatchSummary[]> {
     return m.content ?? null;
   };
 
-  const items: MatchSummary[] = matches.map((m) => {
+  const items: MatchSummary[] = active.map((m) => {
     const otherId = m.user1_id === userId ? m.user2_id : m.user1_id;
     const profile = profiles.find((p) => p.user_id === otherId);
     const last = lastByMatch.get(m.id);
@@ -79,6 +79,8 @@ async function fetchMatches(userId: string): Promise<MatchSummary[]> {
       lastMessagePreview: preview(last),
       unreadCount: unread,
       hasUnread: !!last && last.sender_id !== userId && !last.read_at && !last.deleted_at,
+      expiresAt: m.expires_at ?? null,
+      firstMessageSender: m.first_message_sender ?? null,
     };
   });
 
