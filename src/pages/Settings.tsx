@@ -126,6 +126,21 @@ const Settings = () => {
     toast.success(next ? "Incognito включён" : "Incognito выключен");
   };
 
+  const toggleBumble = async () => {
+    if (!user) return;
+    setBumbleBusy(true);
+    const next = !bumbleMode;
+    const { error } = await supabase.from("profiles").update({ bumble_mode: next }).eq("user_id", user.id);
+    setBumbleBusy(false);
+    if (error) {
+      toast.error("Не удалось изменить");
+      return;
+    }
+    setBumbleMode(next);
+    toast.success(next ? "Bumble-режим включён" : "Bumble-режим выключен");
+  };
+
+
   const handleUnblock = async (id: string) => {
     const { error } = await supabase.from("blocks").delete().eq("id", id);
     if (error) {
