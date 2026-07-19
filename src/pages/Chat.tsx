@@ -91,6 +91,9 @@ const Chat = () => {
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [partnerVerified, setPartnerVerified] = useState(false);
   const [partnerOnline, setPartnerOnline] = useState(false);
+  const [partnerGender, setPartnerGender] = useState<string | null>(null);
+  const [myGender, setMyGender] = useState<string | null>(null);
+  const [matchExpiresAt, setMatchExpiresAt] = useState<string | null>(null);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
   const [gifQuery, setGifQuery] = useState("");
