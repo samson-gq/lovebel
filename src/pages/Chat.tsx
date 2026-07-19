@@ -993,7 +993,7 @@ const Chat = () => {
 
         {(bumbleBlocksMe || bumbleMyTurn) && (
           <div
-            className={cnBanner(bumbleBlocksMe)}
+            className={`flex items-center gap-2 border-t border-border px-4 py-2.5 ${bumbleBlocksMe ? "bg-muted text-muted-foreground" : "bg-secondary/20 text-secondary-foreground"}`}
             role="status"
           >
             {bumbleBlocksMe ? (
