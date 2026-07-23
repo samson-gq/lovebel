@@ -369,6 +369,36 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_voice_prompts: {
+        Row: {
+          audio_url: string
+          created_at: string
+          duration_sec: number
+          id: string
+          prompt: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string
+          duration_sec: number
+          id?: string
+          prompt: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string
+          duration_sec?: number
+          id?: string
+          prompt?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
