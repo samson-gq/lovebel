@@ -420,7 +420,24 @@ const Settings = () => {
             </div>
           </div>
         </section>
+
+        {isAdmin && (
+          <section className="rounded-2xl border border-border/60 bg-card/80 p-5 shadow-sm">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Админ
+            </h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button variant="secondary" size="sm" onClick={() => navigate("/admin/analytics")}>
+                <BarChart3 className="mr-2 h-4 w-4" /> Аналитика
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => navigate("/admin/cities")}>
+                <MapPin className="mr-2 h-4 w-4" /> Города
+              </Button>
+            </div>
+          </section>
+        )}
       </div>
+
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
