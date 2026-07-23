@@ -418,6 +418,7 @@ export type Database = {
           incognito: boolean
           interests: string[] | null
           is_verified: boolean
+          last_seen_at: string
           latitude: number | null
           longitude: number | null
           name: string
@@ -449,6 +450,7 @@ export type Database = {
           incognito?: boolean
           interests?: string[] | null
           is_verified?: boolean
+          last_seen_at?: string
           latitude?: number | null
           longitude?: number | null
           name?: string
@@ -480,6 +482,7 @@ export type Database = {
           incognito?: boolean
           interests?: string[] | null
           is_verified?: boolean
+          last_seen_at?: string
           latitude?: number | null
           longitude?: number | null
           name?: string
@@ -521,6 +524,27 @@ export type Database = {
           id?: string
           p256dh?: string
           user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reactivation_log: {
+        Row: {
+          id: string
+          kind: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          kind?: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          kind?: string
+          sent_at?: string
           user_id?: string
         }
         Relationships: []
@@ -695,6 +719,7 @@ export type Database = {
           boost_until: string
         }[]
       }
+      admin_analytics: { Args: { days_back?: number }; Returns: Json }
       count_search_profiles: {
         Args: {
           city_query: string
@@ -760,6 +785,7 @@ export type Database = {
           incognito: boolean
           interests: string[] | null
           is_verified: boolean
+          last_seen_at: string
           latitude: number | null
           longitude: number | null
           name: string
@@ -874,6 +900,7 @@ export type Database = {
           zodiac: string
         }[]
       }
+      touch_last_seen: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
