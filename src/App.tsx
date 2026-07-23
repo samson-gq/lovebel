@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
 import AdminCities from "./pages/AdminCities";
+import AdminAnalytics from "./pages/AdminAnalytics";
 import Settings from "./pages/Settings";
 import Verification from "./pages/Verification";
 import Onboarding from "./pages/Onboarding";
