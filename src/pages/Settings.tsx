@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ShieldCheck, Download, Trash2, Ban, BadgeCheck, Bell, BellOff, EyeOff, Crown } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Download, Trash2, Ban, BadgeCheck, Bell, BellOff, EyeOff, Crown, BarChart3, MapPin } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { canEnablePush, disablePush, enablePush, getPushPermission, isPushSupported } from "@/lib/push";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
