@@ -19,6 +19,9 @@ export interface Profile {
   image: string;
   images: string[];
   videoUrl?: string | null;
+  voiceUrl?: string | null;
+  voicePrompt?: string | null;
+  voiceDurationSec?: number | null;
   interests: string[];
   heightCm?: number | null;
   education?: string | null;

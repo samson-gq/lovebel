@@ -94,16 +94,18 @@ const Index = () => {
 
     // Fetch photos and prompts for all profiles
     const userIds = (data || []).map((p: DBProfile) => p.user_id);
-    const [photosResp, promptsResp, videosResp] = userIds.length > 0
+    const [photosResp, promptsResp, videosResp, voicesResp] = userIds.length > 0
       ? await Promise.all([
           supabase.from("profile_photos").select("id, user_id, photo_url, position, created_at").in("user_id", userIds).order("position"),
           supabase.from("profile_prompts").select("*").in("user_id", userIds).order("position"),
           (supabase as any).from("profile_videos").select("user_id, video_url").in("user_id", userIds),
+          (supabase as any).from("profile_voice_prompts").select("user_id, prompt, audio_url, duration_sec").in("user_id", userIds),
         ])
-      : [{ data: [] }, { data: [] }, { data: [] }];
+      : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }];
     const allPhotos = photosResp.data || [];
     const allPrompts = promptsResp.data || [];
     const allVideos = videosResp.data || [];
+    const allVoices = voicesResp.data || [];
 
     const mapped: (Profile & { isVerified?: boolean })[] = (data || []).map((p: DBProfile) => ({
       id: p.user_id,
@@ -117,6 +119,12 @@ const Index = () => {
         .map((photo) => photo.photo_url),
       videoUrl: (allVideos as Array<{ user_id: string; video_url: string }>)
         .find((video) => video.user_id === p.user_id)?.video_url ?? null,
+      voiceUrl: (allVoices as Array<{ user_id: string; audio_url: string }>)
+        .find((v) => v.user_id === p.user_id)?.audio_url ?? null,
+      voicePrompt: (allVoices as Array<{ user_id: string; prompt: string }>)
+        .find((v) => v.user_id === p.user_id)?.prompt ?? null,
+      voiceDurationSec: (allVoices as Array<{ user_id: string; duration_sec: number }>)
+        .find((v) => v.user_id === p.user_id)?.duration_sec ?? null,
       interests: p.interests || [],
       isVerified: p.is_verified ?? false,
       heightCm: p.height_cm ?? null,
