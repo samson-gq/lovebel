@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ShieldCheck, Download, Trash2, Ban, BadgeCheck, Bell, BellOff, EyeOff, Crown } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Download, Trash2, Ban, BadgeCheck, Bell, BellOff, EyeOff, Crown, BarChart3, MapPin } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { canEnablePush, disablePush, enablePush, getPushPermission, isPushSupported } from "@/lib/push";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +24,7 @@ interface BlockedRow {
 const Settings = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const [blocked, setBlocked] = useState<BlockedRow[]>([]);
   const [isVerified, setIsVerified] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -418,7 +420,24 @@ const Settings = () => {
             </div>
           </div>
         </section>
+
+        {isAdmin && (
+          <section className="rounded-2xl border border-border/60 bg-card/80 p-5 shadow-sm">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Админ
+            </h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button variant="secondary" size="sm" onClick={() => navigate("/admin/analytics")}>
+                <BarChart3 className="mr-2 h-4 w-4" /> Аналитика
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => navigate("/admin/cities")}>
+                <MapPin className="mr-2 h-4 w-4" /> Города
+              </Button>
+            </div>
+          </section>
+        )}
       </div>
+
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>

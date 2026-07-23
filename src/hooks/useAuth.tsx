@@ -38,6 +38,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Best-effort activity ping so we can find inactive users for reactivation push.
+  useEffect(() => {
+    if (!session?.user) return;
+    const ping = () => {
+      supabase.rpc("touch_last_seen" as any).then(() => {}, () => {});
+    };
+    ping();
+    const iv = setInterval(ping, 5 * 60 * 1000);
+    return () => clearInterval(iv);
+  }, [session?.user?.id]);
+
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
