@@ -57,8 +57,8 @@ const VoicePrompt = ({ userId, editing }: Props) => {
         .eq("user_id", userId)
         .maybeSingle();
       if (active) {
-        setRow((data as VoiceRow) || null);
-        if (data) setPrompt((data as VoiceRow).prompt);
+        setRow((data as unknown as VoiceRow) || null);
+        if (data) setPrompt((data as unknown as VoiceRow).prompt);
         setLoading(false);
       }
     })();
@@ -141,7 +141,7 @@ const VoicePrompt = ({ userId, editing }: Props) => {
         .select("id, prompt, audio_url, duration_sec")
         .single();
       if (error) throw error;
-      setRow(data as VoiceRow);
+      setRow(data as unknown as VoiceRow);
       track("voice_recorded", { duration_sec: durationSec });
       toast.success("Голосовое приветствие сохранено");
     } catch (e) {
