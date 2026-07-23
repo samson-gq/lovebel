@@ -4,6 +4,7 @@ import { MapPin, ChevronLeft, ChevronRight, BadgeCheck, Play, Sparkles, Zap, Rot
 import type { Profile } from "@/data/profiles";
 import ProfileActionsMenu from "./ProfileActionsMenu";
 import { SignedImg } from "./SignedImg";
+import VoicePromptPlayer from "./VoicePromptPlayer";
 import { useSignedUrl } from "@/hooks/useSignedUrl";
 import { cn } from "@/lib/utils";
 
@@ -218,6 +219,16 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
             <span className="text-sm">{profile.distance}</span>
           </div>
           {profile.bio && <p className="mt-2 text-primary-foreground/90">{profile.bio}</p>}
+
+          {profile.voiceUrl && profile.voicePrompt && (
+            <VoicePromptPlayer
+              audioUrl={profile.voiceUrl}
+              prompt={profile.voicePrompt}
+              durationSec={profile.voiceDurationSec ?? 0}
+              profileId={profile.id}
+            />
+          )}
+
 
           {(profile.heightCm || profile.occupation || profile.education || profile.zodiac || profile.children || profile.smoking || profile.drinking) && (
             <div className="mt-3 flex flex-wrap gap-1.5">

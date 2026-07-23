@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import DraggablePhotoGrid from "@/components/DraggablePhotoGrid";
 import PromptsEditor from "@/components/PromptsEditor";
+import VoicePrompt from "@/components/VoicePrompt";
 import { SignedImg } from "@/components/SignedImg";
 import { useSignedUrl } from "@/hooks/useSignedUrl";
 import {
@@ -715,9 +716,12 @@ const Profile = () => {
 
           {/* Промпты */}
           {user && (
-            <div>
-              <h3 className="mb-3 text-lg font-semibold text-foreground">О себе</h3>
-              <PromptsEditor userId={user.id} editing={editing} />
+            <div className="space-y-4">
+              <div>
+                <h3 className="mb-3 text-lg font-semibold text-foreground">О себе</h3>
+                <PromptsEditor userId={user.id} editing={editing} />
+              </div>
+              <VoicePrompt userId={user.id} editing={editing} />
             </div>
           )}
         </div>
