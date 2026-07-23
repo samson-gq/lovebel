@@ -24,6 +24,7 @@ interface BlockedRow {
 const Settings = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const [blocked, setBlocked] = useState<BlockedRow[]>([]);
   const [isVerified, setIsVerified] = useState(false);
   const [exporting, setExporting] = useState(false);
