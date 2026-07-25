@@ -37,6 +37,8 @@ import {
 import ProfileActionsMenu from "@/components/ProfileActionsMenu";
 import ChatList from "@/components/ChatList";
 import ImageLightbox from "@/components/ImageLightbox";
+import ChatVoiceRecorder from "@/components/ChatVoiceRecorder";
+import VoiceMessageBubble from "@/components/VoiceMessageBubble";
 import { SignedImg } from "@/components/SignedImg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDayLabel, formatTime, sameDay, linkify } from "@/lib/chatUtils";
@@ -48,8 +50,9 @@ interface Message {
   content: string;
   sender_id: string;
   created_at: string;
-  content_type?: "text" | "image" | "gif" | "sticker";
+  content_type?: "text" | "image" | "gif" | "sticker" | "voice";
   attachment_url?: string | null;
+  duration_sec?: number | null;
   read_at?: string | null;
   edited_at?: string | null;
   deleted_at?: string | null;
@@ -100,6 +103,8 @@ const Chat = () => {
   const [gifs, setGifs] = useState<TenorGif[]>([]);
   const [gifLoading, setGifLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [voiceUploading, setVoiceUploading] = useState(false);
+  const [voiceRecording, setVoiceRecording] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [showScrollDown, setShowScrollDown] = useState(false);
@@ -264,7 +269,10 @@ const Chat = () => {
   const signedUrlsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     const need = messages.filter(
-      (m) => m.content_type === "image" && m.attachment_url && !signedUrlsRef.current.has(m.id),
+      (m) =>
+        (m.content_type === "image" || m.content_type === "voice") &&
+        m.attachment_url &&
+        !signedUrlsRef.current.has(m.id),
     );
     if (need.length === 0) return;
     let cancelled = false;
@@ -405,6 +413,40 @@ const Chat = () => {
       toast.error("Не удалось загрузить", { description: (err as Error).message });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const sendVoice = async (blob: Blob, durationSec: number) => {
+    if (!user || !matchId) return;
+    if (bumbleBlocksMe) {
+      toast.info("По правилам Bumble-режима первой пишет девушка");
+      return;
+    }
+    setVoiceUploading(true);
+    try {
+      const ext = blob.type.includes("webm") ? "webm" : "wav";
+      const path = `${matchId}/voice-${user.id}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("chat-images")
+        .upload(path, blob, { contentType: blob.type || "audio/webm" });
+      if (upErr) throw upErr;
+      const { error: msgErr } = await supabase.from("messages").insert({
+        match_id: matchId,
+        sender_id: user.id,
+        content: "🎤 Голосовое сообщение",
+        content_type: "voice",
+        attachment_url: path,
+        duration_sec: durationSec,
+      } as any);
+      if (msgErr) throw msgErr;
+      setMatchExpiresAt(null);
+      import("@/lib/analytics").then(({ track }) =>
+        track("voice_message_sent", { match_id: matchId, duration_sec: durationSec }),
+      );
+    } catch (err) {
+      toast.error("Не удалось отправить голосовое", { description: (err as Error).message });
+    } finally {
+      setVoiceUploading(false);
     }
   };
 
@@ -762,6 +804,12 @@ const Chat = () => {
                           <Skeleton className="h-48 w-48 rounded-2xl" />
                         )}
                       </button>
+                    ) : msg.content_type === "voice" && msg.attachment_url ? (
+                      <VoiceMessageBubble
+                        src={signedUrls[msg.id] ?? null}
+                        durationSec={msg.duration_sec}
+                        isMine={isMine}
+                      />
                     ) : msg.content_type === "gif" && msg.attachment_url ? (
                       <button
                         type="button"
@@ -1062,6 +1110,13 @@ const Chat = () => {
           >
             <Sparkles className="h-5 w-5" />
           </button>
+          <ChatVoiceRecorder
+            disabled={bumbleBlocksMe}
+            uploading={voiceUploading}
+            onRecorded={sendVoice}
+            onStateChange={setVoiceRecording}
+          />
+          {!voiceRecording && (
           <Textarea
             ref={textareaRef}
             value={newMessage}
@@ -1074,6 +1129,8 @@ const Chat = () => {
             placeholder="Сообщение… (Enter — отправить, Shift+Enter — новая строка)"
             className="min-h-[40px] flex-1 resize-none py-2"
           />
+          )}
+          {!voiceRecording && (
           <button
             type="submit"
             disabled={!newMessage.trim()}
@@ -1082,6 +1139,7 @@ const Chat = () => {
           >
             <Send className="h-4 w-4" />
           </button>
+          )}
         </form>
       </div>
 
