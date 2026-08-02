@@ -707,6 +707,14 @@ const Chat = () => {
                   </button>
                 ))}
               </div>
+              {partnerId && !bumbleBlocksMe && (
+                <AiIcebreakers
+                  partnerId={partnerId}
+                  partnerName={partnerName}
+                  onPick={(text) => setNewMessage(text)}
+                />
+              )}
+
             </div>
           )}
 
