@@ -466,6 +466,11 @@ const Profile = () => {
                   ))}
                 </div>
                 <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="О себе" />
+                <AiBioAssistant
+                  profile={{ name, age, city, occupation, education, interests, currentBio: bio }}
+                  onPick={setBio}
+                />
+
 
                 {/* Расширенные поля */}
                 <div className="grid grid-cols-2 gap-2">
