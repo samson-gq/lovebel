@@ -38,6 +38,7 @@ import ProfileActionsMenu from "@/components/ProfileActionsMenu";
 import ChatList from "@/components/ChatList";
 import ImageLightbox from "@/components/ImageLightbox";
 import ChatVoiceRecorder from "@/components/ChatVoiceRecorder";
+import AiIcebreakers from "@/components/AiIcebreakers";
 import VoiceMessageBubble from "@/components/VoiceMessageBubble";
 import { SignedImg } from "@/components/SignedImg";
 import { Skeleton } from "@/components/ui/skeleton";
