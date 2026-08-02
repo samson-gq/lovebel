@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import DraggablePhotoGrid from "@/components/DraggablePhotoGrid";
 import PromptsEditor from "@/components/PromptsEditor";
 import VoicePrompt from "@/components/VoicePrompt";
+import AiBioAssistant from "@/components/AiBioAssistant";
 import { SignedImg } from "@/components/SignedImg";
 import { useSignedUrl } from "@/hooks/useSignedUrl";
 import {
@@ -466,6 +467,11 @@ const Profile = () => {
                   ))}
                 </div>
                 <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="О себе" />
+                <AiBioAssistant
+                  profile={{ name, age, city, occupation, education, interests, currentBio: bio }}
+                  onPick={setBio}
+                />
+
 
                 {/* Расширенные поля */}
                 <div className="grid grid-cols-2 gap-2">
