@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import DraggablePhotoGrid from "@/components/DraggablePhotoGrid";
 import PromptsEditor from "@/components/PromptsEditor";
 import VoicePrompt from "@/components/VoicePrompt";
+import AiBioAssistant from "@/components/AiBioAssistant";
 import { SignedImg } from "@/components/SignedImg";
 import { useSignedUrl } from "@/hooks/useSignedUrl";
 import {
