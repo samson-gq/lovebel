@@ -145,7 +145,29 @@ const ProfileActionsMenu = ({ targetUserId, targetUserName, onBlocked, onHide, m
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={unmatchOpen} onOpenChange={setUnmatchOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Расстроить матч{targetUserName ? ` с ${targetUserName}` : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Матч и вся переписка будут удалены безвозвратно. Профиль останется доступным для новых лайков.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={unmatching}>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleUnmatch}
+              disabled={unmatching}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {unmatching ? "Удаляем…" : "Расстроить"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
+
   );
 };
 
