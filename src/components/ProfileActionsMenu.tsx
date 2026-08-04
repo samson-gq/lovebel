@@ -103,6 +103,12 @@ const ProfileActionsMenu = ({ targetUserId, targetUserName, onBlocked, onHide, m
               <EyeOff className="mr-2 h-4 w-4" /> Не показывать снова
             </DropdownMenuItem>
           )}
+          {matchId && (
+            <DropdownMenuItem onClick={() => setUnmatchOpen(true)}>
+              <HeartCrack className="mr-2 h-4 w-4" /> Расстроить матч
+            </DropdownMenuItem>
+          )}
+
           <DropdownMenuItem
             onClick={() => setBlockConfirmOpen(true)}
             className="text-destructive focus:text-destructive"
