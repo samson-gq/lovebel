@@ -61,6 +61,7 @@ async function fetchMatches(userId: string): Promise<MatchSummary[]> {
     if (m.deleted_at) return "Сообщение удалено";
     if (m.content_type === "image") return "📷 Изображение";
     if (m.content_type === "gif") return "🎞️ GIF";
+    if (m.content_type === "voice") return "🎤 Голосовое сообщение";
     return m.content ?? null;
   };
 

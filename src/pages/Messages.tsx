@@ -15,12 +15,6 @@ const formatWhen = (iso: string | null): string => {
   return formatDayLabel(d);
 };
 
-const previewText = (contentType: string | null | undefined, content: string | null): string => {
-  if (contentType === "image") return "📷 Изображение";
-  if (contentType === "gif") return "🎞️ GIF";
-  if (contentType === "voice") return "🎤 Голосовое сообщение";
-  return content ?? "Начните разговор!";
-};
 
 const Messages = () => {
   const { user } = useAuth();
@@ -110,7 +104,7 @@ const Messages = () => {
                         item.hasUnread ? "font-semibold text-foreground" : "text-muted-foreground",
                       )}
                     >
-                      {previewText(item.lastMessagePreview?.startsWith("🎤") ? "voice" : null, item.lastMessagePreview)}
+                      {item.lastMessagePreview ?? "Начните разговор!"}
                     </p>
                     {item.unreadCount > 0 && (
                       <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">

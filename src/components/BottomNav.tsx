@@ -13,7 +13,7 @@ const BottomNav = () => {
             end={exact}
             className={({ isActive }) =>
               cn(
-                "flex min-w-[44px] flex-col items-center gap-1 rounded-xl px-5 py-2 transition-colors",
+                "flex min-w-[44px] flex-col items-center gap-1 rounded-xl px-3 py-2 transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground",
               )
             }
