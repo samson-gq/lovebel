@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import Index from "./pages/Index";
 import Matches from "./pages/Matches";
+import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
@@ -104,6 +105,7 @@ const App = () => (
             <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/matches" element={<ProtectedRoute><Matches /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/likes" element={<ProtectedRoute><LikesMe /></ProtectedRoute>} />
             <Route path="/picks" element={<ProtectedRoute><DailyPicks /></ProtectedRoute>} />
             <Route path="/premium" element={<ProtectedRoute><Premium /></ProtectedRoute>} />

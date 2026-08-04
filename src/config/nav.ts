@@ -1,4 +1,4 @@
-import { Crown, Flame, Heart, Sparkles, User, type LucideIcon } from "lucide-react";
+import { Crown, Flame, Heart, MessageSquare, Sparkles, User, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   path: string;
@@ -12,6 +12,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { path: "/", icon: Flame, label: "Обзор", exact: true },
   { path: "/picks", icon: Sparkles, label: "Подборка" },
+  { path: "/messages", icon: MessageSquare, label: "Сообщения" },
   { path: "/matches", icon: Heart, label: "Матчи" },
   { path: "/premium", icon: Crown, label: "Premium" },
   { path: "/profile", icon: User, label: "Профиль" },
