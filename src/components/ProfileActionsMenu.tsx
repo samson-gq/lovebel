@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Ban, EyeOff, Flag, MoreVertical } from "lucide-react";
+import { Ban, EyeOff, Flag, HeartCrack, MoreVertical } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -18,14 +19,36 @@ interface Props {
   onBlocked?: () => void;
   /** When provided, shows a "Не показывать снова" action that records a hide-swipe. */
   onHide?: () => void;
+  /** When provided, shows a "Расстроить матч" action that deletes the match and its chat. */
+  matchId?: string;
+  onUnmatched?: () => void;
   triggerClassName?: string;
 }
 
-const ProfileActionsMenu = ({ targetUserId, targetUserName, onBlocked, onHide, triggerClassName }: Props) => {
+const ProfileActionsMenu = ({ targetUserId, targetUserName, onBlocked, onHide, matchId, onUnmatched, triggerClassName }: Props) => {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const [reportOpen, setReportOpen] = useState(false);
   const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
   const [blocking, setBlocking] = useState(false);
+  const [unmatchOpen, setUnmatchOpen] = useState(false);
+  const [unmatching, setUnmatching] = useState(false);
+
+  const handleUnmatch = async () => {
+    if (!matchId) return;
+    setUnmatching(true);
+    const { error } = await supabase.rpc("unmatch" as any, { _match_id: matchId });
+    setUnmatching(false);
+    if (error) {
+      toast.error("Не удалось расстроить матч");
+      return;
+    }
+    toast.success("Матч удалён");
+    setUnmatchOpen(false);
+    qc.invalidateQueries({ queryKey: ["matches", user?.id] });
+    onUnmatched?.();
+  };
+
 
   const handleBlock = async () => {
     if (!user) return;
@@ -80,6 +103,12 @@ const ProfileActionsMenu = ({ targetUserId, targetUserName, onBlocked, onHide, t
               <EyeOff className="mr-2 h-4 w-4" /> Не показывать снова
             </DropdownMenuItem>
           )}
+          {matchId && (
+            <DropdownMenuItem onClick={() => setUnmatchOpen(true)}>
+              <HeartCrack className="mr-2 h-4 w-4" /> Расстроить матч
+            </DropdownMenuItem>
+          )}
+
           <DropdownMenuItem
             onClick={() => setBlockConfirmOpen(true)}
             className="text-destructive focus:text-destructive"
@@ -116,7 +145,29 @@ const ProfileActionsMenu = ({ targetUserId, targetUserName, onBlocked, onHide, t
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={unmatchOpen} onOpenChange={setUnmatchOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Расстроить матч{targetUserName ? ` с ${targetUserName}` : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Матч и вся переписка будут удалены безвозвратно. Профиль останется доступным для новых лайков.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={unmatching}>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleUnmatch}
+              disabled={unmatching}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {unmatching ? "Удаляем…" : "Расстроить"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
+
   );
 };
 

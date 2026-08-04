@@ -904,6 +904,7 @@ export type Database = {
         }[]
       }
       touch_last_seen: { Args: never; Returns: undefined }
+      unmatch: { Args: { _match_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

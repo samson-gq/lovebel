@@ -672,6 +672,8 @@ const Chat = () => {
               targetUserId={partnerId}
               targetUserName={partnerName}
               onBlocked={() => navigate("/matches")}
+              matchId={matchId}
+              onUnmatched={() => navigate("/matches")}
               triggerClassName="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
             />
           )}
