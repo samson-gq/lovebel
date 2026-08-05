@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 
 const BottomNav = () => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/80 backdrop-blur-xl md:hidden">
-      <div className="mx-auto flex max-w-lg items-center justify-around py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 pb-[env(safe-area-inset-bottom)] md:hidden">
+      <div className="glass mx-3 mb-3 flex items-center justify-around rounded-2xl border border-border/60 p-1.5 shadow-elevated">
         {NAV_ITEMS.map(({ path, icon: Icon, label, exact }) => (
           <NavLink
             key={path}
@@ -13,15 +13,23 @@ const BottomNav = () => {
             end={exact}
             className={({ isActive }) =>
               cn(
-                "flex min-w-[44px] flex-col items-center gap-1 rounded-xl px-2 py-2 transition-colors sm:px-3",
-                isActive ? "text-primary" : "text-muted-foreground",
+                "relative flex min-w-[44px] flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-2 transition-colors",
+                isActive ? "text-primary" : "text-muted-foreground active:text-foreground",
               )
             }
           >
             {({ isActive }) => (
               <>
-                <Icon className={cn("h-6 w-6", isActive && "fill-primary")} />
-                <span className="text-xs font-medium">{label}</span>
+                {isActive && (
+                  <span className="absolute inset-0 rounded-xl bg-primary/10" aria-hidden="true" />
+                )}
+                <Icon
+                  className={cn(
+                    "relative h-[22px] w-[22px] transition-transform",
+                    isActive && "scale-110 fill-primary/20",
+                  )}
+                />
+                <span className="relative text-[10px] font-semibold leading-tight">{label}</span>
               </>
             )}
           </NavLink>
