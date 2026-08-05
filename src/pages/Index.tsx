@@ -431,7 +431,7 @@ const Index = () => {
           <button
             onClick={() => handleSwipe("right")}
             aria-label="Нравится"
-            className="gradient-primary flex h-20 w-20 items-center justify-center rounded-full shadow-elevated transition-transform hover:scale-110 active:scale-95"
+            className="gradient-primary flex h-20 w-20 items-center justify-center rounded-full shadow-glow transition-transform hover:scale-110 active:scale-95"
           >
             <Heart className="h-9 w-9 text-primary-foreground" />
           </button>
