@@ -7,7 +7,7 @@ const AppShell = ({ children }: { children: ReactNode }) => {
     <>
       <AppSidebar />
       <div className="md:pl-60">
-        <main className="min-h-dvh pb-20 md:pb-0">{children}</main>
+        <main className="min-h-dvh pb-28 md:pb-0">{children}</main>
       </div>
       <BottomNav />
     </>

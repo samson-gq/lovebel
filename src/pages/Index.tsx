@@ -398,7 +398,7 @@ const Index = () => {
       </div>
 
       {remaining.length > 0 && !loading && (
-        <div className="fixed bottom-20 left-0 right-0 z-40 flex items-center justify-center gap-4 md:bottom-8 md:left-60 md:right-0">
+        <div className="fixed bottom-24 left-0 right-0 z-40 flex items-center justify-center gap-3 sm:gap-4 md:bottom-8 md:left-60 md:right-0">
           <button
             onClick={handleRewind}
             disabled={isPremium && !lastSwipeId}
@@ -431,7 +431,7 @@ const Index = () => {
           <button
             onClick={() => handleSwipe("right")}
             aria-label="Нравится"
-            className="gradient-primary flex h-20 w-20 items-center justify-center rounded-full shadow-elevated transition-transform hover:scale-110 active:scale-95"
+            className="gradient-primary flex h-20 w-20 items-center justify-center rounded-full shadow-glow transition-transform hover:scale-110 active:scale-95"
           >
             <Heart className="h-9 w-9 text-primary-foreground" />
           </button>

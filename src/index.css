@@ -39,8 +39,14 @@
     --gradient-primary: linear-gradient(135deg, hsl(350, 80%, 58%), hsl(20, 90%, 60%));
     --gradient-accent: linear-gradient(135deg, hsl(280, 60%, 65%), hsl(350, 80%, 58%));
     --gradient-warm: linear-gradient(180deg, hsl(30, 90%, 60%), hsl(350, 80%, 58%));
+    --gradient-mesh:
+      radial-gradient(60% 55% at 12% 8%, hsl(350 80% 58% / 0.16), transparent 70%),
+      radial-gradient(55% 50% at 92% 12%, hsl(30 90% 60% / 0.16), transparent 70%),
+      radial-gradient(70% 60% at 50% 105%, hsl(280 60% 65% / 0.12), transparent 70%);
     --shadow-card: 0 8px 32px -8px hsl(0 0% 0% / 0.12);
     --shadow-elevated: 0 20px 60px -12px hsl(0 0% 0% / 0.2);
+    --shadow-glow: 0 12px 40px -8px hsl(350 80% 58% / 0.45);
+
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -84,8 +90,14 @@
     --gradient-primary: linear-gradient(135deg, hsl(350, 80%, 62%), hsl(20, 90%, 60%));
     --gradient-accent: linear-gradient(135deg, hsl(280, 60%, 65%), hsl(350, 80%, 62%));
     --gradient-warm: linear-gradient(180deg, hsl(30, 90%, 60%), hsl(350, 80%, 62%));
+    --gradient-mesh:
+      radial-gradient(60% 55% at 12% 8%, hsl(350 80% 62% / 0.22), transparent 70%),
+      radial-gradient(55% 50% at 92% 12%, hsl(30 90% 60% / 0.18), transparent 70%),
+      radial-gradient(70% 60% at 50% 105%, hsl(280 60% 65% / 0.16), transparent 70%);
     --shadow-card: 0 8px 32px -8px hsl(0 0% 0% / 0.5);
     --shadow-elevated: 0 20px 60px -12px hsl(0 0% 0% / 0.6);
+    --shadow-glow: 0 12px 44px -8px hsl(350 80% 62% / 0.5);
+
 
     --sidebar-background: 0 0% 9%;
     --sidebar-foreground: 0 0% 90%;
@@ -121,4 +133,41 @@
   .shadow-elevated {
     box-shadow: var(--shadow-elevated);
   }
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  .text-gradient {
+    background-image: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .glass {
+    background: hsl(var(--card) / 0.72);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+  }
+  .bg-mesh {
+    background-image: var(--gradient-mesh);
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
 }
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+  }
+}
+
