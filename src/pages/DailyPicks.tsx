@@ -6,6 +6,7 @@ import { SignedImg } from "@/components/SignedImg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
+import PageHeader from "@/components/PageHeader";
 
 interface Pick {
   user_id: string;
@@ -56,24 +57,20 @@ const DailyPicks = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <header className="mx-auto w-full max-w-5xl px-6 pt-6">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">Подборка дня</h1>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          5 анкет, подобранных лично для вас. Обновляется каждый день.
-        </p>
-      </header>
+      <PageHeader
+        icon={Sparkles}
+        title="Подборка дня"
+        subtitle="5 анкет, подобранных лично для вас. Обновляется каждый день."
+      />
 
-      <main className="mx-auto mt-6 grid max-w-5xl gap-4 px-6 sm:grid-cols-2 lg:grid-cols-3">
+      <main className="mx-auto mt-5 grid max-w-5xl gap-4 px-6 sm:grid-cols-2 lg:grid-cols-3">
         {loading &&
           Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-80 w-full rounded-2xl" />
+            <Skeleton key={i} className="h-80 w-full rounded-3xl" />
           ))}
 
         {!loading && picks.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-border bg-card p-8 text-center">
+          <div className="col-span-full rounded-3xl border border-border/60 bg-card p-8 text-center shadow-card">
             <Sparkles className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
             <h2 className="text-lg font-semibold text-foreground">Подборка на сегодня закончилась</h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -89,12 +86,12 @@ const DailyPicks = () => {
         )}
 
         {!loading && picks.map((p) => (
-          <article key={p.user_id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+          <article key={p.user_id} className="group overflow-hidden rounded-3xl border border-border/60 bg-card shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
             <div className="relative aspect-[4/5] w-full bg-muted">
               <SignedImg
                 src={p.avatar_url}
                 alt={p.name}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               {p.match_score != null && (
                 <span className="absolute right-3 top-3 rounded-full bg-primary/90 px-2 py-1 text-xs font-semibold text-primary-foreground">
@@ -119,7 +116,7 @@ const DailyPicks = () => {
               )}
               <button
                 onClick={() => like(p.user_id)}
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                className="gradient-primary mt-2 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-primary-foreground shadow-glow transition-transform hover:scale-[1.02] active:scale-95"
               >
                 <Heart className="h-4 w-4" /> Лайк
               </button>

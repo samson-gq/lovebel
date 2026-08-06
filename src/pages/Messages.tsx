@@ -6,6 +6,7 @@ import { useMatches } from "@/hooks/useMatches";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { SignedImg } from "@/components/SignedImg";
 import { cn } from "@/lib/utils";
+import PageHeader from "@/components/PageHeader";
 import { formatDayLabel, formatTime, sameDay } from "@/lib/chatUtils";
 
 const formatWhen = (iso: string | null): string => {
@@ -26,22 +27,21 @@ const Messages = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-24 md:pb-0">
-      <header className="px-6 pt-6">
-        <h1 className="text-2xl font-bold text-foreground">
-          Сообщения
-          {totalUnread > 0 && (
-            <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-sm font-semibold text-primary-foreground">
+      <PageHeader
+        icon={MessageSquare}
+        title="Сообщения"
+        subtitle={items.length > 0 ? `${items.length} чатов` : "Ваши диалоги появятся здесь"}
+        badge={
+          totalUnread > 0 ? (
+            <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
               {totalUnread}
             </span>
-          )}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {items.length > 0 ? `${items.length} чатов` : "Ваши диалоги появятся здесь"}
-        </p>
-      </header>
+          ) : null
+        }
+      />
 
       {isLoading ? (
-        <div className="mt-6 space-y-3 px-6">
+        <div className="mx-auto mt-6 w-full max-w-3xl space-y-3 px-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4">
               <div className="h-12 w-12 animate-pulse rounded-full bg-muted" />
@@ -61,7 +61,7 @@ const Messages = () => {
           </p>
         </div>
       ) : (
-        <nav className="mt-6 space-y-1 px-3 md:px-6">
+        <nav className="mx-auto mt-4 w-full max-w-3xl space-y-1.5 px-3 md:px-6">
           {items.map((item, i) => {
             const isOnline = online.has(item.userId);
             return (
@@ -72,15 +72,15 @@ const Messages = () => {
                 transition={{ delay: Math.min(i * 0.04, 0.4) }}
                 onClick={() => navigate(`/chat/${item.matchId}`)}
                 className={cn(
-                  "flex w-full items-center gap-4 rounded-2xl px-3 py-3 text-left transition-colors",
-                  item.hasUnread ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted",
+                  "flex w-full items-center gap-4 rounded-2xl border border-transparent px-3 py-3 text-left transition-all duration-200 hover:border-border/60 hover:shadow-card",
+                  item.hasUnread ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-card",
                 )}
               >
                 <div className="relative shrink-0">
                   <SignedImg
                     src={item.avatar_url}
                     alt={item.name}
-                    className="h-12 w-12 rounded-full object-cover"
+                    className="h-12 w-12 rounded-full object-cover ring-2 ring-border/60"
                   />
                   {isOnline && (
                     <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-card" />

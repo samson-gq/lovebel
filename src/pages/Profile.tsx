@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import PageHeader from "@/components/PageHeader";
 import { useNavigate } from "react-router-dom";
-import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck, Film, LocateFixed, Trash2, Zap, Check } from "lucide-react";
+import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck, Film, LocateFixed, Trash2, Zap, Check, User } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -379,31 +380,39 @@ const Profile = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-24">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 pt-6">
-        <h1 className="text-2xl font-bold text-foreground">Профиль</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={() => (editing ? handleSave() : setEditing(true))}
-            className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
-            aria-label={editing ? "Сохранить" : "Редактировать"}
-          >
-            {editing ? <Check className="h-5 w-5 text-primary" /> : <Edit3 className="h-5 w-5" />}
-          </button>
-          <button
-            onClick={() => navigate("/settings")}
-            className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
-            aria-label="Настройки"
-          >
-            <SettingsIcon className="h-5 w-5" />
-          </button>
-          <button onClick={signOut} className="rounded-full p-2 text-muted-foreground hover:bg-muted" aria-label="Выйти">
-            <LogOut className="h-5 w-5" />
-          </button>
-        </div>
-      </header>
+      <PageHeader
+        icon={User}
+        title="Профиль"
+        subtitle={editing ? "Режим редактирования" : "Как вас видят другие"}
+        actions={
+          <>
+            <button
+              onClick={() => (editing ? handleSave() : setEditing(true))}
+              className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
+              aria-label={editing ? "Сохранить" : "Редактировать"}
+            >
+              {editing ? <Check className="h-5 w-5 text-primary" /> : <Edit3 className="h-5 w-5" />}
+            </button>
+            <button
+              onClick={() => navigate("/settings")}
+              className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
+              aria-label="Настройки"
+            >
+              <SettingsIcon className="h-5 w-5" />
+            </button>
+            <button
+              onClick={signOut}
+              className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
+              aria-label="Выйти"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </>
+        }
+      />
 
-      <div className="mx-auto mt-6 grid w-full max-w-5xl gap-6 px-6 md:grid-cols-[320px_1fr]">
-        <div className="relative overflow-hidden rounded-2xl bg-card shadow-card md:sticky md:top-6 md:self-start">
+      <div className="mx-auto mt-5 grid w-full max-w-5xl gap-6 px-6 md:grid-cols-[320px_1fr]">
+        <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card shadow-card md:sticky md:top-24 md:self-start">
           <div className="relative mx-auto w-full max-w-xs md:max-w-none">
             <SignedImg
               src={avatarUrl}

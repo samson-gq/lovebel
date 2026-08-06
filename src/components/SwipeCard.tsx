@@ -111,7 +111,7 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
       onDragEnd={handleDragEnd}
       exit={{ x: 300, opacity: 0, transition: { duration: 0.3 } }}
     >
-      <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-elevated">
+      <div className="relative h-full w-full overflow-hidden rounded-3xl shadow-elevated ring-1 ring-border/40">
         {activeMedia.type === "video" ? (
           <SignedVideo url={activeMedia.url} isTop={isTop} />
         ) : (
