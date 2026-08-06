@@ -1,6 +1,23 @@
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { MapPin, ChevronLeft, ChevronRight, BadgeCheck, Play, Sparkles, Zap, RotateCcw } from "lucide-react";
+import {
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  BadgeCheck,
+  Play,
+  Sparkles,
+  Zap,
+  RotateCcw,
+  Ruler,
+  Briefcase,
+  GraduationCap,
+  Baby,
+  Cigarette,
+  Wine,
+  Star,
+} from "lucide-react";
 import type { Profile } from "@/data/profiles";
 import ProfileActionsMenu from "./ProfileActionsMenu";
 import { SignedImg } from "./SignedImg";
@@ -76,6 +93,23 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
   const superOpacity = useTransform(y, [-140, -40], [1, 0]);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+
+  const facts = [
+    profile.heightCm ? { icon: Ruler, label: `${profile.heightCm} см` } : null,
+    profile.education ? { icon: GraduationCap, label: profile.education } : null,
+    profile.zodiac ? { icon: Star, label: profile.zodiac } : null,
+    profile.children ? { icon: Baby, label: profile.children } : null,
+    profile.smoking ? { icon: Cigarette, label: `Курение: ${profile.smoking}` } : null,
+    profile.drinking ? { icon: Wine, label: `Алкоголь: ${profile.drinking}` } : null,
+  ].filter(Boolean) as { icon: typeof Ruler; label: string }[];
+
+  const hasDetails =
+    facts.length > 0 ||
+    profile.interests.length > 3 ||
+    Boolean(profile.prompts && profile.prompts.length > 0) ||
+    Boolean(profile.voiceUrl && profile.voicePrompt) ||
+    (profile.bio?.length ?? 0) > 90;
 
   const mediaItems = [
     ...(profile.videoUrl ? [{ type: "video" as const, url: profile.videoUrl }] : []),
