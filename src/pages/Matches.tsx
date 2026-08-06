@@ -9,6 +9,7 @@ import { formatDayLabel, formatTime, sameDay } from "@/lib/chatUtils";
 import { cn } from "@/lib/utils";
 import { SignedImg } from "@/components/SignedImg";
 import PushOptIn from "@/components/PushOptIn";
+import PageHeader from "@/components/PageHeader";
 
 const ExpiryBadge = ({ expiresAt }: { expiresAt: string }) => {
   const ms = useCountdown(expiresAt);
@@ -37,20 +38,22 @@ const Matches = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-24">
-      <header className="px-6 pt-6">
-        <h1 className="text-2xl font-bold text-foreground">
-          Матчи {totalUnread > 0 && (
-            <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-sm font-semibold text-primary-foreground">
+      <PageHeader
+        icon={Heart}
+        title="Матчи"
+        subtitle={
+          matchedProfiles.length > 0
+            ? `${matchedProfiles.length} совпадений`
+            : "Начните свайпать, чтобы найти пару"
+        }
+        badge={
+          totalUnread > 0 ? (
+            <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
               {totalUnread}
             </span>
-          )}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {matchedProfiles.length > 0
-            ? `${matchedProfiles.length} совпадений`
-            : "Начните свайпать, чтобы найти пару"}
-        </p>
-      </header>
+          ) : null
+        }
+      />
 
       <div className="mt-4">
         <PushOptIn />
@@ -59,13 +62,13 @@ const Matches = () => {
 
 
       {isLoading ? (
-        <div className="mt-6 grid grid-cols-2 gap-4 px-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="mx-auto mt-5 grid w-full max-w-5xl grid-cols-2 gap-4 px-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-muted" />
+            <div key={i} className="aspect-[3/4] animate-pulse rounded-3xl bg-muted" />
           ))}
         </div>
       ) : matchedProfiles.length > 0 ? (
-        <div className="mt-6 grid grid-cols-2 gap-4 px-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="mx-auto mt-5 grid w-full max-w-5xl grid-cols-2 gap-4 px-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {matchedProfiles.map((profile, i) => {
             const isOnline = online.has(profile.userId);
             return (
@@ -74,7 +77,7 @@ const Matches = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.04, 0.5) }}
-                className="group relative overflow-hidden rounded-2xl text-left shadow-card"
+                className="group relative overflow-hidden rounded-3xl text-left shadow-card ring-1 ring-border/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated"
                 onClick={() => navigate(`/chat/${profile.matchId}`)}
               >
                 <SignedImg

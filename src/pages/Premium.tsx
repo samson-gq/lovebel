@@ -81,13 +81,14 @@ const Premium = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <header className="mx-auto w-full max-w-5xl px-6 pt-6">
-        <h1 className="text-2xl font-bold text-foreground">Premium и Boost</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Больше видимости, лайков и контроля</p>
-      </header>
+      <PageHeader
+        icon={Crown}
+        title="Premium и Boost"
+        subtitle="Больше видимости, лайков и контроля"
+      />
 
-      <main className="mx-auto mt-6 max-w-5xl space-y-6 px-6">
-        <section className="gradient-primary overflow-hidden rounded-2xl p-6 text-primary-foreground shadow-elevated md:p-8">
+      <main className="mx-auto mt-5 max-w-5xl space-y-6 px-6">
+        <section className="gradient-primary relative overflow-hidden rounded-3xl p-6 text-primary-foreground shadow-elevated md:p-8">
           <Sparkles className="mb-4 h-9 w-9" />
           <h2 className="text-2xl font-extrabold md:text-3xl">Откройте полную картину</h2>
           <p className="mt-2 max-w-xl text-primary-foreground/85">
@@ -97,7 +98,7 @@ const Premium = () => {
 
         <div className="grid gap-4 md:grid-cols-2">
           {/* Boost card with live state */}
-          <article className="rounded-2xl border border-border bg-card p-5 shadow-card">
+          <article className="rounded-3xl border border-border/60 bg-card p-5 shadow-card">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-secondary/15 text-secondary">
@@ -143,7 +144,7 @@ const Premium = () => {
           </article>
 
           {plans.map(({ name, price, period, icon: Icon, perks }) => (
-            <article key={name} className="rounded-2xl border border-border bg-card p-5 shadow-card transition-shadow hover:shadow-elevated">
+            <article key={name} className="rounded-3xl border border-border/60 bg-card p-5 shadow-card transition-shadow hover:shadow-elevated">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -174,7 +175,7 @@ const Premium = () => {
           ))}
         </div>
 
-        <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+        <section className="overflow-hidden rounded-3xl border border-border/60 bg-card shadow-card">
           <div className="border-b border-border px-5 py-4">
             <h3 className="text-lg font-bold text-card-foreground">Сравнение возможностей</h3>
           </div>
