@@ -1,6 +1,23 @@
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { MapPin, ChevronLeft, ChevronRight, BadgeCheck, Play, Sparkles, Zap, RotateCcw } from "lucide-react";
+import {
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  BadgeCheck,
+  Play,
+  Sparkles,
+  Zap,
+  RotateCcw,
+  Ruler,
+  Briefcase,
+  GraduationCap,
+  Baby,
+  Cigarette,
+  Wine,
+  Star,
+} from "lucide-react";
 import type { Profile } from "@/data/profiles";
 import ProfileActionsMenu from "./ProfileActionsMenu";
 import { SignedImg } from "./SignedImg";
@@ -76,6 +93,23 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
   const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
   const superOpacity = useTransform(y, [-140, -40], [1, 0]);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+
+  const facts = [
+    profile.heightCm ? { icon: Ruler, label: `${profile.heightCm} см` } : null,
+    profile.education ? { icon: GraduationCap, label: profile.education } : null,
+    profile.zodiac ? { icon: Star, label: profile.zodiac } : null,
+    profile.children ? { icon: Baby, label: profile.children } : null,
+    profile.smoking ? { icon: Cigarette, label: `Курение: ${profile.smoking}` } : null,
+    profile.drinking ? { icon: Wine, label: `Алкоголь: ${profile.drinking}` } : null,
+  ].filter(Boolean) as { icon: typeof Ruler; label: string }[];
+
+  const hasDetails =
+    facts.length > 0 ||
+    profile.interests.length > 3 ||
+    Boolean(profile.prompts && profile.prompts.length > 0) ||
+    Boolean(profile.voiceUrl && profile.voicePrompt) ||
+    (profile.bio?.length ?? 0) > 90;
 
   const mediaItems = [
     ...(profile.videoUrl ? [{ type: "video" as const, url: profile.videoUrl }] : []),
@@ -151,12 +185,19 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
           </>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-x-0 bottom-0 transition-all duration-300",
+            expanded
+              ? "top-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20"
+              : "top-1/3 bg-gradient-to-t from-black/85 via-black/35 to-transparent",
+          )}
+        />
 
         {/* Badges row */}
         <div className="absolute left-4 top-7 flex flex-wrap items-center gap-1.5">
           {activeMedia.type === "video" && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/20 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md">
               <Play className="h-3.5 w-3.5 fill-current" /> Клип
             </span>
           )}
@@ -203,64 +244,131 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
           </div>
         )}
 
-        <div className="absolute bottom-0 left-0 right-0 max-h-[70%] overflow-y-auto p-6">
-          <h2 className="flex flex-wrap items-center gap-2 text-3xl font-bold text-primary-foreground">
-            {profile.name}, {profile.age}
-            {profile.isVerified && <BadgeCheck className="h-6 w-6 text-secondary" aria-label="Верифицирован" />}
-            {isOnline && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-xs font-semibold text-white">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-                В сети
+        {/* Info layer */}
+        <div
+          className={cn(
+            "absolute inset-x-0 bottom-0 flex flex-col px-5 pb-5",
+            expanded ? "top-14 overflow-y-auto no-scrollbar" : "",
+          )}
+        >
+          <div className={expanded ? "mt-auto" : ""}>
+            <h2 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[26px] font-bold leading-tight text-white drop-shadow">
+              <span>
+                {profile.name}
+                <span className="ml-1.5 font-light text-white/85">{profile.age}</span>
               </span>
-            )}
-          </h2>
-          <div className="mt-1 flex items-center gap-1 text-primary-foreground/80">
-            <MapPin className="h-4 w-4" />
-            <span className="text-sm">{profile.distance}</span>
-          </div>
-          {profile.bio && <p className="mt-2 text-primary-foreground/90">{profile.bio}</p>}
-
-          {profile.voiceUrl && profile.voicePrompt && (
-            <VoicePromptPlayer
-              audioUrl={profile.voiceUrl}
-              prompt={profile.voicePrompt}
-              durationSec={profile.voiceDurationSec ?? 0}
-              profileId={profile.id}
-            />
-          )}
-
-
-          {(profile.heightCm || profile.occupation || profile.education || profile.zodiac || profile.children || profile.smoking || profile.drinking) && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {profile.heightCm && <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">📏 {profile.heightCm} см</span>}
-              {profile.occupation && <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">💼 {profile.occupation}</span>}
-              {profile.education && <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">🎓 {profile.education}</span>}
-              {profile.zodiac && <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">✨ {profile.zodiac}</span>}
-              {profile.children && <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">👶 {profile.children}</span>}
-              {profile.smoking && <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">🚬 {profile.smoking}</span>}
-              {profile.drinking && <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">🍷 {profile.drinking}</span>}
-            </div>
-          )}
-
-          {profile.interests.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {profile.interests.map((interest) => (
-                <span key={interest} className="rounded-full bg-primary-foreground/20 px-3 py-1 text-xs font-medium text-primary-foreground backdrop-blur-sm">
-                  {interest}
+              {profile.isVerified && <BadgeCheck className="h-5 w-5 text-secondary" aria-label="Верифицирован" />}
+              {isOnline && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[11px] font-semibold text-white">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+                  В сети
                 </span>
-              ))}
+              )}
+            </h2>
+
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/80">
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                {profile.distance}
+              </span>
+              {profile.occupation && (
+                <span className="inline-flex items-center gap-1">
+                  <Briefcase className="h-3.5 w-3.5" />
+                  {profile.occupation}
+                </span>
+              )}
+            </div>
+
+            {profile.bio && (
+              <p className={cn("mt-2 text-sm leading-relaxed text-white/90", !expanded && "line-clamp-2")}>
+                {profile.bio}
+              </p>
+            )}
+
+            {!expanded && profile.interests.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {profile.interests.slice(0, 3).map((interest) => (
+                  <span
+                    key={interest}
+                    className="rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-md"
+                  >
+                    {interest}
+                  </span>
+                ))}
+                {profile.interests.length > 3 && (
+                  <span className="rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-xs font-medium text-white/80 backdrop-blur-md">
+                    +{profile.interests.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {expanded && (
+            <div className="mt-4 space-y-4">
+              {profile.voiceUrl && profile.voicePrompt && (
+                <VoicePromptPlayer
+                  audioUrl={profile.voiceUrl}
+                  prompt={profile.voicePrompt}
+                  durationSec={profile.voiceDurationSec ?? 0}
+                  profileId={profile.id}
+                />
+              )}
+
+              {facts.length > 0 && (
+                <div className="grid grid-cols-2 gap-2">
+                  {facts.map(({ icon: FactIcon, label }) => (
+                    <div
+                      key={label}
+                      className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-medium text-white backdrop-blur-md"
+                    >
+                      <FactIcon className="h-3.5 w-3.5 shrink-0 text-secondary" />
+                      <span className="truncate">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {profile.interests.length > 0 && (
+                <div>
+                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/55">Интересы</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.interests.map((interest) => (
+                      <span
+                        key={interest}
+                        className="rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-md"
+                      >
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {profile.prompts && profile.prompts.length > 0 && (
+                <div className="space-y-2">
+                  {profile.prompts.map((pr, i) => (
+                    <div key={i} className="rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-md">
+                      <p className="text-xs font-semibold text-secondary">{pr.prompt}</p>
+                      <p className="mt-1 text-sm leading-snug text-white">{pr.answer}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {profile.prompts && profile.prompts.length > 0 && (
-            <div className="mt-3 space-y-2">
-              {profile.prompts.map((pr, i) => (
-                <div key={i} className="rounded-xl bg-primary-foreground/15 p-3 backdrop-blur-sm">
-                  <p className="text-xs font-semibold text-secondary">{pr.prompt}</p>
-                  <p className="mt-0.5 text-sm text-primary-foreground">{pr.answer}</p>
-                </div>
-              ))}
-            </div>
+          {hasDetails && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((v) => !v);
+              }}
+              className="mt-4 inline-flex items-center justify-center gap-1.5 self-start rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/20"
+            >
+              {expanded ? "Свернуть" : "Подробнее"}
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")} />
+            </button>
           )}
         </div>
       </div>

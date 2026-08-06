@@ -330,7 +330,7 @@ const Index = () => {
       </p>
 
       <div className="relative mx-auto flex w-full max-w-sm flex-1 justify-center px-4 pb-32 md:max-w-md md:pb-40">
-        <div className="relative h-[520px] w-full">
+        <div className="relative h-[calc(100dvh-330px)] min-h-[440px] w-full md:h-[calc(100dvh-260px)] md:max-h-[640px]">
           {loading ? (
             <div className="flex h-full items-center justify-center">
               <Skeleton className="h-full w-full rounded-3xl" />
