@@ -119,6 +119,13 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
 
   const dirty = !isDefaultFilters(filters);
 
+  const summary = [
+    `${filters.ageRange[0]}–${filters.ageRange[1]} лет`,
+    filters.gender === "female" ? "женщины" : filters.gender === "male" ? "мужчины" : "все",
+    filters.city.trim() || (filters.useGps ? `до ${filters.maxDistance} км` : "любой город"),
+  ].join(" · ");
+
+
   const body = (
     <div className="flex flex-1 flex-col gap-5 overflow-y-auto pb-2">
       {/* Age */}
