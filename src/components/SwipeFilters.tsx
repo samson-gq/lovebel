@@ -398,9 +398,22 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
             isMobile ? "max-h-[90vh] rounded-t-3xl" : "w-full sm:max-w-md",
           )}
         >
-          <SheetHeader className="flex-row items-center justify-between space-y-0">
-            <SheetTitle>Фильтры</SheetTitle>
+          <SheetHeader className="flex-row items-center justify-between space-y-0 pr-8">
+            <div className="min-w-0">
+              <SheetTitle>Фильтры</SheetTitle>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{summary}</p>
+            </div>
+            {dirty && (
+              <button
+                type="button"
+                onClick={() => onChange(DEFAULT_FILTERS)}
+                className="shrink-0 text-xs font-semibold text-primary hover:underline"
+              >
+                Сбросить
+              </button>
+            )}
           </SheetHeader>
+
           {body}
           {footer}
         </SheetContent>
