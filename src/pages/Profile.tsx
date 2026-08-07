@@ -13,6 +13,8 @@ import PromptsEditor from "@/components/PromptsEditor";
 import VoicePrompt from "@/components/VoicePrompt";
 import AiBioAssistant from "@/components/AiBioAssistant";
 import { SignedImg } from "@/components/SignedImg";
+import ProfileCompletion from "@/components/ProfileCompletion";
+
 import { useSignedUrl } from "@/hooks/useSignedUrl";
 import {
   Select,
