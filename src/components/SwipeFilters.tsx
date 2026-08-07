@@ -216,6 +216,24 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
           thumbLabels={["Радиус поиска"]}
           onValueChange={(val) => onChange({ ...filters, maxDistance: val[0] })}
         />
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[5, 10, 25, 50, 100].map((km) => (
+            <button
+              key={km}
+              type="button"
+              onClick={() => onChange({ ...filters, maxDistance: km })}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                filters.maxDistance === km
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {km} км
+            </button>
+          ))}
+        </div>
+
         {filters.useGps && filters.latitude && filters.longitude && (
           <p className="mt-2 text-xs text-muted-foreground">
             📍 GPS: {filters.latitude.toFixed(3)}, {filters.longitude.toFixed(3)} · до {filters.maxDistance} км
