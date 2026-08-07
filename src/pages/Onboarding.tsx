@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SignedImg } from "@/components/SignedImg";
 
 const INTERESTS = ["Путешествия", "Музыка", "Спорт", "Кино", "Книги", "Кофе", "Йога", "Дизайн", "Фитнес", "Искусство", "Наука", "Еда"];
+const STEP_LABELS = ["О себе", "Фото", "Интересы", "Локация"];
 
 const Onboarding = () => {
   const { user } = useAuth();
