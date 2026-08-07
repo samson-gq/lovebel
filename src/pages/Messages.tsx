@@ -117,11 +117,34 @@ const Messages = () => {
       ) : items.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
           <MessageSquare className="mb-4 h-16 w-16 text-muted-foreground/30" />
-          <p className="text-lg font-medium text-muted-foreground">Пока нет сообщений</p>
-          <p className="mt-1 text-sm text-muted-foreground/70">
-            Получайте матчи и начинайте общение
+          <p className="text-lg font-medium text-muted-foreground">
+            {allItems.length === 0 ? "Пока нет сообщений" : "Ничего не найдено"}
           </p>
+          <p className="mt-1 text-sm text-muted-foreground/70">
+            {allItems.length === 0
+              ? "Получайте матчи и начинайте общение"
+              : "Попробуйте изменить запрос или фильтр"}
+          </p>
+          {allItems.length === 0 ? (
+            <button
+              onClick={() => navigate("/")}
+              className="mt-5 rounded-full gradient-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow"
+            >
+              Найти пару
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setQuery("");
+                setTab("all");
+              }}
+              className="mt-5 rounded-full bg-muted px-6 py-2.5 text-sm font-semibold text-foreground"
+            >
+              Сбросить
+            </button>
+          )}
         </div>
+
       ) : (
         <nav className="mx-auto mt-4 w-full max-w-3xl space-y-1.5 px-3 md:px-6">
           {items.map((item, i) => {
