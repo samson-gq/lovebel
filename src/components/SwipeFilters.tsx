@@ -119,6 +119,13 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
 
   const dirty = !isDefaultFilters(filters);
 
+  const summary = [
+    `${filters.ageRange[0]}–${filters.ageRange[1]} лет`,
+    filters.gender === "female" ? "женщины" : filters.gender === "male" ? "мужчины" : "все",
+    filters.city.trim() || (filters.useGps ? `до ${filters.maxDistance} км` : "любой город"),
+  ].join(" · ");
+
+
   const body = (
     <div className="flex flex-1 flex-col gap-5 overflow-y-auto pb-2">
       {/* Age */}
@@ -216,6 +223,24 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
           thumbLabels={["Радиус поиска"]}
           onValueChange={(val) => onChange({ ...filters, maxDistance: val[0] })}
         />
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[5, 10, 25, 50, 100].map((km) => (
+            <button
+              key={km}
+              type="button"
+              onClick={() => onChange({ ...filters, maxDistance: km })}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                filters.maxDistance === km
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {km} км
+            </button>
+          ))}
+        </div>
+
         {filters.useGps && filters.latitude && filters.longitude && (
           <p className="mt-2 text-xs text-muted-foreground">
             📍 GPS: {filters.latitude.toFixed(3)}, {filters.longitude.toFixed(3)} · до {filters.maxDistance} км
@@ -380,9 +405,22 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
             isMobile ? "max-h-[90vh] rounded-t-3xl" : "w-full sm:max-w-md",
           )}
         >
-          <SheetHeader className="flex-row items-center justify-between space-y-0">
-            <SheetTitle>Фильтры</SheetTitle>
+          <SheetHeader className="flex-row items-center justify-between space-y-0 pr-8">
+            <div className="min-w-0">
+              <SheetTitle>Фильтры</SheetTitle>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{summary}</p>
+            </div>
+            {dirty && (
+              <button
+                type="button"
+                onClick={() => onChange(DEFAULT_FILTERS)}
+                className="shrink-0 text-xs font-semibold text-primary hover:underline"
+              >
+                Сбросить
+              </button>
+            )}
           </SheetHeader>
+
           {body}
           {footer}
         </SheetContent>

@@ -13,6 +13,8 @@ import PromptsEditor from "@/components/PromptsEditor";
 import VoicePrompt from "@/components/VoicePrompt";
 import AiBioAssistant from "@/components/AiBioAssistant";
 import { SignedImg } from "@/components/SignedImg";
+import ProfileCompletion from "@/components/ProfileCompletion";
+
 import { useSignedUrl } from "@/hooks/useSignedUrl";
 import {
   Select,
@@ -435,6 +437,21 @@ const Profile = () => {
             </button>
           </div>
           <div className="space-y-3 p-5">
+            <ProfileCompletion
+              data={{
+                avatarUrl,
+                name,
+                bio,
+                age,
+                city,
+                interests,
+                photosCount: photos.length,
+                hasVideo: !!video,
+                occupation,
+                isVerified,
+              }}
+            />
+
             {editing ? (
               <>
                 <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя" />

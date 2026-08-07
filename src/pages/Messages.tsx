@@ -1,5 +1,6 @@
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Search, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useMatches } from "@/hooks/useMatches";
@@ -7,6 +8,7 @@ import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { SignedImg } from "@/components/SignedImg";
 import { cn } from "@/lib/utils";
 import PageHeader from "@/components/PageHeader";
+import { Input } from "@/components/ui/input";
 import { formatDayLabel, formatTime, sameDay } from "@/lib/chatUtils";
 
 const formatWhen = (iso: string | null): string => {
@@ -20,17 +22,35 @@ const formatWhen = (iso: string | null): string => {
 const Messages = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data: items = [], isLoading } = useMatches(user?.id);
+  const { data: allItems = [], isLoading } = useMatches(user?.id);
   const online = useOnlineUsers();
+  const [query, setQuery] = useState("");
+  const [tab, setTab] = useState<"all" | "unread" | "online">("all");
 
-  const totalUnread = items.reduce((acc, m) => acc + m.unreadCount, 0);
+  const totalUnread = allItems.reduce((acc, m) => acc + m.unreadCount, 0);
+
+  const items = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return allItems.filter((m) => {
+      if (q && !m.name.toLowerCase().includes(q)) return false;
+      if (tab === "unread" && !m.hasUnread) return false;
+      if (tab === "online" && !online.has(m.userId)) return false;
+      return true;
+    });
+  }, [allItems, query, tab, online]);
+
+  const tabs: Array<{ id: typeof tab; label: string; count?: number }> = [
+    { id: "all", label: "Все", count: allItems.length },
+    { id: "unread", label: "Непрочитанные", count: allItems.filter((m) => m.hasUnread).length },
+    { id: "online", label: "В сети", count: allItems.filter((m) => online.has(m.userId)).length },
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-24 md:pb-0">
       <PageHeader
         icon={MessageSquare}
         title="Сообщения"
-        subtitle={items.length > 0 ? `${items.length} чатов` : "Ваши диалоги появятся здесь"}
+        subtitle={allItems.length > 0 ? `${allItems.length} чатов` : "Ваши диалоги появятся здесь"}
         badge={
           totalUnread > 0 ? (
             <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
@@ -39,6 +59,48 @@ const Messages = () => {
           ) : null
         }
       />
+
+      {allItems.length > 0 && (
+        <div className="mx-auto w-full max-w-3xl px-3 pt-4 md:px-6">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Поиск по имени"
+              aria-label="Поиск по чатам"
+              className="rounded-full pl-9 pr-9"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                aria-label="Очистить поиск"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  tab === t.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t.label}
+                {t.count ? ` · ${t.count}` : ""}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {isLoading ? (
         <div className="mx-auto mt-6 w-full max-w-3xl space-y-3 px-6">
@@ -55,11 +117,34 @@ const Messages = () => {
       ) : items.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
           <MessageSquare className="mb-4 h-16 w-16 text-muted-foreground/30" />
-          <p className="text-lg font-medium text-muted-foreground">Пока нет сообщений</p>
-          <p className="mt-1 text-sm text-muted-foreground/70">
-            Получайте матчи и начинайте общение
+          <p className="text-lg font-medium text-muted-foreground">
+            {allItems.length === 0 ? "Пока нет сообщений" : "Ничего не найдено"}
           </p>
+          <p className="mt-1 text-sm text-muted-foreground/70">
+            {allItems.length === 0
+              ? "Получайте матчи и начинайте общение"
+              : "Попробуйте изменить запрос или фильтр"}
+          </p>
+          {allItems.length === 0 ? (
+            <button
+              onClick={() => navigate("/")}
+              className="mt-5 rounded-full gradient-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow"
+            >
+              Найти пару
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setQuery("");
+                setTab("all");
+              }}
+              className="mt-5 rounded-full bg-muted px-6 py-2.5 text-sm font-semibold text-foreground"
+            >
+              Сбросить
+            </button>
+          )}
         </div>
+
       ) : (
         <nav className="mx-auto mt-4 w-full max-w-3xl space-y-1.5 px-3 md:px-6">
           {items.map((item, i) => {
