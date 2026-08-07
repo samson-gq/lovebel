@@ -217,14 +217,23 @@ const Settings = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-12">
-      <header className="flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur-xl">
-        <button onClick={() => navigate(-1)} className="text-foreground" aria-label="Назад">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-lg font-semibold text-foreground">Настройки и приватность</h1>
-      </header>
+      <PageHeader
+        icon={ShieldCheck}
+        title="Настройки"
+        subtitle="Приватность, уведомления и данные"
+        actions={
+          <button
+            onClick={() => navigate(-1)}
+            className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
+            aria-label="Назад"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        }
+      />
 
-      <div className="mx-auto w-full max-w-md space-y-6 p-4">
+      <div className="mx-auto grid w-full max-w-4xl gap-4 p-4 md:grid-cols-2 md:p-6 [&>section]:h-fit">
+
         {/* Verification */}
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-start gap-3">
