@@ -414,7 +414,9 @@ const Index = () => {
       </div>
 
       {remaining.length > 0 && !loading && (
-        <div className="fixed bottom-24 left-0 right-0 z-40 flex items-center justify-center gap-3 sm:gap-4 md:bottom-8 md:left-60 md:right-0">
+        <div className="fixed bottom-24 left-0 right-0 z-40 flex flex-col items-center justify-center gap-2 md:bottom-6 md:left-60 md:right-0">
+          <div className="flex items-center justify-center gap-3 sm:gap-4">
+
           <button
             onClick={handleRewind}
             disabled={isPremium && !lastSwipeId}
