@@ -50,7 +50,7 @@ const Messages = () => {
       <PageHeader
         icon={MessageSquare}
         title="Сообщения"
-        subtitle={allItems.length > 0 ? `${allItems.length} чатов` : "Ваши диалоги появятся здесь"}
+        subtitle={allItems.length > 0 ? pluralize(allItems.length, "чат", "чата", "чатов") : "Ваши диалоги появятся здесь"}
         badge={
           totalUnread > 0 ? (
             <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
