@@ -27,7 +27,9 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 
 const AppSidebar = () => {
   const { signOut } = useAuth();
+  const badges = useNavBadges();
   const [confirmOpen, setConfirmOpen] = useState(false);
+
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-border bg-card/80 backdrop-blur-xl md:flex">
