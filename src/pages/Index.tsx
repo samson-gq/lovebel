@@ -453,8 +453,16 @@ const Index = () => {
           >
             <Heart className="h-9 w-9 text-primary-foreground" />
           </button>
+          </div>
+          <p className="hidden text-[11px] text-muted-foreground md:block">
+            Горячие клавиши: <kbd className="rounded bg-muted px-1 font-semibold">←</kbd> пропустить ·{" "}
+            <kbd className="rounded bg-muted px-1 font-semibold">→</kbd> лайк ·{" "}
+            <kbd className="rounded bg-muted px-1 font-semibold">↑</kbd> super ·{" "}
+            <kbd className="rounded bg-muted px-1 font-semibold">Z</kbd> отменить
+          </p>
         </div>
       )}
+
 
       
     </div>
