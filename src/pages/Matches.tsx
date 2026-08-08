@@ -7,6 +7,7 @@ import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { useCountdown, formatCountdown } from "@/hooks/useCountdown";
 import { formatDayLabel, formatTime, sameDay } from "@/lib/chatUtils";
 import { cn } from "@/lib/utils";
+import { pluralize } from "@/lib/plural";
 import { SignedImg } from "@/components/SignedImg";
 import PushOptIn from "@/components/PushOptIn";
 import PageHeader from "@/components/PageHeader";
@@ -43,7 +44,7 @@ const Matches = () => {
         title="Матчи"
         subtitle={
           matchedProfiles.length > 0
-            ? `${matchedProfiles.length} совпадений`
+            ? pluralize(matchedProfiles.length, "совпадение", "совпадения", "совпадений")
             : "Начните свайпать, чтобы найти пару"
         }
         badge={

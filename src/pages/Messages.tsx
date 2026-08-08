@@ -7,6 +7,7 @@ import { useMatches } from "@/hooks/useMatches";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { SignedImg } from "@/components/SignedImg";
 import { cn } from "@/lib/utils";
+import { pluralize } from "@/lib/plural";
 import PageHeader from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
 import { formatDayLabel, formatTime, sameDay } from "@/lib/chatUtils";
