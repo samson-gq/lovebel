@@ -729,22 +729,37 @@ const Profile = () => {
           {/* Interests */}
           <div>
             <h3 className="mb-3 text-lg font-semibold text-foreground">Интересы</h3>
-            <div className="flex flex-wrap gap-2">
-              {(editing ? INTEREST_OPTIONS : interests).map((interest) => (
+            {!editing && interests.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border bg-card/50 p-5 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Интересы не выбраны — они помогают находить более подходящие пары.
+                </p>
                 <button
-                  key={interest}
-                  onClick={() => editing && toggleInterest(interest)}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                    interests.includes(interest)
-                      ? "border border-primary/30 bg-primary/10 text-primary"
-                      : "bg-muted text-muted-foreground"
-                  } ${editing ? "cursor-pointer" : "cursor-default"}`}
+                  onClick={() => setEditing(true)}
+                  className="mt-3 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
                 >
-                  {interest}
+                  Добавить интересы
                 </button>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {(editing ? INTEREST_OPTIONS : interests).map((interest) => (
+                  <button
+                    key={interest}
+                    onClick={() => editing && toggleInterest(interest)}
+                    className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                      interests.includes(interest)
+                        ? "border border-primary/30 bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground hover:bg-muted/70"
+                    } ${editing ? "cursor-pointer" : "cursor-default"}`}
+                  >
+                    {interest}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
 
           {/* Промпты */}
           {user && (
