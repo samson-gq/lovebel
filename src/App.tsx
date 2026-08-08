@@ -111,7 +111,8 @@ const App = () => (
         <NotificationListener />
         <BrowserRouter>
           <PageviewTracker />
-          <Routes>
+          <ScrollToTop />
+
 
             <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
