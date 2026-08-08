@@ -112,6 +112,8 @@ const App = () => (
         <BrowserRouter>
           <PageviewTracker />
           <ScrollToTop />
+          <Routes>
+
 
 
             <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
