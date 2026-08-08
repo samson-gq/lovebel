@@ -13,6 +13,7 @@ import { useProfilesCount } from "@/hooks/useProfilesCount";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
+import { pluralize } from "@/lib/plural";
 import type { Profile } from "@/data/profiles";
 
 interface DBProfile {
@@ -336,8 +337,10 @@ const Index = () => {
           <span className="opacity-70">Считаем анкеты…</span>
         ) : liveCount !== null ? (
           <>
-            Найдено анкет:{" "}
-            <span className="font-semibold text-foreground">{liveCount}</span>
+            Найдено{" "}
+            <span className="font-semibold text-foreground">
+              {pluralize(liveCount, "анкета", "анкеты", "анкет")}
+            </span>
             {filters.city.trim() && <> в городе «{filters.city.trim()}»</>}
             {filters.useGps && <> в радиусе {filters.maxDistance} км</>}
             {countLoading && <span className="ml-1 opacity-60">обновляем…</span>}
