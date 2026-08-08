@@ -40,6 +40,17 @@ const PageviewTracker = () => {
   return null;
 };
 
+/** Reset scroll position on every route change (chat keeps its own scroll). */
+const ScrollToTop = () => {
+  const location = useLocation();
+  useEffect(() => {
+    if (location.pathname.startsWith("/chat/")) return;
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [location.pathname]);
+  return null;
+};
+
+
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -100,7 +111,10 @@ const App = () => (
         <NotificationListener />
         <BrowserRouter>
           <PageviewTracker />
+          <ScrollToTop />
           <Routes>
+
+
 
             <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />

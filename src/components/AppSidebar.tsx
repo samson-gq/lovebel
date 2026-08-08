@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import ThemeToggle from "@/components/ThemeToggle";
 import { NAV_ITEMS } from "@/config/nav";
+import { useNavBadges } from "@/hooks/useNavBadges";
+
 import logoImg from "@/assets/lovebel-logo.png";
 import { cn } from "@/lib/utils";
 import {
@@ -27,7 +29,9 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 
 const AppSidebar = () => {
   const { signOut } = useAuth();
+  const badges = useNavBadges();
   const [confirmOpen, setConfirmOpen] = useState(false);
+
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-border bg-card/80 backdrop-blur-xl md:flex">
@@ -40,20 +44,29 @@ const AppSidebar = () => {
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 px-3">
-        {NAV_ITEMS.map(({ path, icon: Icon, label, exact }) => (
-          <NavLink key={path} to={path} end={exact} className={linkClass}>
-            {({ isActive }) => (
-              <>
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full gradient-primary" />
-                )}
-                <Icon className={cn("h-5 w-5 transition-transform", isActive && "scale-110 fill-primary/20")} />
-                <span>{label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
+        {NAV_ITEMS.map(({ path, icon: Icon, label, exact }) => {
+          const count = badges[path] ?? 0;
+          return (
+            <NavLink key={path} to={path} end={exact} className={linkClass}>
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full gradient-primary" />
+                  )}
+                  <Icon className={cn("h-5 w-5 transition-transform", isActive && "scale-110 fill-primary/20")} />
+                  <span>{label}</span>
+                  {count > 0 && (
+                    <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                      {count > 99 ? "99+" : count}
+                    </span>
+                  )}
+                </>
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
+
 
 
       <div className="mt-auto flex flex-col gap-1 border-t border-border px-3 py-3">
