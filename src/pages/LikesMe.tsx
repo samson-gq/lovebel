@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { SignedImg } from "@/components/SignedImg";
 import PageHeader from "@/components/PageHeader";
+import { pluralize } from "@/lib/plural";
 
 interface LikeRow {
   swiper_id: string;
@@ -66,7 +67,7 @@ const LikesMe = () => {
       <PageHeader
         icon={Heart}
         title="Лайкнули меня"
-        subtitle={likes.length ? `${likes.length} симпатий` : "Пока нет новых лайков"}
+        subtitle={likes.length ? pluralize(likes.length, "симпатия", "симпатии", "симпатий") : "Пока нет новых лайков"}
       />
 
       {loading ? (

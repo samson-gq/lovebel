@@ -7,6 +7,7 @@ import { useMatches } from "@/hooks/useMatches";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { SignedImg } from "@/components/SignedImg";
 import { cn } from "@/lib/utils";
+import { pluralize } from "@/lib/plural";
 import PageHeader from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
 import { formatDayLabel, formatTime, sameDay } from "@/lib/chatUtils";
@@ -50,7 +51,7 @@ const Messages = () => {
       <PageHeader
         icon={MessageSquare}
         title="Сообщения"
-        subtitle={allItems.length > 0 ? `${allItems.length} чатов` : "Ваши диалоги появятся здесь"}
+        subtitle={allItems.length > 0 ? pluralize(allItems.length, "чат", "чата", "чатов") : "Ваши диалоги появятся здесь"}
         badge={
           totalUnread > 0 ? (
             <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
@@ -157,8 +158,8 @@ const Messages = () => {
                 transition={{ delay: Math.min(i * 0.04, 0.4) }}
                 onClick={() => navigate(`/chat/${item.matchId}`)}
                 className={cn(
-                  "flex w-full items-center gap-4 rounded-2xl border border-transparent px-3 py-3 text-left transition-all duration-200 hover:border-border/60 hover:shadow-card",
-                  item.hasUnread ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-card",
+                  "flex w-full items-center gap-4 rounded-2xl border border-border/50 bg-card px-3.5 py-3 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card",
+                  item.hasUnread && "border-primary/40 bg-primary/5",
                 )}
               >
                 <div className="relative shrink-0">
