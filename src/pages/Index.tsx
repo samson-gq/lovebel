@@ -247,7 +247,23 @@ const Index = () => {
     toast("↩️ Свайп отменён");
   }, [user, lastSwipeId, currentIndex, isPremium, navigate]);
 
+  // Desktop keyboard shortcuts: ←/→ swipe, ↑ super like, Z rewind.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "ArrowLeft") { e.preventDefault(); handleSwipe("left"); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); handleSwipe("right"); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); handleSwipe("super"); }
+      else if (e.key.toLowerCase() === "z" || e.key.toLowerCase() === "я") { e.preventDefault(); handleRewind(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleSwipe, handleRewind]);
+
   const remaining = cards.slice(currentIndex);
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background bg-mesh">
