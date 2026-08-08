@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import ThemeToggle from "@/components/ThemeToggle";
 import { NAV_ITEMS } from "@/config/nav";
+import { useNavBadges } from "@/hooks/useNavBadges";
+
 import logoImg from "@/assets/lovebel-logo.png";
 import { cn } from "@/lib/utils";
 import {
