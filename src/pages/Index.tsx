@@ -440,45 +440,51 @@ const Index = () => {
       </div>
 
       {remaining.length > 0 && !loading && (
-        <div className="fixed bottom-24 left-0 right-0 z-40 flex flex-col items-center justify-center gap-2 md:bottom-6 md:left-60 md:right-0">
-          <div className="flex items-center justify-center gap-3 sm:gap-4">
-
-          <button
-            onClick={handleRewind}
-            disabled={isPremium && !lastSwipeId}
-            aria-label={isPremium ? "Отменить последний свайп" : "Rewind — Premium"}
-            className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-secondary/40 bg-card shadow-card transition-transform hover:scale-110 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
-          >
-            <Undo2 className="h-6 w-6 text-secondary" />
-            {!isPremium && (
-              <span className="absolute -top-1 -right-1 rounded-full bg-secondary px-1 text-[9px] font-bold text-secondary-foreground">PRO</span>
-            )}
-          </button>
-          <button
-            onClick={() => handleSwipe("left")}
-            aria-label="Не нравится"
-            className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/30 bg-card shadow-card transition-transform hover:scale-110 active:scale-95"
-          >
-            <X className="h-7 w-7 text-primary" />
-          </button>
-          <button
-            onClick={() => handleSwipe("super")}
-            disabled={superLikesLeft <= 0}
-            aria-label="Super Like"
-            className="relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-blue-400 bg-card shadow-card transition-transform hover:scale-110 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
-          >
-            <Star className="h-7 w-7 fill-blue-500 text-blue-500" />
-            <span className="absolute -bottom-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-bold text-primary-foreground">
-              {superLikesLeft}
-            </span>
-          </button>
-          <button
-            onClick={() => handleSwipe("right")}
-            aria-label="Нравится"
-            className="gradient-primary flex h-20 w-20 items-center justify-center rounded-full shadow-glow transition-transform hover:scale-110 active:scale-95"
-          >
-            <Heart className="h-9 w-9 text-primary-foreground" />
-          </button>
+        <div
+          className="fixed bottom-24 left-0 right-0 z-40 flex flex-col items-center justify-center gap-2 px-4 md:bottom-6 md:left-60 md:right-0"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="glass flex items-center justify-center gap-3 rounded-full border border-border/50 px-4 py-2.5 shadow-elevated sm:gap-4">
+            <button
+              onClick={handleRewind}
+              disabled={isPremium && !lastSwipeId}
+              title={isPremium ? "Отменить последний свайп (Z)" : "Rewind доступен в Premium"}
+              aria-label={isPremium ? "Отменить последний свайп" : "Rewind — Premium"}
+              className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-secondary/40 bg-card shadow-card transition-transform hover:scale-110 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+            >
+              <Undo2 className="h-5 w-5 text-secondary" />
+              {!isPremium && (
+                <span className="absolute -right-1 -top-1 rounded-full bg-secondary px-1 text-[9px] font-bold text-secondary-foreground">PRO</span>
+              )}
+            </button>
+            <button
+              onClick={() => handleSwipe("left")}
+              title="Пропустить (←)"
+              aria-label="Не нравится"
+              className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/30 bg-card shadow-card transition-transform hover:scale-110 active:scale-95"
+            >
+              <X className="h-7 w-7 text-primary" />
+            </button>
+            <button
+              onClick={() => handleSwipe("super")}
+              disabled={superLikesLeft <= 0}
+              title={superLikesLeft > 0 ? `Super Like (↑) · осталось ${superLikesLeft}` : "Super Like закончились на сегодня"}
+              aria-label={`Super Like, осталось ${superLikesLeft}`}
+              className="relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-blue-400 bg-card shadow-card transition-transform hover:scale-110 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+            >
+              <Star className="h-7 w-7 fill-blue-500 text-blue-500" />
+              <span className="absolute -bottom-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-bold text-primary-foreground">
+                {superLikesLeft}
+              </span>
+            </button>
+            <button
+              onClick={() => handleSwipe("right")}
+              title="Нравится (→)"
+              aria-label="Нравится"
+              className="gradient-primary flex h-[72px] w-[72px] items-center justify-center rounded-full shadow-glow transition-transform hover:scale-110 active:scale-95"
+            >
+              <Heart className="h-9 w-9 text-primary-foreground" />
+            </button>
           </div>
           <p className="hidden text-[11px] text-muted-foreground md:block">
             Горячие клавиши: <kbd className="rounded bg-muted px-1 font-semibold">←</kbd> пропустить ·{" "}
@@ -488,6 +494,7 @@ const Index = () => {
           </p>
         </div>
       )}
+
 
 
       
