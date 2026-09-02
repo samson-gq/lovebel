@@ -647,9 +647,19 @@ const Profile = () => {
                   </Select>
                 </div>
 
-                <Button onClick={handleSave} className="gradient-primary w-full text-primary-foreground">
-                  Сохранить
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={cancelEditing} className="flex-1">
+                    Отмена
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="gradient-primary flex-1 text-primary-foreground"
+                  >
+                    {saving ? "Сохраняем…" : "Сохранить"}
+                  </Button>
+                </div>
+
               </>
             ) : (
               <>
