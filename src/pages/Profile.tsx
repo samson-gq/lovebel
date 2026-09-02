@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate } from "react-router-dom";
-import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck, Film, LocateFixed, Trash2, Zap, Check, User } from "lucide-react";
+import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck, Film, LocateFixed, Trash2, Zap, Check, User, X, Ruler, Briefcase, GraduationCap, Baby, Cigarette, Wine, Star } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -120,8 +120,50 @@ const Profile = () => {
     fetchData();
   }, [user]);
 
+  /** Snapshot of editable fields taken when edit mode starts, used by "Отмена". */
+  const snapshotRef = useRef<Record<string, unknown> | null>(null);
+
+  const startEditing = () => {
+    snapshotRef.current = {
+      name, bio, age, city, gender, interests,
+      heightCm, education, occupation, zodiac, children, smoking, drinking,
+    };
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    const s = snapshotRef.current;
+    if (s) {
+      setName(s.name as string);
+      setBio(s.bio as string);
+      setAge(s.age as number | "");
+      setCity(s.city as string);
+      setGender(s.gender as string);
+      setInterests(s.interests as string[]);
+      setHeightCm(s.heightCm as number | "");
+      setEducation(s.education as string);
+      setOccupation(s.occupation as string);
+      setZodiac(s.zodiac as string);
+      setChildren(s.children as string);
+      setSmoking(s.smoking as string);
+      setDrinking(s.drinking as string);
+    }
+    setEditing(false);
+  };
+
+  const [saving, setSaving] = useState(false);
+
   const handleSave = async () => {
     if (!user) return;
+    if (!name.trim()) {
+      toast.error("Укажите имя");
+      return;
+    }
+    if (age !== "" && (Number(age) < 18 || Number(age) > 100)) {
+      toast.error("Возраст должен быть от 18 до 100");
+      return;
+    }
+    setSaving(true);
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -143,14 +185,17 @@ const Profile = () => {
         onboarding_completed: Boolean(name.trim() && (avatarUrl || photos.length > 0)),
       } as any)
       .eq("user_id", user.id);
+    setSaving(false);
 
     if (error) {
       toast.error("Ошибка сохранения");
     } else {
       toast.success("Профиль обновлён!");
+      snapshotRef.current = null;
       setEditing(false);
     }
   };
+
 
   const validateImage = (file: File): boolean => {
     if (!file.type.startsWith("image/")) {
@@ -388,13 +433,26 @@ const Profile = () => {
         subtitle={editing ? "Режим редактирования" : "Как вас видят другие"}
         actions={
           <>
+            {editing && (
+              <button
+                onClick={cancelEditing}
+                className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
+                aria-label="Отменить изменения"
+                title="Отменить изменения"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
             <button
-              onClick={() => (editing ? handleSave() : setEditing(true))}
-              className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
+              onClick={() => (editing ? handleSave() : startEditing())}
+              disabled={saving}
+              className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
               aria-label={editing ? "Сохранить" : "Редактировать"}
+              title={editing ? "Сохранить" : "Редактировать"}
             >
               {editing ? <Check className="h-5 w-5 text-primary" /> : <Edit3 className="h-5 w-5" />}
             </button>
+
             <button
               onClick={() => navigate("/settings")}
               className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
@@ -492,7 +550,21 @@ const Profile = () => {
                     </button>
                   ))}
                 </div>
-                <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="О себе" />
+                <div>
+                  <Textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value.slice(0, 500))}
+                    placeholder="О себе — что вас увлекает и кого вы ищете"
+                    rows={4}
+                  />
+                  <div className="mt-1 flex items-center justify-between text-[11px]">
+                    <span className={bio.trim().length < 40 ? "text-muted-foreground" : "text-primary"}>
+                      {bio.trim().length < 40 ? "Минимум 40 символов для сильного профиля" : "Отличное описание"}
+                    </span>
+                    <span className="text-muted-foreground">{bio.length}/500</span>
+                  </div>
+                </div>
+
                 <AiBioAssistant
                   profile={{ name, age, city, occupation, education, interests, currentBio: bio }}
                   onPick={setBio}
@@ -575,9 +647,19 @@ const Profile = () => {
                   </Select>
                 </div>
 
-                <Button onClick={handleSave} className="gradient-primary w-full text-primary-foreground">
-                  Сохранить
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={cancelEditing} className="flex-1">
+                    Отмена
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="gradient-primary flex-1 text-primary-foreground"
+                  >
+                    {saving ? "Сохраняем…" : "Сохранить"}
+                  </Button>
+                </div>
+
               </>
             ) : (
               <>
@@ -611,45 +693,32 @@ const Profile = () => {
                 {bio && <p className="text-card-foreground/80">{bio}</p>}
 
                 {/* Расширенная информация */}
-                {(heightCm || education || occupation || zodiac || children || smoking || drinking) && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {heightCm && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        📏 {heightCm} см
-                      </span>
-                    )}
-                    {occupation && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        💼 {occupation}
-                      </span>
-                    )}
-                    {education && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        🎓 {education}
-                      </span>
-                    )}
-                    {zodiac && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        ✨ {zodiac}
-                      </span>
-                    )}
-                    {children && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        👶 {children}
-                      </span>
-                    )}
-                    {smoking && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        🚬 {smoking}
-                      </span>
-                    )}
-                    {drinking && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        🍷 {drinking}
-                      </span>
-                    )}
-                  </div>
-                )}
+                {(() => {
+                  const facts = [
+                    heightCm ? { icon: Ruler, label: `${heightCm} см` } : null,
+                    occupation ? { icon: Briefcase, label: occupation } : null,
+                    education ? { icon: GraduationCap, label: education } : null,
+                    zodiac ? { icon: Star, label: zodiac } : null,
+                    children ? { icon: Baby, label: children } : null,
+                    smoking ? { icon: Cigarette, label: `Курение: ${smoking}` } : null,
+                    drinking ? { icon: Wine, label: `Алкоголь: ${drinking}` } : null,
+                  ].filter(Boolean) as { icon: typeof Ruler; label: string }[];
+                  if (facts.length === 0) return null;
+                  return (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {facts.map(({ icon: FactIcon, label }) => (
+                        <span
+                          key={label}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted px-3 py-1 text-xs font-medium text-foreground"
+                        >
+                          <FactIcon className="h-3.5 w-3.5 text-primary" />
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  );
+                })()}
+
               </>
             )}
           </div>
@@ -735,7 +804,7 @@ const Profile = () => {
                   Интересы не выбраны — они помогают находить более подходящие пары.
                 </p>
                 <button
-                  onClick={() => setEditing(true)}
+                  onClick={startEditing}
                   className="mt-3 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
                 >
                   Добавить интересы
