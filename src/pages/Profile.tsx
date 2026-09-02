@@ -669,45 +669,32 @@ const Profile = () => {
                 {bio && <p className="text-card-foreground/80">{bio}</p>}
 
                 {/* Расширенная информация */}
-                {(heightCm || education || occupation || zodiac || children || smoking || drinking) && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {heightCm && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        📏 {heightCm} см
-                      </span>
-                    )}
-                    {occupation && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        💼 {occupation}
-                      </span>
-                    )}
-                    {education && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        🎓 {education}
-                      </span>
-                    )}
-                    {zodiac && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        ✨ {zodiac}
-                      </span>
-                    )}
-                    {children && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        👶 {children}
-                      </span>
-                    )}
-                    {smoking && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        🚬 {smoking}
-                      </span>
-                    )}
-                    {drinking && (
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                        🍷 {drinking}
-                      </span>
-                    )}
-                  </div>
-                )}
+                {(() => {
+                  const facts = [
+                    heightCm ? { icon: Ruler, label: `${heightCm} см` } : null,
+                    occupation ? { icon: Briefcase, label: occupation } : null,
+                    education ? { icon: GraduationCap, label: education } : null,
+                    zodiac ? { icon: Star, label: zodiac } : null,
+                    children ? { icon: Baby, label: children } : null,
+                    smoking ? { icon: Cigarette, label: `Курение: ${smoking}` } : null,
+                    drinking ? { icon: Wine, label: `Алкоголь: ${drinking}` } : null,
+                  ].filter(Boolean) as { icon: typeof Ruler; label: string }[];
+                  if (facts.length === 0) return null;
+                  return (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {facts.map(({ icon: FactIcon, label }) => (
+                        <span
+                          key={label}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted px-3 py-1 text-xs font-medium text-foreground"
+                        >
+                          <FactIcon className="h-3.5 w-3.5 text-primary" />
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  );
+                })()}
+
               </>
             )}
           </div>
