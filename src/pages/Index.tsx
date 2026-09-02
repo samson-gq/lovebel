@@ -279,7 +279,15 @@ const Index = () => {
             <LogOut className="h-5 w-5" />
           </button>
         </div>
-        <span className="hidden md:block" />
+        <div className="hidden items-center gap-3 md:flex">
+          {!loading && remaining.length > 0 && (
+            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+              В стопке: {remaining.length}
+            </span>
+          )}
+          <ThemeToggle className="h-10 w-10" />
+        </div>
+
       </header>
 
       {!isDefaultFilters(filters) && (
