@@ -120,8 +120,50 @@ const Profile = () => {
     fetchData();
   }, [user]);
 
+  /** Snapshot of editable fields taken when edit mode starts, used by "Отмена". */
+  const snapshotRef = useRef<Record<string, unknown> | null>(null);
+
+  const startEditing = () => {
+    snapshotRef.current = {
+      name, bio, age, city, gender, interests,
+      heightCm, education, occupation, zodiac, children, smoking, drinking,
+    };
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    const s = snapshotRef.current;
+    if (s) {
+      setName(s.name as string);
+      setBio(s.bio as string);
+      setAge(s.age as number | "");
+      setCity(s.city as string);
+      setGender(s.gender as string);
+      setInterests(s.interests as string[]);
+      setHeightCm(s.heightCm as number | "");
+      setEducation(s.education as string);
+      setOccupation(s.occupation as string);
+      setZodiac(s.zodiac as string);
+      setChildren(s.children as string);
+      setSmoking(s.smoking as string);
+      setDrinking(s.drinking as string);
+    }
+    setEditing(false);
+  };
+
+  const [saving, setSaving] = useState(false);
+
   const handleSave = async () => {
     if (!user) return;
+    if (!name.trim()) {
+      toast.error("Укажите имя");
+      return;
+    }
+    if (age !== "" && (Number(age) < 18 || Number(age) > 100)) {
+      toast.error("Возраст должен быть от 18 до 100");
+      return;
+    }
+    setSaving(true);
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -143,14 +185,17 @@ const Profile = () => {
         onboarding_completed: Boolean(name.trim() && (avatarUrl || photos.length > 0)),
       } as any)
       .eq("user_id", user.id);
+    setSaving(false);
 
     if (error) {
       toast.error("Ошибка сохранения");
     } else {
       toast.success("Профиль обновлён!");
+      snapshotRef.current = null;
       setEditing(false);
     }
   };
+
 
   const validateImage = (file: File): boolean => {
     if (!file.type.startsWith("image/")) {
