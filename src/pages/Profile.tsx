@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import PageHeader from "@/components/PageHeader";
 import { useNavigate } from "react-router-dom";
-import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck, Film, LocateFixed, Trash2, Zap, Check, User } from "lucide-react";
+import { Settings as SettingsIcon, Edit3, MapPin, Camera, LogOut, BadgeCheck, ShieldCheck, Film, LocateFixed, Trash2, Zap, Check, User, X, Ruler, Briefcase, GraduationCap, Baby, Cigarette, Wine, Star } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
