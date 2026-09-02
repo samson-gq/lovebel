@@ -433,13 +433,26 @@ const Profile = () => {
         subtitle={editing ? "Режим редактирования" : "Как вас видят другие"}
         actions={
           <>
+            {editing && (
+              <button
+                onClick={cancelEditing}
+                className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
+                aria-label="Отменить изменения"
+                title="Отменить изменения"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
             <button
-              onClick={() => (editing ? handleSave() : setEditing(true))}
-              className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
+              onClick={() => (editing ? handleSave() : startEditing())}
+              disabled={saving}
+              className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
               aria-label={editing ? "Сохранить" : "Редактировать"}
+              title={editing ? "Сохранить" : "Редактировать"}
             >
               {editing ? <Check className="h-5 w-5 text-primary" /> : <Edit3 className="h-5 w-5" />}
             </button>
+
             <button
               onClick={() => navigate("/settings")}
               className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted"
