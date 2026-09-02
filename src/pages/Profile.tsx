@@ -550,7 +550,21 @@ const Profile = () => {
                     </button>
                   ))}
                 </div>
-                <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="О себе" />
+                <div>
+                  <Textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value.slice(0, 500))}
+                    placeholder="О себе — что вас увлекает и кого вы ищете"
+                    rows={4}
+                  />
+                  <div className="mt-1 flex items-center justify-between text-[11px]">
+                    <span className={bio.trim().length < 40 ? "text-muted-foreground" : "text-primary"}>
+                      {bio.trim().length < 40 ? "Минимум 40 символов для сильного профиля" : "Отличное описание"}
+                    </span>
+                    <span className="text-muted-foreground">{bio.length}/500</span>
+                  </div>
+                </div>
+
                 <AiBioAssistant
                   profile={{ name, age, city, occupation, education, interests, currentBio: bio }}
                   onPick={setBio}
