@@ -359,10 +359,20 @@ const Index = () => {
       <div className="relative mx-auto flex w-full max-w-sm flex-1 justify-center px-4 pb-32 md:max-w-md md:pb-40">
         <div className="relative h-[calc(100dvh-330px)] min-h-[440px] w-full md:h-[calc(100dvh-260px)] md:max-h-[640px]">
           {loading ? (
-            <div className="flex h-full items-center justify-center">
-              <Skeleton className="h-full w-full rounded-3xl" />
+            <div className="relative h-full w-full overflow-hidden rounded-3xl border border-border/50 bg-card shadow-card">
+              <Skeleton className="h-full w-full rounded-none" />
+              <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-background/95 to-transparent p-5">
+                <Skeleton className="h-6 w-2/3 rounded-full" />
+                <Skeleton className="h-4 w-1/3 rounded-full" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </div>
+              </div>
             </div>
           ) : remaining.length > 0 ? (
+
             <AnimatePresence>
               {remaining
                 .slice(0, 2)
