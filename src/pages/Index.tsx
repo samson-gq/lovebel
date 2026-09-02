@@ -213,6 +213,11 @@ const Index = () => {
       }
 
       setLastSwipeId(inserted?.id ?? null);
+      // Light haptic feedback on touch devices (modern mobile UX norm).
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate(direction === "super" ? [10, 40, 10] : 12);
+      }
+
       track(`swipe_${dbDirection}`, { profile_id: profile.id });
       if (direction === "super") {
         setSuperLikesLeft((n) => Math.max(0, n - 1));
