@@ -86,8 +86,8 @@ const DailyPicks = () => {
         )}
 
         {!loading && picks.map((p) => (
-          <article key={p.user_id} className="group overflow-hidden rounded-3xl border border-border/60 bg-card shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
-            <div className="relative aspect-[4/5] w-full bg-muted">
+          <article key={p.user_id} className="group flex flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
+            <div className="relative aspect-[4/5] w-full shrink-0 bg-muted">
               <SignedImg
                 src={p.avatar_url}
                 alt={p.name}
@@ -99,24 +99,27 @@ const DailyPicks = () => {
                 </span>
               )}
             </div>
-            <div className="space-y-2 p-4">
+            <div className="flex flex-1 flex-col p-4">
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold text-foreground">
+                <h3 className="truncate text-lg font-semibold text-foreground">
                   {p.name}{p.age ? `, ${p.age}` : ""}
                 </h3>
-                {p.is_verified && <BadgeCheck className="h-4 w-4 text-primary" />}
+                {p.is_verified && <BadgeCheck className="h-4 w-4 shrink-0 text-primary" />}
               </div>
-              {p.city && (
-                <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <MapPin className="h-3 w-3" /> {p.city}
-                </p>
-              )}
-              {p.bio && (
-                <p className="line-clamp-2 text-sm text-muted-foreground">{p.bio}</p>
-              )}
+              <p className="mt-1 flex min-h-4 items-center gap-1 text-xs text-muted-foreground">
+                {p.city && (
+                  <>
+                    <MapPin className="h-3 w-3" /> {p.city}
+                  </>
+                )}
+              </p>
+              {/* Reserve two lines for bio so all cards keep identical rhythm. */}
+              <p className="mt-2 line-clamp-2 min-h-10 flex-1 text-sm text-muted-foreground">
+                {p.bio ?? ""}
+              </p>
               <button
                 onClick={() => like(p.user_id)}
-                className="gradient-primary mt-2 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-primary-foreground shadow-glow transition-transform hover:scale-[1.02] active:scale-95"
+                className="gradient-primary mt-3 flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-primary-foreground shadow-glow transition-transform hover:scale-[1.02] active:scale-95"
               >
                 <Heart className="h-4 w-4" /> Лайк
               </button>
