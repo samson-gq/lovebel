@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { LocateFixed, SlidersHorizontal, X } from "lucide-react";
+import { LocateFixed, MapPin, Search, SlidersHorizontal, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
-import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { suggestCities } from "@/lib/cities";
 import { usePopularCities } from "@/hooks/usePopularCities";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DEFAULT_FILTERS, isDefaultFilters } from "@/hooks/useSwipeFilters";
+import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 
 interface FilterValues {
@@ -36,8 +36,19 @@ const AGE_PRESETS: Array<{ label: string; range: [number, number] }> = [
   { label: "45+", range: [45, 60] },
 ];
 
+const DISTANCE_PRESETS = [5, 10, 25, 50, 100];
+
+const GENDER_OPTIONS = [
+  { value: "all", label: "Все" },
+  { value: "female", label: "Женщины" },
+  { value: "male", label: "Мужчины" },
+];
+
 const clampAge = (n: number) =>
   Math.max(AGE_MIN, Math.min(AGE_MAX, Math.round(Number.isFinite(n) ? n : AGE_MIN)));
+
+const sectionLabel =
+  "text-[11px] font-semibold uppercase tracking-widest text-muted-foreground";
 
 const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = false }: FiltersProps) => {
   const isMobile = useIsMobile();
@@ -119,61 +130,92 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
 
   const dirty = !isDefaultFilters(filters);
 
-  const summary = [
-    `${filters.ageRange[0]}–${filters.ageRange[1]} лет`,
-    filters.gender === "female" ? "женщины" : filters.gender === "male" ? "мужчины" : "все",
-    filters.city.trim() || (filters.useGps ? `до ${filters.maxDistance} км` : "любой город"),
-  ].join(" · ");
+  /** Removable summary chips shown under the header (tactile-glass direction). */
+  const chips: Array<{ key: string; label: string; clear: () => void }> = [];
+  if (filters.ageRange[0] !== DEFAULT_FILTERS.ageRange[0] || filters.ageRange[1] !== DEFAULT_FILTERS.ageRange[1]) {
+    chips.push({
+      key: "age",
+      label: `${filters.ageRange[0]}–${filters.ageRange[1]} лет`,
+      clear: () => onChange({ ...filters, ageRange: [...DEFAULT_FILTERS.ageRange] as [number, number] }),
+    });
+  }
+  if (filters.gender !== "all") {
+    chips.push({
+      key: "gender",
+      label: filters.gender === "female" ? "Женщины" : "Мужчины",
+      clear: () => onChange({ ...filters, gender: "all" }),
+    });
+  }
+  if (filters.city.trim()) {
+    chips.push({
+      key: "city",
+      label: filters.city.trim(),
+      clear: () => onChange({ ...filters, city: "" }),
+    });
+  } else if (filters.useGps) {
+    chips.push({
+      key: "gps",
+      label: `до ${filters.maxDistance} км`,
+      clear: () => onChange({ ...filters, useGps: false, latitude: null, longitude: null }),
+    });
+  } else if (filters.maxDistance !== DEFAULT_FILTERS.maxDistance) {
+    chips.push({
+      key: "dist",
+      label: `до ${filters.maxDistance} км`,
+      clear: () => onChange({ ...filters, maxDistance: DEFAULT_FILTERS.maxDistance }),
+    });
+  }
 
+  const ageInputCls =
+    "w-11 border-0 border-b border-primary/30 bg-transparent py-0.5 text-center text-sm font-bold text-primary outline-none transition-colors focus:border-primary";
 
   const body = (
-    <div className="flex flex-1 flex-col gap-5 overflow-y-auto pb-2">
+    <div className="flex-1 space-y-8 overflow-y-auto px-7 py-5">
       {/* Age */}
-      <div>
-        <div className="mb-2 flex items-center justify-between text-sm font-medium text-card-foreground">
-          <span>Возраст</span>
-          <span className="text-xs text-muted-foreground">{AGE_MIN}–{AGE_MAX} лет</span>
+      <section className="space-y-5">
+        <div className="flex items-end justify-between">
+          <span className={sectionLabel}>Возраст</span>
+          <div className="flex items-center gap-1.5">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={AGE_MIN}
+              max={AGE_MAX}
+              value={ageMinInput}
+              onChange={(e) => setAgeMinInput(e.target.value)}
+              onBlur={commitAgeMin}
+              onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+              aria-label="Минимальный возраст"
+              className={ageInputCls}
+            />
+            <span className="text-sm text-muted-foreground/60">—</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={AGE_MIN}
+              max={AGE_MAX}
+              value={ageMaxInput}
+              onChange={(e) => setAgeMaxInput(e.target.value)}
+              onBlur={commitAgeMax}
+              onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+              aria-label="Максимальный возраст"
+              className={ageInputCls}
+            />
+          </div>
         </div>
-        <div className="mb-3 flex items-center gap-2">
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={AGE_MIN}
-            max={AGE_MAX}
-            value={ageMinInput}
-            onChange={(e) => setAgeMinInput(e.target.value)}
-            onBlur={commitAgeMin}
-            onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-            aria-label="Минимальный возраст"
-            className="h-9 w-16 text-center"
-          />
-          <Slider
-            min={AGE_MIN}
-            max={AGE_MAX}
-            step={1}
-            minStepsBetweenThumbs={1}
-            value={filters.ageRange}
-            thumbLabels={["Минимальный возраст", "Максимальный возраст"]}
-            onValueChange={(val) => {
-              const [a, b] = val as [number, number];
-              setAgeRange(a, b);
-            }}
-            className="flex-1"
-          />
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={AGE_MIN}
-            max={AGE_MAX}
-            value={ageMaxInput}
-            onChange={(e) => setAgeMaxInput(e.target.value)}
-            onBlur={commitAgeMax}
-            onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-            aria-label="Максимальный возраст"
-            className="h-9 w-16 text-center"
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
+        <Slider
+          min={AGE_MIN}
+          max={AGE_MAX}
+          step={1}
+          minStepsBetweenThumbs={1}
+          value={filters.ageRange}
+          thumbLabels={["Минимальный возраст", "Максимальный возраст"]}
+          onValueChange={(val) => {
+            const [a, b] = val as [number, number];
+            setAgeRange(a, b);
+          }}
+        />
+        <div className="grid grid-cols-4 gap-2">
           {AGE_PRESETS.map((p) => {
             const active = filters.ageRange[0] === p.range[0] && filters.ageRange[1] === p.range[1];
             return (
@@ -182,10 +224,10 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
                 type="button"
                 onClick={() => setAgeRange(p.range[0], p.range[1])}
                 className={cn(
-                  "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                  "rounded-2xl py-2 text-xs font-medium transition-all active:scale-95",
                   active
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground",
+                    ? "gradient-primary font-semibold text-primary-foreground shadow-glow"
+                    : "border border-border bg-card text-muted-foreground shadow-card hover:border-primary/50 hover:text-primary",
                 )}
               >
                 {p.label}
@@ -193,74 +235,77 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
             );
           })}
         </div>
-      </div>
+      </section>
 
       {/* Distance */}
-      <div>
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <label className="block text-sm font-medium text-card-foreground">
-            Радиус: до {filters.maxDistance} км
-          </label>
+      <section className="space-y-5">
+        <div className="flex items-end justify-between">
+          <span className={sectionLabel}>Расстояние</span>
           <button
             type="button"
             onClick={requestGps}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+              "inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-all active:scale-95",
               filters.useGps && filters.latitude && filters.longitude
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:text-foreground",
+                ? "gradient-primary text-primary-foreground shadow-glow"
+                : "bg-primary/10 text-primary hover:bg-primary/15",
             )}
           >
-            <LocateFixed className="h-3.5 w-3.5" />
+            <LocateFixed className="h-3 w-3" />
             {locating ? "Ищем…" : filters.useGps ? "GPS активен" : "Включить GPS"}
           </button>
         </div>
-        <Slider
-          min={1}
-          max={100}
-          step={1}
-          value={[filters.maxDistance]}
-          thumbLabels={["Радиус поиска"]}
-          onValueChange={(val) => onChange({ ...filters, maxDistance: val[0] })}
-        />
-        <div className="mt-3 flex flex-wrap gap-2">
-          {[5, 10, 25, 50, 100].map((km) => (
+        <div className="relative">
+          <Slider
+            min={1}
+            max={100}
+            step={1}
+            value={[filters.maxDistance]}
+            thumbLabels={["Радиус поиска"]}
+            onValueChange={(val) => onChange({ ...filters, maxDistance: val[0] })}
+          />
+          <p className="mt-2 text-center text-xs font-bold text-primary">{filters.maxDistance} км</p>
+        </div>
+        <div className="flex justify-between px-1">
+          {DISTANCE_PRESETS.map((km) => (
             <button
               key={km}
               type="button"
               onClick={() => onChange({ ...filters, maxDistance: km })}
               className={cn(
-                "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                "text-xs transition-all active:scale-95",
                 filters.maxDistance === km
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground",
+                  ? "font-semibold text-primary underline underline-offset-4"
+                  : "font-medium text-muted-foreground hover:text-primary",
               )}
             >
-              {km} км
+              {km}
             </button>
           ))}
         </div>
 
         {filters.useGps && filters.latitude && filters.longitude && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            📍 GPS: {filters.latitude.toFixed(3)}, {filters.longitude.toFixed(3)} · до {filters.maxDistance} км
+          <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3" />
+            {filters.latitude.toFixed(3)}, {filters.longitude.toFixed(3)}
             <button
               type="button"
               onClick={() => onChange({ ...filters, useGps: false })}
-              className="ml-2 font-medium text-primary hover:underline"
+              className="ml-1 font-medium text-primary hover:underline"
             >
               Отключить
             </button>
           </p>
         )}
-      </div>
+      </section>
 
       {/* City */}
-      <div>
-        <label className="mb-2 block text-sm font-medium text-card-foreground">Город</label>
+      <section className="space-y-4">
+        <span className={sectionLabel}>Город</span>
         <div className="relative">
-          <Input
-            placeholder="Любой город"
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
+          <input
+            placeholder="Начните вводить город…"
             value={filters.city}
             onChange={(e) => onChange({ ...filters, city: e.target.value })}
             onFocus={() => setCityFocused(true)}
@@ -272,12 +317,12 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
             aria-activedescendant={
               cityFocused && suggestions.length > 0 ? `city-opt-${activeIndex}` : undefined
             }
-            className="pr-8"
+            className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-11 pr-10 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary/50 focus:bg-card focus:ring-2 focus:ring-primary/20"
           />
           {filters.city && (
             <button
               onClick={() => onChange({ ...filters, city: "" })}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
               aria-label="Очистить город"
             >
               <X className="h-4 w-4" />
@@ -288,7 +333,7 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
               ref={listRef}
               id="city-suggestions"
               role="listbox"
-              className="absolute left-0 right-0 top-full z-10 mt-1 max-h-52 overflow-auto rounded-xl border border-border bg-popover p-1 shadow-elevated"
+              className="absolute left-0 right-0 top-full z-10 mt-1 max-h-52 overflow-auto rounded-2xl border border-border bg-popover/95 p-1 shadow-elevated backdrop-blur-xl"
             >
               {suggestions.map((c, idx) => {
                 const active = idx === activeIndex;
@@ -307,7 +352,7 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
                       setCityFocused(false);
                     }}
                     className={cn(
-                      "block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                      "block w-full rounded-xl px-3 py-2 text-left text-sm transition-colors",
                       active
                         ? "bg-primary text-primary-foreground"
                         : "text-popover-foreground hover:bg-accent hover:text-accent-foreground",
@@ -321,54 +366,42 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
           )}
         </div>
         {!filters.city && (
-          <p className="mt-1.5 text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Подсказка: «спб», «мск» — тоже работает. ↑↓ Enter
           </p>
         )}
-      </div>
+      </section>
 
-      {/* Gender */}
-      <div>
-        <label className="mb-2 block text-sm font-medium text-card-foreground">Пол</label>
-        <div className="flex gap-2">
-          {[
-            { value: "all", label: "Все" },
-            { value: "female", label: "Женщины" },
-            { value: "male", label: "Мужчины" },
-          ].map((opt) => (
+      {/* Gender — segmented control */}
+      <section className="space-y-4">
+        <span className={sectionLabel}>Кого показывать</span>
+        <div className="flex rounded-[24px] border border-border bg-muted/50 p-1.5">
+          {GENDER_OPTIONS.map((opt) => (
             <button
               key={opt.value}
+              type="button"
               onClick={() => onChange({ ...filters, gender: opt.value })}
               className={cn(
-                "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+                "flex-1 rounded-[20px] py-2.5 text-sm transition-all active:scale-95",
                 filters.gender === opt.value
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground",
+                  ? "bg-card font-semibold text-primary shadow-card ring-1 ring-border"
+                  : "font-medium text-muted-foreground hover:text-foreground",
               )}
             >
               {opt.label}
             </button>
           ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 
   const footer = (
-    <div className="mt-4 flex items-center gap-2 border-t border-border pt-4">
-      {dirty && (
-        <button
-          type="button"
-          onClick={() => onChange(DEFAULT_FILTERS)}
-          className="rounded-full bg-muted px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Сбросить
-        </button>
-      )}
+    <div className="border-t border-border/60 bg-card/60 p-6 backdrop-blur-xl">
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="ml-auto flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="gradient-primary w-full rounded-3xl py-4 text-base font-bold text-primary-foreground shadow-glow transition-all hover:opacity-95 active:scale-[0.98] disabled:opacity-50"
       >
         {countLoading
           ? "Считаем…"
@@ -376,7 +409,7 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
             ? "Применить"
             : resultCount === 0
               ? "Ничего не найдено"
-              : `Показать ${resultCount} ${pluralProfiles(resultCount)}`}
+              : `Показать ${resultCount} ${plural(resultCount, "анкету", "анкеты", "анкет")}`}
       </button>
     </div>
   );
@@ -401,25 +434,45 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
         <SheetContent
           side={isMobile ? "bottom" : "right"}
           className={cn(
-            "flex flex-col",
-            isMobile ? "max-h-[90vh] rounded-t-3xl" : "w-full sm:max-w-md",
+            "flex flex-col gap-0 border-border/60 bg-card/80 p-0 backdrop-blur-xl",
+            isMobile ? "max-h-[90vh] rounded-t-[32px]" : "w-full sm:max-w-md",
           )}
         >
-          <SheetHeader className="flex-row items-center justify-between space-y-0 pr-8">
-            <div className="min-w-0">
-              <SheetTitle>Фильтры</SheetTitle>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">{summary}</p>
-            </div>
+          {/* Header */}
+          <div className="flex items-center justify-between px-7 pb-3 pt-7">
+            <h2 className="text-2xl font-bold text-foreground">Фильтры</h2>
             {dirty && (
               <button
                 type="button"
                 onClick={() => onChange(DEFAULT_FILTERS)}
-                className="shrink-0 text-xs font-semibold text-primary hover:underline"
+                className="text-sm font-medium text-primary transition-opacity hover:opacity-80"
               >
-                Сбросить
+                Сбросить всё
               </button>
             )}
-          </SheetHeader>
+          </div>
+
+          {/* Active filters summary chips */}
+          {chips.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto px-7 pb-2 [scrollbar-width:none]">
+              {chips.map((chip) => (
+                <span
+                  key={chip.key}
+                  className="flex flex-none items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary"
+                >
+                  {chip.label}
+                  <button
+                    type="button"
+                    onClick={chip.clear}
+                    aria-label={`Убрать фильтр ${chip.label}`}
+                    className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform hover:scale-110"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
 
           {body}
           {footer}
@@ -427,14 +480,6 @@ const SwipeFilters = ({ filters, onChange, resultCount = null, countLoading = fa
       </Sheet>
     </>
   );
-};
-
-const pluralProfiles = (n: number) => {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return "анкету";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "анкеты";
-  return "анкет";
 };
 
 export default SwipeFilters;
