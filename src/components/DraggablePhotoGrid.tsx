@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { forwardRef, useState, useRef } from "react";
 import { Plus, Trash2, GripVertical } from "lucide-react";
 import { SignedImg } from "@/components/SignedImg";
 
@@ -17,7 +17,7 @@ interface Props {
   onAddClick: () => void;
 }
 
-const DraggablePhotoGrid = ({ photos, editing, maxPhotos, onReorder, onDelete, onAddClick }: Props) => {
+const DraggablePhotoGrid = forwardRef<HTMLDivElement, Props>(function DraggablePhotoGrid({ photos, editing, maxPhotos, onReorder, onDelete, onAddClick }: Props, _ref) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const dragRef = useRef<number | null>(null);
@@ -103,6 +103,6 @@ const DraggablePhotoGrid = ({ photos, editing, maxPhotos, onReorder, onDelete, o
       )}
     </div>
   );
-};
+});
 
 export default DraggablePhotoGrid;

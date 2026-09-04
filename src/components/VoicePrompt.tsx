@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { Mic, Square, Play, Pause, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,7 +35,7 @@ interface Props {
   editing: boolean;
 }
 
-const VoicePrompt = ({ userId, editing }: Props) => {
+const VoicePrompt = forwardRef<HTMLDivElement, Props>(function VoicePrompt({ userId, editing }: Props, _ref) {
   const [row, setRow] = useState<VoiceRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [prompt, setPrompt] = useState<string>(VOICE_PROMPT_OPTIONS[0]);
@@ -259,6 +259,6 @@ const VoicePrompt = ({ userId, editing }: Props) => {
       )}
     </div>
   );
-};
+});
 
 export default VoicePrompt;

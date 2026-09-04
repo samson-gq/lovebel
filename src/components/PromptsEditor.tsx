@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +28,7 @@ interface Props {
 
 const MAX_PROMPTS = 3;
 
-const PromptsEditor = ({ userId, editing }: Props) => {
+const PromptsEditor = forwardRef<HTMLDivElement, Props>(function PromptsEditor({ userId, editing }: Props, _ref) {
   const [prompts, setPrompts] = useState<ProfilePrompt[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -199,6 +199,6 @@ const PromptsEditor = ({ userId, editing }: Props) => {
       )}
     </div>
   );
-};
+});
 
 export default PromptsEditor;
