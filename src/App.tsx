@@ -110,7 +110,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <NotificationListener />
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <PageviewTracker />
           <ScrollToTop />
           <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-muted-foreground">Загрузка…</div>}>
