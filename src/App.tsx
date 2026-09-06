@@ -134,6 +134,7 @@ const App = () => (
             <Route path="/verification" element={<ProtectedRoute><Verification /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
