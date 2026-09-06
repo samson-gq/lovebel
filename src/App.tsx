@@ -113,6 +113,7 @@ const App = () => (
         <BrowserRouter>
           <PageviewTracker />
           <ScrollToTop />
+          <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-muted-foreground">Загрузка…</div>}>
           <Routes>
 
 
