@@ -147,6 +147,7 @@ const Index = () => {
     setCards(mapped);
     setCurrentIndex(0);
     setLastSwipeId(null);
+    setLastSwipeDirection(null);
 
     const premium = Boolean((me as any)?.is_premium);
     setIsPremium(premium);
