@@ -51,6 +51,7 @@ const Index = () => {
   const [isPremium, setIsPremium] = useState<boolean>(false);
   const [superLikesLeft, setSuperLikesLeft] = useState<number>(1);
   const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
+  const [lastSwipeDirection, setLastSwipeDirection] = useState<"left" | "right" | "super" | null>(null);
   const { count: liveCount, loading: countLoading, error: countError } = useProfilesCount({
     user,
     filters,
