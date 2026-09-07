@@ -51,6 +51,7 @@ const Index = () => {
   const [isPremium, setIsPremium] = useState<boolean>(false);
   const [superLikesLeft, setSuperLikesLeft] = useState<number>(1);
   const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
+  const [lastSwipeDirection, setLastSwipeDirection] = useState<"left" | "right" | "super" | null>(null);
   const { count: liveCount, loading: countLoading, error: countError } = useProfilesCount({
     user,
     filters,
@@ -146,6 +147,7 @@ const Index = () => {
     setCards(mapped);
     setCurrentIndex(0);
     setLastSwipeId(null);
+    setLastSwipeDirection(null);
 
     const premium = Boolean((me as any)?.is_premium);
     setIsPremium(premium);
@@ -213,6 +215,7 @@ const Index = () => {
       }
 
       setLastSwipeId(inserted?.id ?? null);
+      setLastSwipeDirection(direction);
       // Light haptic feedback on touch devices (modern mobile UX norm).
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         navigator.vibrate(direction === "super" ? [10, 40, 10] : 12);
@@ -249,6 +252,7 @@ const Index = () => {
     }
     setCurrentIndex((prev) => Math.max(0, prev - 1));
     setLastSwipeId(null);
+    setLastSwipeDirection(null);
     track("swipe_rewind");
     toast("↩️ Свайп отменён");
   }, [user, lastSwipeId, currentIndex, isPremium, navigate]);
@@ -382,22 +386,26 @@ const Index = () => {
               {remaining
                 .slice(0, 2)
                 .reverse()
-                .map((profile, i) => (
-                  <SwipeCard
-                    key={profile.id}
-                    profile={profile as Profile & { isVerified?: boolean }}
-                    onSwipe={handleSwipe}
-                    isTop={i === remaining.slice(0, 2).length - 1}
-                    isOnline={onlineUsers.has(profile.id)}
-                    onBlocked={() => {
-                      setCards((prev) => prev.filter((p) => p.id !== profile.id));
-                      fetchProfiles();
-                    }}
-                    onHide={() => {
-                      setCards((prev) => prev.filter((p) => p.id !== profile.id));
-                    }}
-                  />
-                ))}
+                .map((profile, i, arr) => {
+                  const isTop = i === arr.length - 1;
+                  return (
+                    <SwipeCard
+                      key={profile.id}
+                      profile={profile as Profile & { isVerified?: boolean }}
+                      onSwipe={handleSwipe}
+                      isTop={isTop}
+                      isOnline={onlineUsers.has(profile.id)}
+                      exitDirection={isTop ? lastSwipeDirection : null}
+                      onBlocked={() => {
+                        setCards((prev) => prev.filter((p) => p.id !== profile.id));
+                        fetchProfiles();
+                      }}
+                      onHide={() => {
+                        setCards((prev) => prev.filter((p) => p.id !== profile.id));
+                      }}
+                    />
+                  );
+                })}
             </AnimatePresence>
           ) : (
             <motion.div

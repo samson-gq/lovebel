@@ -32,6 +32,7 @@ interface SwipeCardProps {
   onBlocked?: () => void;
   onHide?: () => void;
   isOnline?: boolean;
+  exitDirection?: "left" | "right" | "super" | null;
 }
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -85,7 +86,7 @@ const SignedVideo = ({ url, isTop }: { url: string; isTop: boolean }) => {
   );
 };
 
-const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: SwipeCardProps) => {
+const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline, exitDirection }: SwipeCardProps) => {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -94,6 +95,12 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
   const superOpacity = useTransform(y, [-140, -40], [1, 0]);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
+
+  const exitVariants = {
+    left: { x: -300, opacity: 0, rotate: -15, transition: { duration: 0.3 } },
+    right: { x: 300, opacity: 0, rotate: 15, transition: { duration: 0.3 } },
+    super: { y: -300, opacity: 0, transition: { duration: 0.35 } },
+  };
 
   const facts = [
     profile.heightCm ? { icon: Ruler, label: `${profile.heightCm} см` } : null,
@@ -143,7 +150,7 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline }: Swi
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
       dragElastic={0.9}
       onDragEnd={handleDragEnd}
-      exit={{ x: 300, opacity: 0, transition: { duration: 0.3 } }}
+      exit={exitDirection ? exitVariants[exitDirection] : { x: 300, opacity: 0, transition: { duration: 0.3 } }}
     >
       <div className="relative h-full w-full overflow-hidden rounded-3xl shadow-elevated ring-1 ring-border/40">
         {activeMedia.type === "video" ? (
