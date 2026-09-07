@@ -150,7 +150,7 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline, exitD
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
       dragElastic={0.9}
       onDragEnd={handleDragEnd}
-      exit={{ x: 300, opacity: 0, transition: { duration: 0.3 } }}
+      exit={exitDirection ? exitVariants[exitDirection] : { x: 300, opacity: 0, transition: { duration: 0.3 } }}
     >
       <div className="relative h-full w-full overflow-hidden rounded-3xl shadow-elevated ring-1 ring-border/40">
         {activeMedia.type === "video" ? (
