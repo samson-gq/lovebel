@@ -32,6 +32,7 @@ interface SwipeCardProps {
   onBlocked?: () => void;
   onHide?: () => void;
   isOnline?: boolean;
+  exitDirection?: "left" | "right" | "super" | null;
 }
 
 const DAY = 24 * 60 * 60 * 1000;
