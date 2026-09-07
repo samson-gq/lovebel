@@ -386,22 +386,26 @@ const Index = () => {
               {remaining
                 .slice(0, 2)
                 .reverse()
-                .map((profile, i) => (
-                  <SwipeCard
-                    key={profile.id}
-                    profile={profile as Profile & { isVerified?: boolean }}
-                    onSwipe={handleSwipe}
-                    isTop={i === remaining.slice(0, 2).length - 1}
-                    isOnline={onlineUsers.has(profile.id)}
-                    onBlocked={() => {
-                      setCards((prev) => prev.filter((p) => p.id !== profile.id));
-                      fetchProfiles();
-                    }}
-                    onHide={() => {
-                      setCards((prev) => prev.filter((p) => p.id !== profile.id));
-                    }}
-                  />
-                ))}
+                .map((profile, i, arr) => {
+                  const isTop = i === arr.length - 1;
+                  return (
+                    <SwipeCard
+                      key={profile.id}
+                      profile={profile as Profile & { isVerified?: boolean }}
+                      onSwipe={handleSwipe}
+                      isTop={isTop}
+                      isOnline={onlineUsers.has(profile.id)}
+                      exitDirection={isTop ? lastSwipeDirection : null}
+                      onBlocked={() => {
+                        setCards((prev) => prev.filter((p) => p.id !== profile.id));
+                        fetchProfiles();
+                      }}
+                      onHide={() => {
+                        setCards((prev) => prev.filter((p) => p.id !== profile.id));
+                      }}
+                    />
+                  );
+                })}
             </AnimatePresence>
           ) : (
             <motion.div
