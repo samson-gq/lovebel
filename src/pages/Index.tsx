@@ -252,6 +252,7 @@ const Index = () => {
     }
     setCurrentIndex((prev) => Math.max(0, prev - 1));
     setLastSwipeId(null);
+    setLastSwipeDirection(null);
     track("swipe_rewind");
     toast("↩️ Свайп отменён");
   }, [user, lastSwipeId, currentIndex, isPremium, navigate]);
