@@ -488,7 +488,7 @@ const Index = () => {
               )}
             </button>
             <button
-              onClick={() => handleSwipe("left")}
+              onClick={() => triggerSwipe("left")}
               title="Пропустить (←)"
               aria-label="Не нравится"
               className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/30 bg-card shadow-card transition-transform hover:scale-110 active:scale-95"
@@ -496,7 +496,7 @@ const Index = () => {
               <X className="h-7 w-7 text-primary" />
             </button>
             <button
-              onClick={() => handleSwipe("super")}
+              onClick={() => triggerSwipe("super")}
               disabled={superLikesLeft <= 0}
               title={superLikesLeft > 0 ? `Super Like (↑) · осталось ${superLikesLeft}` : "Super Like закончились на сегодня"}
               aria-label={`Super Like, осталось ${superLikesLeft}`}
@@ -508,7 +508,7 @@ const Index = () => {
               </span>
             </button>
             <button
-              onClick={() => handleSwipe("right")}
+              onClick={() => triggerSwipe("right")}
               title="Нравится (→)"
               aria-label="Нравится"
               className="gradient-primary flex h-[72px] w-[72px] items-center justify-center rounded-full shadow-glow transition-transform hover:scale-110 active:scale-95"
