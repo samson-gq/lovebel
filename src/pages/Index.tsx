@@ -249,9 +249,9 @@ const Index = () => {
 
   useEffect(() => {
     if (!pendingSwipe) return;
-    const direction = pendingSwipe;
-    setPendingSwipe(null);
-    executeSwipe(direction);
+    // Allow React to paint the card with the exitDirection before removing it.
+    const timer = setTimeout(() => executeSwipe(pendingSwipe), 60);
+    return () => clearTimeout(timer);
   }, [pendingSwipe, executeSwipe]);
 
   const handleRewind = useCallback(async () => {
