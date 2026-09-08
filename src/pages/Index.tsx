@@ -52,6 +52,7 @@ const Index = () => {
   const [superLikesLeft, setSuperLikesLeft] = useState<number>(1);
   const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
   const [lastSwipeDirection, setLastSwipeDirection] = useState<"left" | "right" | "super" | null>(null);
+  const [pendingSwipe, setPendingSwipe] = useState<"left" | "right" | "super" | null>(null);
   const { count: liveCount, loading: countLoading, error: countError } = useProfilesCount({
     user,
     filters,
@@ -184,7 +185,7 @@ const Index = () => {
     }
   }, [cards, currentIndex]);
 
-  const handleSwipe = useCallback(
+  const executeSwipe = useCallback(
     async (direction: "left" | "right" | "super") => {
       if (!user || currentIndex >= cards.length) return;
       const profile = cards[currentIndex];
@@ -216,6 +217,7 @@ const Index = () => {
 
       setLastSwipeId(inserted?.id ?? null);
       setLastSwipeDirection(direction);
+      setPendingSwipe(null);
       // Light haptic feedback on touch devices (modern mobile UX norm).
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         navigator.vibrate(direction === "super" ? [10, 40, 10] : 12);
@@ -230,6 +232,27 @@ const Index = () => {
     },
     [user, currentIndex, cards, superLikesLeft]
   );
+
+  const triggerSwipe = useCallback(
+    (direction: "left" | "right" | "super") => {
+      if (!user || currentIndex >= cards.length) return;
+      if (direction === "super" && superLikesLeft <= 0) {
+        toast.info("Лимит Super Like исчерпан", {
+          description: "Возвращайся завтра — даём 1 Super Like в день",
+        });
+        return;
+      }
+      setPendingSwipe(direction);
+    },
+    [user, currentIndex, cards, superLikesLeft]
+  );
+
+  useEffect(() => {
+    if (!pendingSwipe) return;
+    // Allow React to paint the card with the exitDirection before removing it.
+    const timer = setTimeout(() => executeSwipe(pendingSwipe), 60);
+    return () => clearTimeout(timer);
+  }, [pendingSwipe, executeSwipe]);
 
   const handleRewind = useCallback(async () => {
     if (!user) return;
@@ -263,14 +286,14 @@ const Index = () => {
       const target = e.target as HTMLElement | null;
       if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === "ArrowLeft") { e.preventDefault(); handleSwipe("left"); }
-      else if (e.key === "ArrowRight") { e.preventDefault(); handleSwipe("right"); }
-      else if (e.key === "ArrowUp") { e.preventDefault(); handleSwipe("super"); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); triggerSwipe("left"); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); triggerSwipe("right"); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); triggerSwipe("super"); }
       else if (e.key.toLowerCase() === "z" || e.key.toLowerCase() === "я") { e.preventDefault(); handleRewind(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handleSwipe, handleRewind]);
+  }, [triggerSwipe, handleRewind]);
 
   const remaining = cards.slice(currentIndex);
 
@@ -392,10 +415,10 @@ const Index = () => {
                     <SwipeCard
                       key={profile.id}
                       profile={profile as Profile & { isVerified?: boolean }}
-                      onSwipe={handleSwipe}
+                      onSwipe={triggerSwipe}
                       isTop={isTop}
                       isOnline={onlineUsers.has(profile.id)}
-                      exitDirection={isTop ? lastSwipeDirection : null}
+                      exitDirection={isTop ? pendingSwipe || lastSwipeDirection : null}
                       onBlocked={() => {
                         setCards((prev) => prev.filter((p) => p.id !== profile.id));
                         fetchProfiles();
@@ -466,7 +489,7 @@ const Index = () => {
               )}
             </button>
             <button
-              onClick={() => handleSwipe("left")}
+              onClick={() => triggerSwipe("left")}
               title="Пропустить (←)"
               aria-label="Не нравится"
               className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/30 bg-card shadow-card transition-transform hover:scale-110 active:scale-95"
@@ -474,7 +497,7 @@ const Index = () => {
               <X className="h-7 w-7 text-primary" />
             </button>
             <button
-              onClick={() => handleSwipe("super")}
+              onClick={() => triggerSwipe("super")}
               disabled={superLikesLeft <= 0}
               title={superLikesLeft > 0 ? `Super Like (↑) · осталось ${superLikesLeft}` : "Super Like закончились на сегодня"}
               aria-label={`Super Like, осталось ${superLikesLeft}`}
@@ -486,7 +509,7 @@ const Index = () => {
               </span>
             </button>
             <button
-              onClick={() => handleSwipe("right")}
+              onClick={() => triggerSwipe("right")}
               title="Нравится (→)"
               aria-label="Нравится"
               className="gradient-primary flex h-[72px] w-[72px] items-center justify-center rounded-full shadow-glow transition-transform hover:scale-110 active:scale-95"
