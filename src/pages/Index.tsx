@@ -285,14 +285,14 @@ const Index = () => {
       const target = e.target as HTMLElement | null;
       if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === "ArrowLeft") { e.preventDefault(); handleSwipe("left"); }
-      else if (e.key === "ArrowRight") { e.preventDefault(); handleSwipe("right"); }
-      else if (e.key === "ArrowUp") { e.preventDefault(); handleSwipe("super"); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); triggerSwipe("left"); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); triggerSwipe("right"); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); triggerSwipe("super"); }
       else if (e.key.toLowerCase() === "z" || e.key.toLowerCase() === "я") { e.preventDefault(); handleRewind(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handleSwipe, handleRewind]);
+  }, [triggerSwipe, handleRewind]);
 
   const remaining = cards.slice(currentIndex);
 
