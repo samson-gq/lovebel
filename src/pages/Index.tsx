@@ -185,7 +185,7 @@ const Index = () => {
     }
   }, [cards, currentIndex]);
 
-  const handleSwipe = useCallback(
+  const executeSwipe = useCallback(
     async (direction: "left" | "right" | "super") => {
       if (!user || currentIndex >= cards.length) return;
       const profile = cards[currentIndex];
@@ -231,6 +231,27 @@ const Index = () => {
     },
     [user, currentIndex, cards, superLikesLeft]
   );
+
+  const triggerSwipe = useCallback(
+    (direction: "left" | "right" | "super") => {
+      if (!user || currentIndex >= cards.length) return;
+      if (direction === "super" && superLikesLeft <= 0) {
+        toast.info("Лимит Super Like исчерпан", {
+          description: "Возвращайся завтра — даём 1 Super Like в день",
+        });
+        return;
+      }
+      setPendingSwipe(direction);
+    },
+    [user, currentIndex, cards, superLikesLeft]
+  );
+
+  useEffect(() => {
+    if (!pendingSwipe) return;
+    const direction = pendingSwipe;
+    setPendingSwipe(null);
+    executeSwipe(direction);
+  }, [pendingSwipe, executeSwipe]);
 
   const handleRewind = useCallback(async () => {
     if (!user) return;
