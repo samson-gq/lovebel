@@ -414,10 +414,10 @@ const Index = () => {
                     <SwipeCard
                       key={profile.id}
                       profile={profile as Profile & { isVerified?: boolean }}
-                      onSwipe={handleSwipe}
+                      onSwipe={triggerSwipe}
                       isTop={isTop}
                       isOnline={onlineUsers.has(profile.id)}
-                      exitDirection={isTop ? lastSwipeDirection : null}
+                      exitDirection={isTop ? pendingSwipe || lastSwipeDirection : null}
                       onBlocked={() => {
                         setCards((prev) => prev.filter((p) => p.id !== profile.id));
                         fetchProfiles();
