@@ -217,6 +217,7 @@ const Index = () => {
 
       setLastSwipeId(inserted?.id ?? null);
       setLastSwipeDirection(direction);
+      setPendingSwipe(null);
       // Light haptic feedback on touch devices (modern mobile UX norm).
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         navigator.vibrate(direction === "super" ? [10, 40, 10] : 12);
