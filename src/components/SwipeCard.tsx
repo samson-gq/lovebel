@@ -266,7 +266,7 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline, exitD
               </span>
               {profile.isVerified && <BadgeCheck className="h-5 w-5 text-secondary" aria-label="Верифицирован" />}
               {isOnline && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[11px] font-semibold text-white">
+                <span className="inline-flex items-center gap-1 rounded-full bg-success/90 px-2 py-0.5 text-[11px] font-semibold text-success-foreground">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
                   В сети
                 </span>
