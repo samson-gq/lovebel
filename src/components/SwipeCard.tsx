@@ -48,7 +48,7 @@ const computeBadge = (profile: Profile): Badge => {
       return {
         label: "Новый",
         icon: <Sparkles className="h-3 w-3" />,
-        className: "bg-emerald-500/90 text-white",
+        className: "bg-success/90 text-success-foreground",
       };
     }
   }
