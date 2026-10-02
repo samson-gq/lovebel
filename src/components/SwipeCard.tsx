@@ -222,22 +222,22 @@ const SwipeCard = ({ profile, onSwipe, isTop, onBlocked, onHide, isOnline, exitD
         </div>
 
         <motion.div
-          className="absolute left-6 top-20 rounded-lg border-4 border-green-500 px-4 py-2 font-bold text-green-500"
+          className="pointer-events-none absolute left-6 top-20 rounded-xl border-4 border-success bg-background/20 px-4 py-1.5 font-extrabold text-success backdrop-blur-sm"
           style={{ opacity: likeOpacity, rotate: -15 }}
         >
-          <span className="text-3xl tracking-wider">LIKE</span>
+          <span className="text-3xl tracking-widest">LIKE</span>
         </motion.div>
         <motion.div
-          className="absolute right-6 top-20 rounded-lg border-4 border-primary px-4 py-2 font-bold text-primary"
+          className="pointer-events-none absolute right-6 top-20 rounded-xl border-4 border-primary bg-background/20 px-4 py-1.5 font-extrabold text-primary backdrop-blur-sm"
           style={{ opacity: nopeOpacity, rotate: 15 }}
         >
-          <span className="text-3xl tracking-wider">NOPE</span>
+          <span className="text-3xl tracking-widest">NOPE</span>
         </motion.div>
         <motion.div
-          className="absolute left-1/2 top-24 -translate-x-1/2 rounded-lg border-4 border-blue-500 px-4 py-2 font-bold text-blue-500"
+          className="pointer-events-none absolute left-1/2 top-24 -translate-x-1/2 whitespace-nowrap rounded-xl border-4 border-info bg-background/20 px-4 py-1.5 font-extrabold text-info backdrop-blur-sm"
           style={{ opacity: superOpacity }}
         >
-          <span className="text-3xl tracking-wider">SUPER LIKE</span>
+          <span className="text-3xl tracking-widest">SUPER LIKE</span>
         </motion.div>
 
         {isTop && (
