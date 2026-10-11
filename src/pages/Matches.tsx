@@ -50,8 +50,8 @@ const Matches = () => {
   }, [matchedProfiles, query]);
 
   // Fresh matches (no conversation yet) get their own spotlight row.
-  const fresh = filtered.filter((m) => !m.lastMessageAt);
-  const conversations = filtered.filter((m) => m.lastMessageAt);
+  const fresh = filtered.filter((m) => !m.lastMessagePreview);
+  const conversations = filtered.filter((m) => m.lastMessagePreview);
 
   const renderCard = (profile: MatchProfile, i: number) => {
     const isOnline = online.has(profile.userId);
