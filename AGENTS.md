@@ -1,0 +1,1 @@
+- Demo-profile activity (like-backs, hourly organic likes) lives in DB schema `private` and identifies demo users by `@lovebel.test` email — keeps it invisible to the API and separate from real users.
