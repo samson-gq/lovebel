@@ -15,6 +15,13 @@
       "when": 1791743085057,
       "tag": "0001_test_reciprocal_likes_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791792945626,
+      "tag": "0002_organic_likes_from_profiles",
+      "breakpoints": true
     }
   ]
 }
