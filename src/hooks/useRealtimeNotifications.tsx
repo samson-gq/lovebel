@@ -13,6 +13,19 @@ import { toast } from "sonner";
  *   table to every client. The match list is refreshed whenever a new match
  *   row arrives, which triggers re-subscription of the messages channel.
  */
+/** Notify only when the app is minimized / in background tab. */
+const notifyIfHidden = (title: string, body: string, url: string) => {
+  if (typeof document === "undefined" || document.visibilityState !== "hidden") return;
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      const n = new Notification(title, { body, icon: "/icon-192.png", tag: url });
+      n.onclick = () => { window.focus(); window.location.assign(url); n.close(); };
+      return;
+    } catch { /* fall through to toast */ }
+  }
+  toast(title, { description: body, duration: 6000 });
+};
+
 export const useRealtimeNotifications = () => {
   const { user } = useAuth();
   const [matchIds, setMatchIds] = useState<string[] | null>(null);
@@ -47,10 +60,7 @@ export const useRealtimeNotifications = () => {
       if (!active) return;
       const match = payload.new;
       if (match.user1_id !== user.id && match.user2_id !== user.id) return;
-      toast.success("💘 У вас новый матч!", {
-        description: "Перейдите в раздел матчей, чтобы начать общение",
-        duration: 5000,
-      });
+      notifyIfHidden("💘 У вас новый матч!", "Перейдите в раздел матчей, чтобы начать общение", "/matches");
       setMatchIds((prev) => (prev && !prev.includes(match.id) ? [...prev, match.id] : prev));
     };
 
@@ -96,13 +106,13 @@ export const useRealtimeNotifications = () => {
         },
         (payload) => {
           if (!active) return;
-          const msg = payload.new as { sender_id: string; content: string | null };
+          const msg = payload.new as { sender_id: string; content: string | null; match_id: string };
           if (msg.sender_id === user.id || !msg.content) return;
-          toast("💬 Новое сообщение", {
-            description:
-              msg.content.length > 50 ? msg.content.slice(0, 50) + "…" : msg.content,
-            duration: 4000,
-          });
+          notifyIfHidden(
+            "💬 Новое сообщение",
+            msg.content.length > 50 ? msg.content.slice(0, 50) + "…" : msg.content,
+            `/chat/${msg.match_id}`,
+          );
         },
       )
       .subscribe();
