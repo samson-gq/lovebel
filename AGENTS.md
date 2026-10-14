@@ -1,1 +1,2 @@
 - Demo-profile activity (like-backs, hourly organic likes) lives in DB schema `private` and identifies demo users by `@lovebel.test` email — keeps it invisible to the API and separate from real users.
+- Demo profiles (@lovebel.test) are excluded from discovery via private.is_seeded_user in search functions, and their auto-likes are disabled — so only real users appear; flip the filter to bring them back.
