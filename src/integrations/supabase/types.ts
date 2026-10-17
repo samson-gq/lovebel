@@ -820,6 +820,10 @@ export type Database = {
         Args: { _match_id: string; _user_id: string }
         Returns: boolean
       }
+      is_real_interaction: {
+        Args: { _first: string; _second: string }
+        Returns: boolean
+      }
       normalize_city: { Args: { input: string }; Returns: string }
       record_profile_view: { Args: { _viewed_id: string }; Returns: undefined }
       search_profiles: {

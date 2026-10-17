@@ -1,3 +1,4 @@
 - Demo-profile activity (like-backs, hourly organic likes) lives in DB schema `private` and identifies demo users by `@lovebel.test` email — keeps it invisible to the API and separate from real users.
 - Demo profiles (@lovebel.test) are excluded from discovery via private.is_seeded_user in search functions, and their auto-likes are disabled — so only real users appear; flip the filter to bring them back.
+- Matches and swipe SELECT policies exclude seeded participants through a membership-scoped security-definer predicate; existing demo records are retained but do not populate lists or badges.
 - Friend invitations use the public signup URL without personal identifiers; reuse the existing push subscription flow rather than creating a second notification service.
