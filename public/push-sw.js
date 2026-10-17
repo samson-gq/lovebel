@@ -30,7 +30,9 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || "/";
+  const target = (event.notification.data && event.notification.data.url) || "/";
+  // Older like notifications use the previous route name.
+  const url = target === "/likes-me" ? "/likes" : target;
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const c of list) {
