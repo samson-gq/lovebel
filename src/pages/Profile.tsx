@@ -496,6 +496,7 @@ const Profile = () => {
             </button>
           </div>
           <div className="space-y-3 p-5">
+            <InviteFriend />
             <ProfileCompletion
               data={{
                 avatarUrl,
