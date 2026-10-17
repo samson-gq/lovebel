@@ -14,20 +14,25 @@ self.addEventListener("push", (event) => {
   } catch (_) {}
 
   event.waitUntil(
-    self.registration.showNotification(data.title, {
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      if (clients.some((client) => client.visibilityState === "visible")) return;
+      return self.registration.showNotification(data.title, {
       body: data.body,
       tag: data.tag,
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
+      icon: "/favicon.png",
+      badge: "/favicon.png",
       data: { url: data.url },
       renotify: true,
+      });
     }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || "/";
+  const target = (event.notification.data && event.notification.data.url) || "/";
+  // Older like notifications use the previous route name.
+  const url = target === "/likes-me" ? "/likes" : target;
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const c of list) {

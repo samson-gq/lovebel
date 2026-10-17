@@ -14,6 +14,7 @@ import VoicePrompt from "@/components/VoicePrompt";
 import AiBioAssistant from "@/components/AiBioAssistant";
 import { SignedImg } from "@/components/SignedImg";
 import ProfileCompletion from "@/components/ProfileCompletion";
+import InviteFriend from "@/components/InviteFriend";
 
 import { useSignedUrl } from "@/hooks/useSignedUrl";
 import {
@@ -495,6 +496,7 @@ const Profile = () => {
             </button>
           </div>
           <div className="space-y-3 p-5">
+            <InviteFriend />
             <ProfileCompletion
               data={{
                 avatarUrl,

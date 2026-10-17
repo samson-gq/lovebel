@@ -1,0 +1,2 @@
+- [x] Add profile invitation sharing and notification opt-in.
+- [x] Preserve quiet notifications while the app is visible and verify invitation flow.
