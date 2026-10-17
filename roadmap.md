@@ -1,2 +1,3 @@
 - [x] Add profile invitation sharing and notification opt-in.
 - [x] Preserve quiet notifications while the app is visible and verify invitation flow.
+- [ ] Hide remaining demo matches and incoming likes without inventing real activity; verify real records remain accessible.
