@@ -14,13 +14,16 @@ self.addEventListener("push", (event) => {
   } catch (_) {}
 
   event.waitUntil(
-    self.registration.showNotification(data.title, {
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      if (clients.some((client) => client.visibilityState === "visible")) return;
+      return self.registration.showNotification(data.title, {
       body: data.body,
       tag: data.tag,
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
+      icon: "/favicon.png",
+      badge: "/favicon.png",
       data: { url: data.url },
       renotify: true,
+      });
     }),
   );
 });
