@@ -4,6 +4,7 @@ import { X, Heart, Star, LogOut, MapPin, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import SwipeCard from "@/components/SwipeCard";
+import LikeFriends from "@/components/LikeFriends";
 import SwipeFilters from "@/components/SwipeFilters";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -53,6 +54,7 @@ const Index = () => {
   const [lastSwipeId, setLastSwipeId] = useState<string | null>(null);
   const [lastSwipeDirection, setLastSwipeDirection] = useState<"left" | "right" | "super" | null>(null);
   const [pendingSwipe, setPendingSwipe] = useState<"left" | "right" | "super" | null>(null);
+  const [friendsOpen, setFriendsOpen] = useState(false);
   const { count: liveCount, loading: countLoading, error: countError } = useProfilesCount({
     user,
     filters,
@@ -285,7 +287,7 @@ const Index = () => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.metaKey || e.ctrlKey || e.altKey || friendsOpen) return;
       if (e.key === "ArrowLeft") { e.preventDefault(); triggerSwipe("left"); }
       else if (e.key === "ArrowRight") { e.preventDefault(); triggerSwipe("right"); }
       else if (e.key === "ArrowUp") { e.preventDefault(); triggerSwipe("super"); }
@@ -293,7 +295,24 @@ const Index = () => {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [triggerSwipe, handleRewind]);
+  }, [triggerSwipe, handleRewind, friendsOpen]);
+
+  const likeSelectedProfile = async (id: string) => {
+    if (!user || pendingSwipe || !cards.slice(currentIndex).some((profile) => profile.id === id)) return false;
+    const { error } = await supabase.from("swipes").insert({
+      swiper_id: user.id, swiped_id: id, direction: "like",
+    });
+    if (error) {
+      toast.error("Не удалось отправить лайк");
+      return false;
+    }
+    setCards((previous) => previous.filter((profile) => profile.id !== id));
+    setLastSwipeId(null);
+    setLastSwipeDirection(null);
+    track("swipe_like", { profile_id: id });
+    toast.success("Лайк отправлен");
+    return true;
+  };
 
   const remaining = cards.slice(currentIndex);
 
@@ -321,6 +340,10 @@ const Index = () => {
         </div>
 
       </header>
+
+      <div className="flex justify-end px-4 py-3">
+        <LikeFriends profiles={remaining} loading={loading} onLike={likeSelectedProfile} onOpenChange={setFriendsOpen} />
+      </div>
 
       {!isDefaultFilters(filters) && (
         <div className="flex flex-wrap items-center gap-2 px-4 pb-2">
