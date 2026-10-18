@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfileUpdates } from "@/hooks/useProfileUpdates";
 
 export interface MatchSummary {
   matchId: string;
@@ -95,8 +96,12 @@ export function useMatches(userId: string | undefined) {
   const query = useQuery({
     enabled: !!userId,
     queryKey: ["matches", userId],
-    queryFn: () => fetchMatches(userId!),
+    queryFn: () => userId ? fetchMatches(userId) : Promise.resolve([]),
     staleTime: 30 * 1000,
+  });
+
+  useProfileUpdates((query.data ?? []).map((match) => match.userId), () => {
+    qc.invalidateQueries({ queryKey: ["matches", userId] });
   });
 
   // Invalidate on new messages / matches so the list reflects fresh state.
