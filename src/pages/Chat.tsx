@@ -21,6 +21,7 @@ import {
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfileUpdates } from "@/hooks/useProfileUpdates";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -91,6 +92,7 @@ const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [partnerName, setPartnerName] = useState("");
+  const [partnerBio, setPartnerBio] = useState<string | null>(null);
   const [partnerAvatar, setPartnerAvatar] = useState<string | null>(null);
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [partnerVerified, setPartnerVerified] = useState(false);
@@ -123,6 +125,20 @@ const Chat = () => {
   const typingTimerRef = useRef<number | null>(null);
   const isAtBottomRef = useRef(true);
 
+  const refreshPartnerProfile = useCallback(async () => {
+    if (!partnerId) return;
+    const { data } = await supabase.from("profiles")
+      .select("name, bio, avatar_url, is_verified, gender")
+      .eq("user_id", partnerId).maybeSingle();
+    if (!data) return;
+    setPartnerName(data.name);
+    setPartnerBio(data.bio);
+    setPartnerAvatar(data.avatar_url);
+    setPartnerVerified(data.is_verified);
+    setPartnerGender(data.gender);
+  }, [partnerId]);
+  useProfileUpdates(partnerId ? [partnerId] : [], refreshPartnerProfile);
+
   // Fetch partner + messages + realtime
   useEffect(() => {
     if (!matchId || !user) return;
@@ -135,12 +151,13 @@ const Chat = () => {
         setPartnerId(pid);
         const { data: rows } = await supabase
           .from("profiles")
-          .select("user_id, name, avatar_url, is_verified, gender")
+          .select("user_id, name, bio, avatar_url, is_verified, gender")
           .in("user_id", [pid, user.id]);
         const profile = rows?.find((r) => r.user_id === pid);
         const mine = rows?.find((r) => r.user_id === user.id);
         if (profile) {
           setPartnerName(profile.name);
+          setPartnerBio(profile.bio);
           setPartnerAvatar(profile.avatar_url);
           setPartnerVerified(profile.is_verified ?? false);
           setPartnerGender(profile.gender ?? null);
@@ -654,7 +671,7 @@ const Chat = () => {
               />
             )}
           </div>
-          <div className="flex flex-1 flex-col">
+          <div className="flex min-w-0 flex-1 flex-col">
             <span className="flex items-center gap-1 font-semibold text-foreground">
               {partnerName}
               {partnerVerified && <BadgeCheck className="h-4 w-4 text-primary" aria-label="Верифицирован" />}
@@ -678,6 +695,12 @@ const Chat = () => {
             />
           )}
         </header>
+
+        {partnerBio && (
+          <div className="shrink-0 border-b border-border bg-card/60 px-4 py-2">
+            <p className="max-h-24 overflow-y-auto whitespace-pre-wrap break-words text-sm text-muted-foreground" aria-label="Описание собеседника">{partnerBio}</p>
+          </div>
+        )}
 
         <div
           ref={scrollerRef}

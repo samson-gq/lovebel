@@ -1,3 +1,4 @@
 - [x] Add profile invitation sharing and notification opt-in.
 - [x] Preserve quiet notifications while the app is visible and verify invitation flow.
 - [x] Hide remaining demo matches and incoming likes without inventing real activity; verify non-demo records remain accessible (live policy tests and signed-in pages).
+- [x] Refresh partner photo and biography in open chats and conversation lists after profile edits (subscription tests pass; signed-in chat displays current biography; live cross-account edit not performed).
