@@ -36,6 +36,13 @@
       "when": 1792265384810,
       "tag": "0004_hide_demo_interactions",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792311325350,
+      "tag": "0005_realtime_profile_updates",
+      "breakpoints": true
     }
   ]
 }
