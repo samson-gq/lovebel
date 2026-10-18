@@ -3,3 +3,4 @@
 - Matches and swipe SELECT policies exclude seeded participants through a membership-scoped security-definer predicate; existing demo records are retained but do not populate lists or badges.
 - Friend invitations use the public signup URL without personal identifiers; reuse the existing push subscription flow rather than creating a second notification service.
 - Chat headers and conversation summaries subscribe to displayed profile IDs using useProfileUpdates, refetching on edits and reconnects so profile changes are never stored as message snapshots.
+- The Discover friend-like picker uses the current eligible discovery stack, sends only the signed-in user's explicitly selected like, and never imports contacts or generates reciprocal likes.
