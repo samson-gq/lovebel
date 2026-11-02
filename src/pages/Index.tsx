@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSwipeFilters, DEFAULT_FILTERS, isDefaultFilters } from "@/hooks/useSwipeFilters";
 import { useProfilesCount } from "@/hooks/useProfilesCount";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
+import { useSwipeStats } from "@/hooks/useSwipeStats";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { pluralize } from "@/lib/plural";
@@ -60,6 +61,7 @@ const Index = () => {
     filters,
   });
   const onlineUsers = useOnlineUsers();
+  const { stats: swipeStats, refresh: refreshSwipeStats } = useSwipeStats(user?.id);
   const prefetchedRef = useRef<Set<string>>(new Set());
 
 
