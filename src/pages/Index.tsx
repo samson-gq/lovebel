@@ -345,7 +345,24 @@ const Index = () => {
 
       </header>
 
-      <div className="flex justify-end px-4 py-3">
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        {swipeStats && swipeStats.liked > 0 ? (
+          <div className="flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+            <span className="rounded-full bg-muted px-3 py-1 font-medium text-foreground">
+              Лайкнуто: {swipeStats.liked}
+            </span>
+            <span className="rounded-full bg-primary/10 px-3 py-1 font-medium text-primary">
+              Взаимно: {swipeStats.responded}
+            </span>
+            {swipeStats.pending > 0 && (
+              <span className="rounded-full bg-muted px-3 py-1 font-medium text-muted-foreground">
+                Без ответа: {swipeStats.pending}
+              </span>
+            )}
+          </div>
+        ) : (
+          <span />
+        )}
         <LikeFriends profiles={remaining} loading={loading} onLike={likeSelectedProfile} onOpenChange={setFriendsOpen} />
       </div>
 
