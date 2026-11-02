@@ -232,9 +232,10 @@ const Index = () => {
         setSuperLikesLeft((n) => Math.max(0, n - 1));
         toast.success("⭐ Super Like отправлен!");
       }
+      if (direction !== "left") refreshSwipeStats();
       setCurrentIndex((prev) => prev + 1);
     },
-    [user, currentIndex, cards, superLikesLeft]
+    [user, currentIndex, cards, superLikesLeft, refreshSwipeStats]
   );
 
   const triggerSwipe = useCallback(
@@ -312,6 +313,7 @@ const Index = () => {
     setLastSwipeId(null);
     setLastSwipeDirection(null);
     track("swipe_like", { profile_id: id });
+    refreshSwipeStats();
     toast.success("Лайк отправлен");
     return true;
   };
