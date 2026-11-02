@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSwipeFilters, DEFAULT_FILTERS, isDefaultFilters } from "@/hooks/useSwipeFilters";
 import { useProfilesCount } from "@/hooks/useProfilesCount";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
+import { useSwipeStats } from "@/hooks/useSwipeStats";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { pluralize } from "@/lib/plural";
@@ -60,6 +61,7 @@ const Index = () => {
     filters,
   });
   const onlineUsers = useOnlineUsers();
+  const { stats: swipeStats, refresh: refreshSwipeStats } = useSwipeStats(user?.id);
   const prefetchedRef = useRef<Set<string>>(new Set());
 
 
@@ -230,9 +232,10 @@ const Index = () => {
         setSuperLikesLeft((n) => Math.max(0, n - 1));
         toast.success("⭐ Super Like отправлен!");
       }
+      if (direction !== "left") refreshSwipeStats();
       setCurrentIndex((prev) => prev + 1);
     },
-    [user, currentIndex, cards, superLikesLeft]
+    [user, currentIndex, cards, superLikesLeft, refreshSwipeStats]
   );
 
   const triggerSwipe = useCallback(
@@ -310,6 +313,7 @@ const Index = () => {
     setLastSwipeId(null);
     setLastSwipeDirection(null);
     track("swipe_like", { profile_id: id });
+    refreshSwipeStats();
     toast.success("Лайк отправлен");
     return true;
   };
@@ -341,7 +345,24 @@ const Index = () => {
 
       </header>
 
-      <div className="flex justify-end px-4 py-3">
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        {swipeStats && swipeStats.liked > 0 ? (
+          <div className="flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+            <span className="rounded-full bg-muted px-3 py-1 font-medium text-foreground">
+              Лайкнуто: {swipeStats.liked}
+            </span>
+            <span className="rounded-full bg-primary/10 px-3 py-1 font-medium text-primary">
+              Взаимно: {swipeStats.responded}
+            </span>
+            {swipeStats.pending > 0 && (
+              <span className="rounded-full bg-muted px-3 py-1 font-medium text-muted-foreground">
+                Без ответа: {swipeStats.pending}
+              </span>
+            )}
+          </div>
+        ) : (
+          <span />
+        )}
         <LikeFriends profiles={remaining} loading={loading} onLike={likeSelectedProfile} onOpenChange={setFriendsOpen} />
       </div>
 
